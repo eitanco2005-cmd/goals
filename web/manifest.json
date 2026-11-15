@@ -1,11 +1,11 @@
 {
-    "name": "goals_challenge",
-    "short_name": "goals_challenge",
+    "name": "האתגר שלנו · Our Challenge",
+    "short_name": "האתגר שלנו",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#F3E3D9",
+    "theme_color": "#E07A5F",
+    "description": "Track your daily goals together",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
@@ -31,5 +31,7 @@
             "type": "image/png",
             "purpose": "maskable"
         }
-    ]
+    ],
+    "lang": "he",
+    "dir": "auto"
 }
