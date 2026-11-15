@@ -1,13 +1,189 @@
+import 'package:flutter/services.dart' show HapticFeedback;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../core/dates.dart';
+import '../../core/errors.dart';
+import '../../core/providers.dart';
+import '../../data/memory/memory_backend.dart';
+import '../../domain/models.dart';
 import '../../l10n/gen/app_localizations.dart';
+import 'goal_card.dart';
+import 'partner_strip.dart';
+import 'today_cards.dart';
+import 'today_format.dart';
+import 'today_header.dart';
+import 'today_providers.dart';
 
-/// Placeholder – to be implemented.
-class TodayScreen extends StatelessWidget {
+/// The heart of the app: log today's goals and glance at the partner's day.
+class TodayScreen extends ConsumerStatefulWidget {
   const TodayScreen({super.key});
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-        body: Center(child: Text(AppLocalizations.of(context).comingSoon)),
-      );
+  ConsumerState<TodayScreen> createState() => _TodayScreenState();
+}
+
+class _TodayScreenState extends ConsumerState<TodayScreen> {
+  late final AppLifecycleListener _lifecycle;
+
+  @override
+  void initState() {
+    super.initState();
+    // Roll the date over when the app comes back after midnight.
+    _lifecycle = AppLifecycleListener(
+      onResume: () => ref.read(todayKeyProvider.notifier).refresh(),
+    );
+  }
+
+  @override
+  void dispose() {
+    _lifecycle.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    ref.listen(myTodaySummaryProvider.select((s) => s?.percent), (prev, next) {
+      if (prev != null && prev < 100 && next == 100) {
+        HapticFeedback.heavyImpact();
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              content: Text(l.todayAllDone),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+      }
+    });
+
+    final body = switch (ref.watch(challengeProvider)) {
+      AsyncValue(value: final Challenge challenge) => _TodayContent(
+        challenge: challenge,
+      ),
+      AsyncValue(hasValue: true) => TodayMessage(
+        emoji: '🌱',
+        title: l.todayNoChallengeTitle,
+        body: l.todayNoChallengeBody,
+      ),
+      AsyncError(:final error) => TodayMessage(
+        emoji: '😕',
+        title: errorMessage(l, error),
+      ),
+      _ => const Center(child: CircularProgressIndicator()),
+    };
+    return Scaffold(body: SafeArea(bottom: false, child: body));
+  }
+}
+
+class _TodayContent extends ConsumerWidget {
+  const _TodayContent({required this.challenge});
+
+  final Challenge challenge;
+
+  Future<void> _set(
+    BuildContext context,
+    WidgetRef ref,
+    GoalDef goal,
+    num? value,
+  ) async {
+    HapticFeedback.selectionClick();
+    final messenger = ScaffoldMessenger.of(context);
+    final l = AppLocalizations.of(context);
+    try {
+      await ref
+          .read(todayLogControllerProvider.notifier)
+          .setValue(goal.id, value);
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(errorMessage(l, e))));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    final locale = Localizations.localeOf(context).toLanguageTag();
+    final todayKey = ref.watch(todayKeyProvider);
+    final log = ref.watch(todayLogProvider);
+    final summary = ref.watch(myTodaySummaryProvider);
+    final name =
+        ref.watch(profileProvider.select((p) => p.value?.displayName)) ?? '';
+    final showDemo =
+        ref.watch(isDemoModeProvider) &&
+        !ref.watch(demoBannerDismissedProvider);
+    final dailyGoals = challenge.dailyGoals;
+    final weeklyGoals = challenge.weeklyGoals;
+    final met =
+        summary?.statuses.values.where((s) => s == GoalStatus.met).length ?? 0;
+
+    return CustomScrollView(
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsetsDirectional.fromSTEB(16, 12, 16, 32),
+          sliver: SliverList.list(
+            children: [
+              if (showDemo) ...[
+                DemoModeBanner(
+                  code: MemoryBackend.demoInviteCode,
+                  onDismiss: () =>
+                      ref.read(demoBannerDismissedProvider.notifier).dismiss(),
+                ),
+                const SizedBox(height: 16),
+              ],
+              TodayHeader(
+                greeting: greetingFor(l, DateTime.now().hour),
+                name: name,
+                dateText: DateFormat.MMMMEEEEd(locale)
+                    .format(parseDayKey(todayKey)),
+                dayLabel: challengeDayLabel(
+                  l,
+                  challengeDay(
+                    startDate: challenge.startDate,
+                    endDate: challenge.endDate,
+                    today: todayKey,
+                  ),
+                ),
+                percent: summary?.percent ?? 0,
+                met: met,
+                total: dailyGoals.length,
+              ),
+              const SizedBox(height: 20),
+              PartnerSection(dailyGoals: dailyGoals),
+              const SizedBox(height: 24),
+              Padding(
+                padding: const EdgeInsetsDirectional.only(start: 4, bottom: 10),
+                child: Text(
+                  l.todayYourGoals,
+                  style: Theme.of(context).textTheme.titleLarge
+                      ?.copyWith(fontWeight: FontWeight.w800),
+                ),
+              ),
+              if (log case AsyncError(:final error))
+                TodayMessage(emoji: '😕', title: errorMessage(l, error))
+              else if (dailyGoals.isEmpty)
+                TodayMessage(emoji: '🗒️', title: l.todayNoDailyGoals)
+              else
+                for (final goal in dailyGoals)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: GoalCard(
+                      key: ValueKey('goal-${goal.id}'),
+                      goal: goal,
+                      value: log.value?.valueOf(goal.id),
+                      enabled: log.value != null,
+                      onChanged: (v) => _set(context, ref, goal, v),
+                    ),
+                  ),
+              if (weeklyGoals.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                WeeklyTeaserCard(goals: weeklyGoals),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 }

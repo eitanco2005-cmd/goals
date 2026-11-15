@@ -121,6 +121,16 @@ class MemoryBackend
     final p = _profiles[uid];
     if (p == null) return;
     _profiles[uid] = p.copyWith(displayName: displayName);
+    final pair = p.pairId == null ? null : _pairs[p.pairId];
+    if (pair != null) {
+      _pairs[pair.id] = Pair(
+        id: pair.id,
+        memberUids: pair.memberUids,
+        memberNames: {...pair.memberNames, uid: displayName},
+        inviteCode: pair.inviteCode,
+        activeChallengeId: pair.activeChallengeId,
+      );
+    }
     _notify();
   }
 

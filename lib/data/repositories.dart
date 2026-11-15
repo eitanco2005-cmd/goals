@@ -12,7 +12,10 @@ import '../domain/models.dart';
 ///   pairs/{pairId}/logs/{uid}/days/{date}           DailyLog   (owner only)
 ///   pairs/{pairId}/summaries/{uid}_{date}           DaySummary (both members)
 ///   pairs/{pairId}/workouts/{workoutId}             WorkoutEntry
-///   inviteCodes/{code}                              {pairId}
+///   inviteCodes/{code}                              {pairId, open, createdBy}
+///     (`open` is cleared when the partner joins, so a full pair can be
+///     reported as 'pair-full' without outsiders reading the pair doc)
+///   Every Firestore write also stores a server `updatedAt` (debug only).
 
 /// Thrown by repositories with a stable [code] the UI maps to a localized
 /// message (see `errorMessage()` in core/errors.dart).

@@ -56,4 +56,15 @@ void main() {
         .first;
     expect(partnerToday.length, greaterThan(10));
   });
+
+  test('renaming updates the name the partner sees', () async {
+    final b = MemoryBackend(seedDemo: true);
+    final u = await b.signUp(
+        email: 'me@x.com', password: 'secret1', displayName: 'Me', languageCode: 'he');
+    final pair = await b.joinPair(
+        uid: u.uid, displayName: 'Me', code: MemoryBackend.demoInviteCode);
+    await b.setDisplayName(u.uid, 'Eitan');
+    final updated = await b.watchPair(pair.id).first;
+    expect(updated!.memberNames[u.uid], 'Eitan');
+  });
 }

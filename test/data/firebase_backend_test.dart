@@ -1,0 +1,372 @@
+import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth_mocks/firebase_auth_mocks.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:goals_challenge/data/firebase/firebase_backend.dart';
+import 'package:goals_challenge/data/firebase/firebase_errors.dart';
+import 'package:goals_challenge/data/repositories.dart';
+import 'package:goals_challenge/domain/default_goals.dart';
+import 'package:goals_challenge/domain/models.dart';
+
+/// Auth mock whose sign-in / sign-up fail with a given Firebase error code.
+class _FailingAuth extends MockFirebaseAuth {
+  _FailingAuth(this.code);
+  final String code;
+
+  @override
+  Future<UserCredential> signInWithEmailAndPassword({
+    required String email,
+    required String password,
+  }) => Future.error(FirebaseAuthException(code: code));
+
+  @override
+  Future<UserCredential> createUserWithEmailAndPassword({
+    required String email,
+    required String password,
+  }) => Future.error(FirebaseAuthException(code: code));
+}
+
+Matcher throwsAppException(String code) =>
+    throwsA(isA<AppException>().having((e) => e.code, 'code', code));
+
+void main() {
+  late MockFirebaseAuth auth;
+  late FakeFirebaseFirestore db;
+  late FirebaseBackend b;
+
+  setUp(() {
+    auth = MockFirebaseAuth();
+    db = FakeFirebaseFirestore();
+    b = FirebaseBackend(auth: auth, firestore: db);
+  });
+
+  Future<AppUser> signUp(String name) => b.signUp(
+    email: '${name.toLowerCase()}@x.com',
+    password: 'secret1',
+    displayName: name,
+    languageCode: 'he',
+  );
+
+  // fake_cloud_firestore applies transaction writes without awaiting them,
+  // so let them land before reading.
+  Future<Pair> createPair(AppUser u) async {
+    final pair = await b.createPair(
+      uid: u.uid,
+      displayName: u.displayName!,
+      startDate: '2026-11-15',
+      endDate: '2026-12-14',
+      goals: defaultGoals,
+    );
+    await pumpEventQueue();
+    return pair;
+  }
+
+  Future<Pair> join(AppUser u, String code) async {
+    final pair = await b.joinPair(
+      uid: u.uid,
+      displayName: u.displayName!,
+      code: code,
+    );
+    await pumpEventQueue();
+    return pair;
+  }
+
+  test('sign up creates the profile document', () async {
+    final u = await signUp('A');
+    expect(u.displayName, 'A');
+    final profile = await b.watchProfile(u.uid).first;
+    expect(profile!.displayName, 'A');
+    expect(profile.languageCode, 'he');
+    expect(profile.pairId, isNull);
+
+    await b.setLanguage(u.uid, 'en');
+    expect((await b.watchProfile(u.uid).first)!.languageCode, 'en');
+    // Missing profile is a no-op, like the memory backend.
+    await b.setDisplayName('nobody', 'X');
+  });
+
+  test('create pair writes pair, challenge, invite code and profile', () async {
+    final a = await signUp('A');
+    final pair = await createPair(a);
+
+    expect(pair.inviteCode, hasLength(6));
+    expect(pair.inviteCode, matches(RegExp(r'^[A-HJ-NP-Z2-9]{6}$')));
+    expect(pair.memberUids, [a.uid]);
+    expect(pair.isComplete, isFalse);
+
+    expect((await b.watchPair(pair.id).first)!.memberNames, {a.uid: 'A'});
+    expect((await b.watchProfile(a.uid).first)!.pairId, pair.id);
+    final invite = await db.doc('inviteCodes/${pair.inviteCode}').get();
+    expect(invite.data(), containsPair('pairId', pair.id));
+    final challenge = (await b.watchActiveChallenge(pair.id).first)!;
+    expect(challenge.id, pair.activeChallengeId);
+    expect(challenge.goals, hasLength(defaultGoals.length));
+
+    await expectLater(createPair(a), throwsAppException('already-paired'));
+  });
+
+  test(
+    'join by lowercase code, then full / already-paired / invalid',
+    () async {
+      final a = await signUp('A');
+      final pair = await createPair(a);
+      final c = await signUp('C');
+
+      await expectLater(
+        b.joinPair(uid: c.uid, displayName: 'C', code: 'nope00'),
+        throwsAppException('invalid-code'),
+      );
+      await expectLater(
+        b.joinPair(uid: c.uid, displayName: 'C', code: 'a/b'),
+        throwsAppException('invalid-code'),
+      );
+
+      final joined = await join(c, pair.inviteCode.toLowerCase());
+      expect(joined.isComplete, isTrue);
+      expect(joined.partnerOf(c.uid), a.uid);
+      final stored = (await b.watchPair(pair.id).first)!;
+      expect(stored.memberUids, [a.uid, c.uid]);
+      expect(stored.memberNames, {a.uid: 'A', c.uid: 'C'});
+      expect((await b.watchProfile(c.uid).first)!.pairId, pair.id);
+
+      // Same user again -> already paired.
+      await expectLater(
+        b.joinPair(uid: c.uid, displayName: 'C', code: pair.inviteCode),
+        throwsAppException('already-paired'),
+      );
+      // A third user -> pair full.
+      final d = await signUp('D');
+      await expectLater(
+        b.joinPair(uid: d.uid, displayName: 'D', code: pair.inviteCode),
+        throwsAppException('pair-full'),
+      );
+    },
+  );
+
+  test('renaming updates the name stored on the pair', () async {
+    final a = await signUp('A');
+    final pair = await createPair(a);
+    await b.setDisplayName(a.uid, 'Eitan');
+    await pumpEventQueue();
+    expect((await b.watchProfile(a.uid).first)!.displayName, 'Eitan');
+    expect((await b.watchPair(pair.id).first)!.memberNames[a.uid], 'Eitan');
+  });
+
+  test('setGoalValue writes the log and the summary', () async {
+    final a = await signUp('A');
+    final pair = await createPair(a);
+    final goals = (await b.watchActiveChallenge(pair.id).first)!.dailyGoals;
+    const date = '2026-11-15';
+
+    expect(
+      await b.watchDaySummary(pairId: pair.id, uid: a.uid, date: date).first,
+      isNull,
+    );
+    final empty = await b
+        .watchDailyLog(pairId: pair.id, uid: a.uid, date: date)
+        .first;
+    expect(empty.values, isEmpty);
+
+    Future<void> set(String goalId, num? v) => b.setGoalValue(
+      pairId: pair.id,
+      uid: a.uid,
+      date: date,
+      goalId: goalId,
+      value: v,
+      dailyGoals: goals,
+    );
+
+    await set(GoalIds.water, 8);
+    await set(GoalIds.reading, 60);
+    await set(GoalIds.sweets, 3);
+
+    final log = await b
+        .watchDailyLog(pairId: pair.id, uid: a.uid, date: date)
+        .first;
+    expect(log.values, {
+      GoalIds.water: 8,
+      GoalIds.reading: 60,
+      GoalIds.sweets: 3,
+    });
+    var summary = (await b
+        .watchDaySummary(pairId: pair.id, uid: a.uid, date: date)
+        .first)!;
+    expect(summary.statuses[GoalIds.water], GoalStatus.met);
+    expect(summary.statuses[GoalIds.sweets], GoalStatus.notMet);
+    expect(summary.statuses[GoalIds.steps], GoalStatus.unlogged);
+    expect(summary.percent, 22); // 2 of 9
+
+    // Clearing a value removes it from the log and the summary.
+    await set(GoalIds.reading, null);
+    final cleared = await b
+        .watchDailyLog(pairId: pair.id, uid: a.uid, date: date)
+        .first;
+    expect(cleared.values.keys, [GoalIds.water, GoalIds.sweets]);
+    summary = (await b
+        .watchDaySummary(pairId: pair.id, uid: a.uid, date: date)
+        .first)!;
+    expect(summary.statuses[GoalIds.reading], GoalStatus.unlogged);
+    expect(summary.percent, 11);
+
+    // Stored at the documented paths.
+    expect(
+      (await db.doc('pairs/${pair.id}/summaries/${a.uid}_$date').get()).exists,
+      isTrue,
+    );
+    expect(
+      (await db.doc('pairs/${pair.id}/logs/${a.uid}/days/$date').get()).exists,
+      isTrue,
+    );
+  });
+
+  test('watchSummaries returns one user in an inclusive date range', () async {
+    final a = await signUp('A');
+    final pair = await createPair(a);
+    final goals = (await b.watchActiveChallenge(pair.id).first)!.dailyGoals;
+    for (final (uid, date) in [
+      (a.uid, '2026-11-14'),
+      (a.uid, '2026-11-15'),
+      (a.uid, '2026-11-17'),
+      (a.uid, '2026-11-18'),
+      ('other', '2026-11-16'),
+    ]) {
+      await b.setGoalValue(
+        pairId: pair.id,
+        uid: uid,
+        date: date,
+        goalId: GoalIds.water,
+        value: 8,
+        dailyGoals: goals,
+      );
+    }
+    final list = await b
+        .watchSummaries(
+          pairId: pair.id,
+          uid: a.uid,
+          from: '2026-11-15',
+          to: '2026-11-17',
+        )
+        .first;
+    expect(list.map((s) => s.date), ['2026-11-15', '2026-11-17']);
+    expect(list.every((s) => s.uid == a.uid), isTrue);
+  });
+
+  test('workouts add (generated id) and delete', () async {
+    final a = await signUp('A');
+    final pair = await createPair(a);
+    await b.addWorkout(
+      pairId: pair.id,
+      entry: WorkoutEntry(
+        id: '',
+        uid: a.uid,
+        date: '2026-11-16',
+        type: WorkoutType.run,
+        minutes: 35,
+      ),
+    );
+    await b.addWorkout(
+      pairId: pair.id,
+      entry: WorkoutEntry(
+        id: 'w-fixed',
+        uid: a.uid,
+        date: '2026-11-15',
+        type: WorkoutType.strength,
+        minutes: 40,
+      ),
+    );
+    await b.addWorkout(
+      pairId: pair.id,
+      entry: const WorkoutEntry(
+        id: '',
+        uid: 'other',
+        date: '2026-11-15',
+        type: WorkoutType.run,
+        minutes: 30,
+      ),
+    );
+
+    Future<List<WorkoutEntry>> week() => b
+        .watchWorkouts(
+          pairId: pair.id,
+          uid: a.uid,
+          from: '2026-11-15',
+          to: '2026-11-21',
+        )
+        .first;
+    var list = await week();
+    expect(list.map((w) => w.date), ['2026-11-15', '2026-11-16']);
+    expect(list.first.id, 'w-fixed');
+    expect(list.last.id, isNotEmpty);
+
+    await b.deleteWorkout(pairId: pair.id, id: list.last.id);
+    list = await week();
+    expect(list.map((w) => w.id), ['w-fixed']);
+  });
+
+  test('createChallenge switches the active challenge', () async {
+    final a = await signUp('A');
+    final pair = await createPair(a);
+    final next = await b.createChallenge(
+      pairId: pair.id,
+      startDate: '2027-01-01',
+      endDate: '2027-01-31',
+      goals: defaultGoals.take(3).toList(),
+    );
+    final active = (await b.watchActiveChallenge(pair.id).first)!;
+    expect(active.id, next.id);
+    expect(active.goals, hasLength(3));
+  });
+
+  group('error mapping', () {
+    test('auth errors map to AppException codes', () async {
+      for (final (fb, app) in [
+        ('invalid-credential', 'invalid-credentials'),
+        ('wrong-password', 'invalid-credentials'),
+        ('user-not-found', 'invalid-credentials'),
+        ('email-already-in-use', 'email-in-use'),
+        ('weak-password', 'weak-password'),
+        ('invalid-email', 'invalid-email'),
+        ('network-request-failed', 'network'),
+        ('something-else', 'unknown'),
+      ]) {
+        expect(
+          toAppException(FirebaseAuthException(code: fb)).code,
+          app,
+          reason: fb,
+        );
+      }
+      expect(
+        toAppException(FirebaseException(plugin: 'x', code: 'unavailable'))
+            .code,
+        'network',
+      );
+    });
+
+    test('signIn surfaces mapped auth exceptions', () async {
+      b = FirebaseBackend(auth: _FailingAuth('wrong-password'), firestore: db);
+      await expectLater(
+        b.signIn(email: 'a@x.com', password: 'nope'),
+        throwsAppException('invalid-credentials'),
+      );
+    });
+
+    test('signUp surfaces email-in-use', () async {
+      b = FirebaseBackend(
+        auth: _FailingAuth('email-already-in-use'),
+        firestore: db,
+      );
+      await expectLater(signUp('A'), throwsAppException('email-in-use'));
+    });
+  });
+
+  test('authStateChanges emits AppUser', () async {
+    final events = <String?>[];
+    final sub = b.authStateChanges().listen((u) => events.add(u?.uid));
+    final u = await signUp('A');
+    await b.signOut();
+    await pumpEventQueue();
+    expect(events, containsAllInOrder([u.uid, null]));
+    expect(b.currentUser, isNull);
+    await sub.cancel();
+  });
+}

@@ -1,0 +1,209 @@
+rules_version = '2';
+
+// Security rules for the Goals Challenge app. Layout: see
+// lib/data/repositories.dart. Visibility model is "summary only": each
+// person's detailed daily log is private; the partner only sees the public
+// DaySummary (per-goal met/not met + daily %), workouts and the pair doc.
+//
+// Tests: test/firestore_rules/ (runs against the Firestore emulator).
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ------------------------------------------------------------ helpers
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isUser(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function pairPath(pairId) {
+      return /databases/$(database)/documents/pairs/$(pairId);
+    }
+
+    function invitePath(code) {
+      return /databases/$(database)/documents/inviteCodes/$(code);
+    }
+
+    // Member of the pair as it is stored now.
+    function isMember(pairId) {
+      return signedIn() && request.auth.uid in get(pairPath(pairId)).data.memberUids;
+    }
+
+    // Member of the pair as it will be after this write/batch/transaction
+    // (lets the pair and its first documents be created atomically).
+    function isMemberAfter(pairId) {
+      return signedIn()
+        && existsAfter(pairPath(pairId))
+        && request.auth.uid in getAfter(pairPath(pairId)).data.memberUids;
+    }
+
+    function isDayKey(v) {
+      return v is string && v.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+    }
+
+    function isName(v) {
+      return v is string && v.size() <= 100;
+    }
+
+    // Optional debugging timestamp written by the app.
+    function stampOk(d) {
+      return d.get('updatedAt', request.time) is timestamp;
+    }
+
+    // -------------------------------------------------------------- users
+    // Private profile. Partners never read each other's profile; names are
+    // copied into pairs/{pairId}.memberNames instead.
+    match /users/{uid} {
+      allow read: if isUser(uid);
+      allow create, update: if isUser(uid) && validProfile(request.resource.data);
+      allow delete: if false;
+
+      function validProfile(d) {
+        return d.uid == uid
+          && isName(d.displayName)
+          && d.get('languageCode', 'he') in ['he', 'en']
+          // pairId may only point at a pair the user is (or becomes) a member of.
+          && (d.get('pairId', null) == null || isMemberAfter(d.pairId))
+          && stampOk(d);
+      }
+    }
+
+    // -------------------------------------------------------- inviteCodes
+    // {pairId, open, createdBy}. Readable by code only (no listing).
+    match /inviteCodes/{code} {
+      allow get: if signedIn();
+      allow list: if false;
+
+      // Only together with the brand-new pair it points to.
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['pairId', 'open', 'createdBy'])
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.open == true
+        && !exists(pairPath(request.resource.data.pairId))
+        && getAfter(pairPath(request.resource.data.pairId)).data.memberUids == [request.auth.uid]
+        && getAfter(pairPath(request.resource.data.pairId)).data.inviteCode == code;
+
+      // Closed by the joining partner in the join transaction.
+      allow update: if signedIn()
+        && resource.data.open == true
+        && request.resource.data.open == false
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['open'])
+        && !(request.auth.uid in get(pairPath(resource.data.pairId)).data.memberUids)
+        && getAfter(pairPath(resource.data.pairId)).data.memberUids.size() == 2
+        && request.auth.uid in getAfter(pairPath(resource.data.pairId)).data.memberUids;
+
+      allow delete: if false;
+    }
+
+    // -------------------------------------------------------------- pairs
+    match /pairs/{pairId} {
+      // Members read; anyone signed in may `get` an OPEN pair (one member),
+      // which the join transaction needs after resolving the invite code.
+      allow read: if signedIn() && request.auth.uid in resource.data.memberUids;
+      allow get: if signedIn() && resource.data.memberUids.size() == 1;
+
+      allow create: if signedIn()
+        && request.resource.data.id == pairId
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.memberUids == [request.auth.uid]
+        && request.resource.data.memberNames.keys().hasOnly([request.auth.uid])
+        && isName(request.resource.data.memberNames[request.auth.uid])
+        && request.resource.data.inviteCode is string
+        && getAfter(invitePath(request.resource.data.inviteCode)).data.pairId == pairId
+        && stampOk(request.resource.data);
+
+      allow update: if signedIn()
+        && (joinOk(resource.data, request.resource.data)
+            || memberUpdateOk(resource.data, request.resource.data))
+        && stampOk(request.resource.data);
+
+      allow delete: if false;
+
+      // The partner joins: adds exactly themself (uid + name) to an open
+      // pair and closes the invite code in the same transaction.
+      function joinOk(before, after) {
+        return !(request.auth.uid in before.memberUids)
+          && before.memberUids.size() == 1
+          && after.memberUids == before.memberUids.concat([request.auth.uid])
+          && after.diff(before).affectedKeys().hasOnly(['memberUids', 'memberNames', 'updatedAt'])
+          && after.memberNames.diff(before.memberNames).affectedKeys().hasOnly([request.auth.uid])
+          && isName(after.memberNames[request.auth.uid])
+          && getAfter(invitePath(before.inviteCode)).data.open == false;
+      }
+
+      // A member switches the active challenge or renames themself.
+      function memberUpdateOk(before, after) {
+        return request.auth.uid in before.memberUids
+          && after.diff(before).affectedKeys().hasOnly(['activeChallengeId', 'memberNames', 'updatedAt'])
+          && after.memberNames.diff(before.memberNames).affectedKeys().hasOnly([request.auth.uid])
+          && (after.activeChallengeId == null
+              || existsAfter(/databases/$(database)/documents/pairs/$(pairId)/challenges/$(after.activeChallengeId)));
+      }
+
+      // --------------------------------------------------------- challenges
+      match /challenges/{challengeId} {
+        allow read: if isMember(pairId);
+        allow create, update: if isMemberAfter(pairId) && validChallenge(request.resource.data);
+        allow delete: if isMember(pairId);
+
+        function validChallenge(d) {
+          return d.id == challengeId
+            && d.pairId == pairId
+            && isDayKey(d.startDate)
+            && isDayKey(d.endDate)
+            && d.startDate <= d.endDate
+            && d.goals is list
+            && d.goals.size() <= 50
+            && stampOk(d);
+        }
+      }
+
+      // ------------------------------------------- private daily logs
+      // Only the owner, never the partner.
+      match /logs/{uid}/days/{date} {
+        allow read, delete: if isUser(uid) && isMember(pairId);
+        allow create, update: if isUser(uid) && isMember(pairId)
+          && request.resource.data.uid == uid
+          && request.resource.data.date == date
+          && isDayKey(date)
+          && request.resource.data.values is map
+          && stampOk(request.resource.data);
+      }
+
+      // ---------------------------------------------- public summaries
+      // Doc id `{uid}_{date}`. Both members read; only the owner writes.
+      match /summaries/{summaryId} {
+        allow read: if isMember(pairId);
+        allow create, update: if isMember(pairId)
+          && request.resource.data.uid == request.auth.uid
+          && isDayKey(request.resource.data.date)
+          && summaryId == request.auth.uid + '_' + request.resource.data.date
+          && request.resource.data.statuses is map
+          && request.resource.data.percent is int
+          && request.resource.data.percent >= 0
+          && request.resource.data.percent <= 100
+          && stampOk(request.resource.data);
+        allow delete: if isMember(pairId) && resource.data.uid == request.auth.uid;
+      }
+
+      // -------------------------------------------------------- workouts
+      // Both members read (may be narrowed later); only own entries written.
+      match /workouts/{workoutId} {
+        allow read: if isMember(pairId);
+        allow create, update: if isMember(pairId)
+          && request.resource.data.uid == request.auth.uid
+          && (resource == null || resource.data.uid == request.auth.uid)
+          && request.resource.data.id == workoutId
+          && isDayKey(request.resource.data.date)
+          && request.resource.data.type in ['run', 'strength', 'other']
+          && request.resource.data.minutes is int
+          && request.resource.data.minutes >= 0
+          && request.resource.data.minutes <= 1440
+          && stampOk(request.resource.data);
+        allow delete: if isMember(pairId) && resource.data.uid == request.auth.uid;
+      }
+    }
+  }
+}

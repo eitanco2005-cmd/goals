@@ -4,6 +4,7 @@ import 'package:material_ui/material_ui.dart';
 
 import 'app.dart';
 import 'core/providers.dart';
+import 'data/firebase/firebase_setup.dart';
 import 'data/memory/memory_backend.dart';
 
 /// Build with `--dart-define=USE_FIREBASE=true` once the Firebase project is
@@ -28,6 +29,3 @@ List<Override> demoOverrides() {
     logRepositoryProvider.overrideWithValue(backend),
   ];
 }
-
-/// Replaced by the Firebase data layer (data/firebase/firebase_setup.dart).
-Future<List<Override>> firebaseOverrides() async => demoOverrides();
