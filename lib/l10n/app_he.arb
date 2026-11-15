@@ -1,0 +1,34 @@
+{
+  "@@locale": "he",
+  "appTitle": "האתגר שלנו",
+
+  "navToday": "היום",
+  "navWeek": "שבוע",
+  "navBoard": "לוח",
+  "navSettings": "הגדרות",
+  "comingSoon": "בקרוב",
+
+  "language": "שפה",
+  "languageHebrew": "עברית",
+  "languageEnglish": "English",
+
+  "demoModeBanner": "מצב הדגמה – הנתונים לא נשמרים. הצטרפו עם הקוד {code} כדי להתחבר לשותפה לדוגמה.",
+
+  "errInvalidCredentials": "אימייל או סיסמה שגויים",
+  "errEmailInUse": "האימייל הזה כבר רשום",
+  "errWeakPassword": "הסיסמה חייבת להכיל לפחות 6 תווים",
+  "errInvalidEmail": "כתובת אימייל לא תקינה",
+  "errInvalidCode": "לא נמצא אתגר עם הקוד הזה",
+  "errPairFull": "באתגר הזה כבר יש שני אנשים",
+  "errAlreadyPaired": "את/ה כבר באתגר",
+  "errNetwork": "אין חיבור. בדקו את האינטרנט ונסו שוב",
+  "errUnknown": "משהו השתבש. נסו שוב",
+
+  "statusMet": "בוצע",
+  "statusNotMet": "עוד לא",
+  "statusUnlogged": "לא עודכן",
+
+  "signOut": "התנתקות",
+  "settingsTitle": "הגדרות",
+  "displayName": "השם שלך"
+}

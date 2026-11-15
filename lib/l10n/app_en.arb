@@ -1,0 +1,35 @@
+{
+  "@@locale": "en",
+  "appTitle": "Our Challenge",
+
+  "navToday": "Today",
+  "navWeek": "Week",
+  "navBoard": "Board",
+  "navSettings": "Settings",
+  "comingSoon": "Coming soon",
+
+  "language": "Language",
+  "languageHebrew": "עברית",
+  "languageEnglish": "English",
+
+  "demoModeBanner": "Demo mode – data is not saved. Join code {code} to pair with a demo partner.",
+  "@demoModeBanner": {"placeholders": {"code": {"type": "String"}}},
+
+  "errInvalidCredentials": "Wrong email or password",
+  "errEmailInUse": "This email is already registered",
+  "errWeakPassword": "Password must be at least 6 characters",
+  "errInvalidEmail": "Invalid email address",
+  "errInvalidCode": "No challenge found with this code",
+  "errPairFull": "This challenge already has two people",
+  "errAlreadyPaired": "You are already in a challenge",
+  "errNetwork": "No connection. Check your internet and try again",
+  "errUnknown": "Something went wrong. Please try again",
+
+  "statusMet": "Done",
+  "statusNotMet": "Not yet",
+  "statusUnlogged": "Not logged",
+
+  "signOut": "Sign out",
+  "settingsTitle": "Settings",
+  "displayName": "Your name"
+}
