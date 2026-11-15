@@ -13,6 +13,203 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appTitle => 'Our Challenge';
 
   @override
+  String get authTagline =>
+      'Two people, one challenge. Build healthy habits together, one day at a time.';
+
+  @override
+  String get authSignInTitle => 'Welcome back';
+
+  @override
+  String get authSignUpTitle => 'Create your account';
+
+  @override
+  String get authEmailLabel => 'Email';
+
+  @override
+  String get authPasswordLabel => 'Password';
+
+  @override
+  String get authNameHint => 'This is how you\'ll appear in the challenge';
+
+  @override
+  String get authPasswordHint => 'At least 6 characters';
+
+  @override
+  String get authShowPassword => 'Show password';
+
+  @override
+  String get authHidePassword => 'Hide password';
+
+  @override
+  String get authForgotPassword => 'Forgot password?';
+
+  @override
+  String authResetSent(String email) {
+    return 'We sent a password reset link to $email';
+  }
+
+  @override
+  String get authResetNeedsEmail =>
+      'Enter a valid email above, then tap “Forgot password?” again';
+
+  @override
+  String get authSignInButton => 'Sign in';
+
+  @override
+  String get authSignUpButton => 'Create account';
+
+  @override
+  String get authNoAccount => 'New here?';
+
+  @override
+  String get authGoToSignUp => 'Create an account';
+
+  @override
+  String get authHaveAccount => 'Already have an account?';
+
+  @override
+  String get authGoToSignIn => 'Sign in';
+
+  @override
+  String get authEmailRequired => 'Please enter your email';
+
+  @override
+  String get authPasswordRequired => 'Please enter your password';
+
+  @override
+  String get authNameRequired => 'Please enter your name';
+
+  @override
+  String pairWelcome(String name) {
+    return 'Hi $name! Let\'s get started';
+  }
+
+  @override
+  String get pairIntro =>
+      'Start a new challenge and invite your partner, or join the challenge your partner already started.';
+
+  @override
+  String get pairCreateTitle => 'Start a new challenge';
+
+  @override
+  String get pairCreateSubtitle =>
+      'Pick the dates and get a code to send your partner';
+
+  @override
+  String get pairJoinTitle => 'Join with a code';
+
+  @override
+  String get pairJoinSubtitle =>
+      'Your partner already started? Enter their code';
+
+  @override
+  String get pairStartDate => 'Start date';
+
+  @override
+  String get pairEndDate => 'End date';
+
+  @override
+  String get pairLength => 'Challenge length';
+
+  @override
+  String pairDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days',
+      one: '1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get pairCustomLength => 'Custom';
+
+  @override
+  String get pairGoalsIncluded => 'Goals included';
+
+  @override
+  String get pairDailyGoals => 'Daily goals';
+
+  @override
+  String get pairWeeklyGoals => 'Weekly goals';
+
+  @override
+  String get pairGoalsEditLater => 'You can edit the goals later.';
+
+  @override
+  String get pairCreateButton => 'Create challenge';
+
+  @override
+  String get pairCodeLabel => 'Invite code';
+
+  @override
+  String get pairCodeHint => '6 letters and numbers';
+
+  @override
+  String get pairCodeLength => 'The code has 6 characters';
+
+  @override
+  String get pairJoinButton => 'Join challenge';
+
+  @override
+  String get pairInviteTitle => 'Your invite code';
+
+  @override
+  String get pairInviteExplain =>
+      'Send this code to your partner so they can join the challenge.';
+
+  @override
+  String get pairCopy => 'Copy';
+
+  @override
+  String get pairCopyCode => 'Copy invite code';
+
+  @override
+  String get pairCopied => 'Code copied';
+
+  @override
+  String get settingsProfile => 'Profile';
+
+  @override
+  String get settingsEditName => 'Edit name';
+
+  @override
+  String get settingsChallenge => 'Challenge';
+
+  @override
+  String get settingsPartner => 'Partner';
+
+  @override
+  String get settingsWaitingForPartner => 'Waiting for your partner to join';
+
+  @override
+  String get settingsDates => 'Dates';
+
+  @override
+  String settingsDateRange(String start, String end) {
+    return '$start – $end';
+  }
+
+  @override
+  String settingsDayOf(int day, int total) {
+    return 'Day $day of $total';
+  }
+
+  @override
+  String get settingsEditGoals => 'Edit goals';
+
+  @override
+  String get settingsAccount => 'Account';
+
+  @override
+  String get settingsSignOutConfirmTitle => 'Sign out?';
+
+  @override
+  String get settingsSignOutConfirmBody =>
+      'You can sign back in anytime with your email and password.';
+
+  @override
   String get navToday => 'Today';
 
   @override
@@ -76,6 +273,155 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get statusUnlogged => 'Not logged';
+
+  @override
+  String get todayGreetingMorning => 'Good morning';
+
+  @override
+  String get todayGreetingAfternoon => 'Good afternoon';
+
+  @override
+  String get todayGreetingEvening => 'Good evening';
+
+  @override
+  String get todayGreetingNight => 'Good night';
+
+  @override
+  String todayDayOfTotal(int day, int total) {
+    return 'Day $day of $total';
+  }
+
+  @override
+  String todayChallengeStartsIn(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'The challenge starts in $count days',
+      one: 'The challenge starts tomorrow',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get todayChallengeEnded => 'Challenge complete 🏁';
+
+  @override
+  String todayMetCount(int met, int total) {
+    return '$met of $total goals done';
+  }
+
+  @override
+  String todayProgressSemantics(int percent) {
+    return '$percent% of today\'s goals done';
+  }
+
+  @override
+  String get todayAllDone => 'All of today\'s goals are done! 🎉';
+
+  @override
+  String get todayPartnerFallbackName => 'Your partner';
+
+  @override
+  String todayPartnerPercent(int percent) {
+    return '$percent% today';
+  }
+
+  @override
+  String get todayPartnerNothingYet => 'Nothing logged yet today';
+
+  @override
+  String todayGoalStatusSemantics(String goal, String status) {
+    return '$goal: $status';
+  }
+
+  @override
+  String get todayWaitingTitle => 'Waiting for your partner';
+
+  @override
+  String get todayWaitingBody =>
+      'Send them this code so they can join your challenge:';
+
+  @override
+  String get todayYourGoals => 'Your goals';
+
+  @override
+  String todayDecrease(String goal) {
+    return 'Decrease $goal';
+  }
+
+  @override
+  String todayIncrease(String goal) {
+    return 'Increase $goal';
+  }
+
+  @override
+  String get todayNoneToday => 'None today ✓';
+
+  @override
+  String get todayKeptIt => 'Kept it ✓';
+
+  @override
+  String get todayDidnt => 'Didn\'t';
+
+  @override
+  String todayValueSteps(String value) {
+    return '$value steps';
+  }
+
+  @override
+  String todayValueMinutes(String value) {
+    return '$value min';
+  }
+
+  @override
+  String todayProgressOf(String value, String target) {
+    return '$value / $target';
+  }
+
+  @override
+  String todayAtMost(String target) {
+    return 'max $target';
+  }
+
+  @override
+  String get todayUnitSteps => 'steps';
+
+  @override
+  String get todayUnitMinutes => 'min';
+
+  @override
+  String get todayTapToEdit => 'Enter an exact value';
+
+  @override
+  String get todayEnterValueLabel => 'Value';
+
+  @override
+  String get todayInvalidNumber => 'Enter a whole number';
+
+  @override
+  String get todaySave => 'Save';
+
+  @override
+  String get todayCancel => 'Cancel';
+
+  @override
+  String get todayClear => 'Clear';
+
+  @override
+  String get todayDismiss => 'Dismiss';
+
+  @override
+  String get todayThisWeek => 'This week';
+
+  @override
+  String get todayNoChallengeTitle => 'No active challenge';
+
+  @override
+  String get todayNoChallengeBody =>
+      'Start a new round from Settings to begin tracking.';
+
+  @override
+  String get todayNoDailyGoals => 'This round has no daily goals.';
 
   @override
   String get signOut => 'Sign out';
