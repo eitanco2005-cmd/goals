@@ -1,6 +1,6 @@
 {
-    "name": "האתגר שלנו · Our Challenge",
-    "short_name": "האתגר שלנו",
+    "name": "Goals",
+    "short_name": "Goals",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#F3E3D9",

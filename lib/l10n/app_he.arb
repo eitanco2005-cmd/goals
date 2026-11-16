@@ -1,6 +1,6 @@
 {
   "@@locale": "he",
-  "appTitle": "האתגר שלנו",
+  "appTitle": "Goals",
   "sessionNameTooLong": "השם יכול להכיל עד {max} תווים",
   "sessionStuckMessage": "הטעינה לוקחת יותר זמן מהרגיל. כדאי לבדוק את החיבור ולנסות שוב.",
   "sessionTryAgain": "לנסות שוב",

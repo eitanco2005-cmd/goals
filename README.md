@@ -1,4 +1,4 @@
-# האתגר שלנו · Our Challenge
+# Goals
 
 A habit-challenge app for two people. Each of you logs your own daily goals and can see a summary of your partner's day.
 

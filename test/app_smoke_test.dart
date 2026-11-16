@@ -11,7 +11,7 @@ void main() {
   ) async {
     await pumpApp(tester, MemoryBackend());
     expect(find.byType(SignInScreen), findsOneWidget);
-    expect(find.text('האתגר שלנו'), findsOneWidget); // app title hero
+    expect(find.text('Goals'), findsOneWidget); // app title hero
     expect(find.widgetWithText(FilledButton, 'התחברות'), findsOneWidget);
     expect(
       Directionality.of(tester.element(find.byType(SignInScreen))),

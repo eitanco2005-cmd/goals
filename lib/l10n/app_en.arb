@@ -1,6 +1,6 @@
 {
   "@@locale": "en",
-  "appTitle": "Our Challenge",
+  "appTitle": "Goals",
   "sessionNameTooLong": "Name can be at most {max} characters",
   "@sessionNameTooLong": {"placeholders": {"max": {"type": "int"}}},
   "sessionStuckMessage": "This is taking longer than expected. Check your connection and try again.",

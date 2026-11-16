@@ -10,7 +10,7 @@ class AppLocalizationsHe extends AppLocalizations {
   AppLocalizationsHe([String locale = 'he']) : super(locale);
 
   @override
-  String get appTitle => 'האתגר שלנו';
+  String get appTitle => 'Goals';
 
   @override
   String sessionNameTooLong(int max) {
