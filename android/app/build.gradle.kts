@@ -6,7 +6,8 @@ plugins {
 
 android {
     namespace = "app.goalschallenge.goals_challenge"
-    compileSdk = flutter.compileSdkVersion
+    // androidx.core 1.19 (via flutter_local_notifications) needs API 37.
+    compileSdk = maxOf(flutter.compileSdkVersion, 37)
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
