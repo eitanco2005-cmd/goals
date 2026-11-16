@@ -510,10 +510,10 @@ class AppLocalizationsHe extends AppLocalizations {
   String get goalsRule => 'כלל';
 
   @override
-  String get goalsAtLeast => 'לפחות';
+  String get goalsAtLeast => 'מינימום';
 
   @override
-  String get goalsAtMost => 'לכל היותר';
+  String get goalsAtMost => 'מקסימום';
 
   @override
   String get goalsExactly => 'בדיוק';
@@ -557,12 +557,12 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String goalsSummaryAtLeast(String target) {
-    return 'לפחות $target';
+    return 'מינימום $target';
   }
 
   @override
   String goalsSummaryAtMost(String target) {
-    return 'לכל היותר $target';
+    return 'מקסימום $target';
   }
 
   @override
@@ -727,7 +727,7 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String weekMinMinutes(int minutes) {
-    return 'לפחות $minutes דק׳ כל אחד';
+    return 'מינימום $minutes דק׳ לכל אימון';
   }
 
   @override
