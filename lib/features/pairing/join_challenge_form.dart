@@ -37,16 +37,13 @@ class _JoinChallengeFormState extends ConsumerState<JoinChallengeForm> {
     final l = AppLocalizations.of(context);
     final user = ref.read(authStateProvider).value;
     if (user == null) return;
-    final name = ref.read(profileProvider).value?.displayName ??
-        user.displayName ??
-        '';
+    final name =
+        ref.read(profileProvider).value?.displayName ?? user.displayName ?? '';
     setState(() => _loading = true);
     try {
-      await ref.read(pairRepositoryProvider).joinPair(
-            uid: user.uid,
-            displayName: name,
-            code: _code.text,
-          );
+      await ref
+          .read(pairRepositoryProvider)
+          .joinPair(uid: user.uid, displayName: name, code: _code.text);
     } catch (e) {
       if (mounted) setState(() => _error = errorMessage(l, e));
     } finally {
@@ -113,6 +110,7 @@ class _UpperCaseFormatter extends TextInputFormatter {
 
   @override
   TextEditingValue formatEditUpdate(
-          TextEditingValue oldValue, TextEditingValue newValue) =>
-      newValue.copyWith(text: newValue.text.toUpperCase());
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) => newValue.copyWith(text: newValue.text.toUpperCase());
 }

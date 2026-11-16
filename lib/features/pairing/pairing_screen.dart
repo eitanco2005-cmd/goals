@@ -40,17 +40,17 @@ class _PairingScreenState extends ConsumerState<PairingScreen> {
     final Widget body = switch (_mode) {
       null => _ModeChoice(onSelected: _setMode),
       _PairMode.create => _ModePanel(
-          key: const ValueKey(_PairMode.create),
-          title: l.pairCreateTitle,
-          onBack: () => _setMode(null),
-          child: const CreateChallengeForm(),
-        ),
+        key: const ValueKey(_PairMode.create),
+        title: l.pairCreateTitle,
+        onBack: () => _setMode(null),
+        child: const CreateChallengeForm(),
+      ),
       _PairMode.join => _ModePanel(
-          key: const ValueKey(_PairMode.join),
-          title: l.pairJoinTitle,
-          onBack: () => _setMode(null),
-          child: const JoinChallengeForm(),
-        ),
+        key: const ValueKey(_PairMode.join),
+        title: l.pairJoinTitle,
+        onBack: () => _setMode(null),
+        child: const JoinChallengeForm(),
+      ),
     };
 
     return PopScope(
@@ -72,7 +72,8 @@ class _PairingScreenState extends ConsumerState<PairingScreen> {
                       alignment: AlignmentDirectional.centerEnd,
                       child: TextButton.icon(
                         style: TextButton.styleFrom(
-                            minimumSize: const Size(48, 48)),
+                          minimumSize: const Size(48, 48),
+                        ),
                         onPressed: _signOut,
                         icon: const Icon(Icons.logout, size: 18),
                         label: Text(l.signOut),
@@ -80,23 +81,27 @@ class _PairingScreenState extends ConsumerState<PairingScreen> {
                     ),
                     const SizedBox(height: 8),
                     const ExcludeSemantics(
-                      child: Text('🎯',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 48)),
+                      child: Text(
+                        '🎯',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 48),
+                      ),
                     ),
                     const SizedBox(height: 12),
                     Text(
                       l.pairWelcome(name ?? ''),
                       textAlign: TextAlign.center,
-                      style: theme.textTheme.headlineSmall
-                          ?.copyWith(fontWeight: FontWeight.w800),
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       l.pairIntro,
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodyLarge?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant),
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                     ),
                     const SizedBox(height: 24),
                     AnimatedSwitcher(
@@ -183,19 +188,27 @@ class _ChoiceCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title,
-                        style: theme.textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.w700)),
+                    Text(
+                      title,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                     const SizedBox(height: 2),
-                    Text(subtitle,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant)),
+                    Text(
+                      subtitle,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
                   ],
                 ),
               ),
               const SizedBox(width: 8),
-              Icon(Icons.chevron_right,
-                  color: theme.colorScheme.onSurfaceVariant),
+              Icon(
+                Icons.chevron_right,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ],
           ),
         ),
@@ -235,9 +248,12 @@ class _ModePanel extends StatelessWidget {
                 ),
                 const SizedBox(width: 4),
                 Expanded(
-                  child: Text(title,
-                      style: theme.textTheme.titleLarge
-                          ?.copyWith(fontWeight: FontWeight.w700)),
+                  child: Text(
+                    title,
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ),
               ],
             ),

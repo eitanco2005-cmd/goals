@@ -21,13 +21,11 @@ ThemeData buildTheme(Brightness brightness) {
     brightness: brightness,
     surface: brightness == Brightness.light ? const Color(0xFFFFF8F4) : null,
   );
-  final base = ThemeData(
-    colorScheme: scheme,
-    useMaterial3: true,
-  );
+  final base = ThemeData(colorScheme: scheme, useMaterial3: true);
   return base.copyWith(
-    scaffoldBackgroundColor:
-        brightness == Brightness.light ? AppColors.peach : scheme.surface,
+    scaffoldBackgroundColor: brightness == Brightness.light
+        ? AppColors.peach
+        : scheme.surface,
     cardTheme: CardThemeData(
       elevation: 0,
       color: scheme.surface,
@@ -54,8 +52,7 @@ ThemeData buildTheme(Brightness brightness) {
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
         minimumSize: const Size.fromHeight(52),
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
     ),
   );

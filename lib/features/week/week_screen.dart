@@ -8,6 +8,6 @@ class WeekScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        body: Center(child: Text(AppLocalizations.of(context).comingSoon)),
-      );
+    body: Center(child: Text(AppLocalizations.of(context).comingSoon)),
+  );
 }

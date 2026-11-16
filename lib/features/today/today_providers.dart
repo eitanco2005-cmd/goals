@@ -122,15 +122,17 @@ final myTodaySummaryProvider = Provider<DaySummary?>((ref) {
   return summarizeDay(log, challenge.dailyGoals);
 });
 
-/// The partner's PUBLIC summary for today (summary-only visibility: the
-/// partner's DailyLog is never read). Null if they haven't joined or logged.
-final partnerTodaySummaryProvider = StreamProvider<DaySummary?>((ref) {
-  final partnerUid = ref.watch(partnerUidProvider);
+/// A group member's PUBLIC summary for today (summary-only visibility: other
+/// members' DailyLogs are never read). Null until they log something.
+final memberTodaySummaryProvider = StreamProvider.family<DaySummary?, String>((
+  ref,
+  uid,
+) {
   final scope = ref.watch(todayScopeProvider);
-  if (partnerUid == null || scope == null) return Stream.value(null);
+  if (scope == null) return Stream.value(null);
   return ref
       .watch(logRepositoryProvider)
-      .watchDaySummary(pairId: scope.pairId, uid: partnerUid, date: scope.date);
+      .watchDaySummary(pairId: scope.pairId, uid: uid, date: scope.date);
 });
 
 /// Whether the demo-mode banner was dismissed (for this app session).

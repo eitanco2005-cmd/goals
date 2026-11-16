@@ -26,7 +26,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get authTagline =>
-      'Two people, one challenge. Build healthy habits together, one day at a time.';
+      'One challenge, together. Build healthy habits day by day and keep each other going.';
 
   @override
   String get authSignInTitle => 'Welcome back';
@@ -98,21 +98,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pairIntro =>
-      'Start a new challenge and invite your partner, or join the challenge your partner already started.';
+      'Start a new challenge and invite others, or join a challenge someone already started.';
 
   @override
   String get pairCreateTitle => 'Start a new challenge';
 
   @override
-  String get pairCreateSubtitle =>
-      'Pick the dates and get a code to send your partner';
+  String get pairCreateSubtitle => 'Pick the dates and get a code to share';
 
   @override
   String get pairJoinTitle => 'Join with a code';
 
   @override
-  String get pairJoinSubtitle =>
-      'Your partner already started? Enter their code';
+  String get pairJoinSubtitle => 'Got a code from someone? Enter it here';
 
   @override
   String get pairStartDate => 'Start date';
@@ -169,7 +167,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pairInviteExplain =>
-      'Send this code to your partner so they can join the challenge.';
+      'Share this code with the people you want in the challenge (up to 8).';
 
   @override
   String get pairCopy => 'Copy';
@@ -190,10 +188,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsChallenge => 'Challenge';
 
   @override
-  String get settingsPartner => 'Partner';
+  String get settingsWaitingForPartner => 'No one else has joined yet';
 
   @override
-  String get settingsWaitingForPartner => 'Waiting for your partner to join';
+  String settingsMembers(int count, int max) {
+    return 'Members ($count/$max)';
+  }
 
   @override
   String get settingsDates => 'Dates';
@@ -247,7 +247,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String demoModeBanner(String code) {
-    return 'Demo mode – data is not saved. Join code $code to pair with a demo partner.';
+    return 'Demo mode – data is not saved. Join with code $code to try it with a demo member.';
   }
 
   @override
@@ -266,7 +266,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errInvalidCode => 'No challenge found with this code';
 
   @override
-  String get errPairFull => 'This challenge already has two people';
+  String get errPairFull => 'This challenge is full';
 
   @override
   String get errAlreadyPaired => 'You are already in a challenge';
@@ -300,6 +300,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String widgetNoPhotos(String name) {
     return 'No photos from $name yet today';
   }
+
+  @override
+  String widgetMemberPercent(String name, int percent) {
+    return '$name $percent%';
+  }
+
+  @override
+  String widgetGroupPhotos(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count photos today',
+      one: '1 photo today',
+      zero: 'No photos yet today',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get widgetNoPhotosGroup => 'No photos from the group yet today';
 
   @override
   String get photoAdd => 'Add a photo';
@@ -441,7 +461,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get todayAllDone => 'All of today\'s goals are done! 🎉';
 
   @override
-  String get todayPartnerFallbackName => 'Your partner';
+  String get todayPartnerFallbackName => 'Member';
 
   @override
   String todayPartnerPercent(int percent) {
@@ -457,11 +477,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get todayWaitingTitle => 'Waiting for your partner';
+  String get todayWaitingTitle => 'Invite people to your challenge';
 
   @override
-  String get todayWaitingBody =>
-      'Send them this code so they can join your challenge:';
+  String get todayWaitingBody => 'Share this code so others can join:';
 
   @override
   String get todayYourGoals => 'Your goals';

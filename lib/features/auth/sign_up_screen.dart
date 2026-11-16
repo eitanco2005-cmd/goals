@@ -40,7 +40,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     final l = AppLocalizations.of(context);
     setState(() => _loading = true);
     try {
-      await ref.read(authRepositoryProvider).signUp(
+      await ref
+          .read(authRepositoryProvider)
+          .signUp(
             email: _email.text.trim(),
             password: _password.text,
             displayName: _name.text.trim(),

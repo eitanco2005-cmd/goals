@@ -2,14 +2,21 @@ rules_version = '2';
 
 // Security rules for the Goals Challenge app. Layout: see
 // lib/data/repositories.dart. Visibility model is "summary only": each
-// person's detailed daily log is private; the partner only sees the public
-// DaySummary (per-goal met/not met + daily %), workouts and the pair doc.
+// person's detailed daily log is private; the other group members only see
+// the public DaySummary (per-goal met/not met + daily %), workouts, shared
+// photos and the group ("pair") doc. Groups hold up to 8 members
+// (maxGroupMembers in lib/domain/models.dart).
 //
 // Tests: test/firestore_rules/ (runs against the Firestore emulator).
 service cloud.firestore {
   match /databases/{database}/documents {
 
     // ------------------------------------------------------------ helpers
+    // Mirrors maxGroupMembers in lib/domain/models.dart.
+    function maxMembers() {
+      return 8;
+    }
+
     function signedIn() {
       return request.auth != null;
     }
@@ -85,13 +92,14 @@ service cloud.firestore {
         && getAfter(pairPath(request.resource.data.pairId)).data.memberUids == [request.auth.uid]
         && getAfter(pairPath(request.resource.data.pairId)).data.inviteCode == code;
 
-      // Closed by the joining partner in the join transaction.
+      // Closed by the member who takes the last spot, in the join
+      // transaction.
       allow update: if signedIn()
         && resource.data.open == true
         && request.resource.data.open == false
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['open'])
         && !(request.auth.uid in get(pairPath(resource.data.pairId)).data.memberUids)
-        && getAfter(pairPath(resource.data.pairId)).data.memberUids.size() == 2
+        && getAfter(pairPath(resource.data.pairId)).data.memberUids.size() == maxMembers()
         && request.auth.uid in getAfter(pairPath(resource.data.pairId)).data.memberUids;
 
       allow delete: if false;
@@ -99,10 +107,11 @@ service cloud.firestore {
 
     // -------------------------------------------------------------- pairs
     match /pairs/{pairId} {
-      // Members read; anyone signed in may `get` an OPEN pair (one member),
-      // which the join transaction needs after resolving the invite code.
+      // Members read; anyone signed in may `get` a group that still has
+      // room, which the join transaction needs after resolving the invite
+      // code (group ids are random and only reachable through a code).
       allow read: if signedIn() && request.auth.uid in resource.data.memberUids;
-      allow get: if signedIn() && resource.data.memberUids.size() == 1;
+      allow get: if signedIn() && resource.data.memberUids.size() < maxMembers();
 
       allow create: if signedIn()
         && request.resource.data.id == pairId
@@ -121,16 +130,18 @@ service cloud.firestore {
 
       allow delete: if false;
 
-      // The partner joins: adds exactly themself (uid + name) to an open
-      // pair and closes the invite code in the same transaction.
+      // Someone joins: adds exactly themself (uid + name) to a group with
+      // room. Taking the last spot must close the invite code in the same
+      // transaction; otherwise it stays open.
       function joinOk(before, after) {
         return !(request.auth.uid in before.memberUids)
-          && before.memberUids.size() == 1
+          && before.memberUids.size() < maxMembers()
           && after.memberUids == before.memberUids.concat([request.auth.uid])
           && after.diff(before).affectedKeys().hasOnly(['memberUids', 'memberNames', 'updatedAt'])
           && after.memberNames.diff(before.memberNames).affectedKeys().hasOnly([request.auth.uid])
           && isName(after.memberNames[request.auth.uid])
-          && getAfter(invitePath(before.inviteCode)).data.open == false;
+          && getAfter(invitePath(before.inviteCode)).data.open
+              == (after.memberUids.size() < maxMembers());
       }
 
       // A member switches the active challenge or renames themself.

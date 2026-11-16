@@ -28,7 +28,7 @@ class MemoryBackend
         LogRepository,
         PhotoRepository {
   MemoryBackend({bool seedDemo = false, Random? random})
-      : _random = random ?? Random() {
+    : _random = random ?? Random() {
     if (seedDemo) _seed();
   }
 
@@ -99,13 +99,19 @@ class MemoryBackend
     _setCurrent(user);
     await _letListenersRun();
     _profiles[user.uid] = UserProfile(
-        uid: user.uid, displayName: displayName, languageCode: languageCode);
+      uid: user.uid,
+      displayName: displayName,
+      languageCode: languageCode,
+    );
     _notify();
     return user;
   }();
 
   @override
-  Future<AppUser> signIn({required String email, required String password}) async {
+  Future<AppUser> signIn({
+    required String email,
+    required String password,
+  }) async {
     final acc = _accounts[email.trim().toLowerCase()];
     if (acc == null || acc.password != password) {
       throw const AppException('invalid-credentials');
@@ -165,7 +171,10 @@ class MemoryBackend
   }
 
   @override
-  Future<void> ensureProfile(AppUser user, {required String languageCode}) async {
+  Future<void> ensureProfile(
+    AppUser user, {
+    required String languageCode,
+  }) async {
     try {
       await _signUpInFlight;
     } catch (_) {
@@ -173,9 +182,10 @@ class MemoryBackend
     }
     if (_profiles.containsKey(user.uid)) return;
     _profiles[user.uid] = UserProfile(
-        uid: user.uid,
-        displayName: fallbackProfileName(user),
-        languageCode: languageCode);
+      uid: user.uid,
+      displayName: fallbackProfileName(user),
+      languageCode: languageCode,
+    );
     _notify();
   }
 
@@ -192,7 +202,10 @@ class MemoryBackend
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     String code;
     do {
-      code = List.generate(6, (_) => chars[_random.nextInt(chars.length)]).join();
+      code = List.generate(
+        6,
+        (_) => chars[_random.nextInt(chars.length)],
+      ).join();
     } while (_pairs.values.any((p) => p.inviteCode == code));
     return code;
   }
@@ -210,7 +223,11 @@ class MemoryBackend
     }
     final pairId = _id('p');
     final challenge = await createChallenge(
-        pairId: pairId, startDate: startDate, endDate: endDate, goals: goals);
+      pairId: pairId,
+      startDate: startDate,
+      endDate: endDate,
+      goals: goals,
+    );
     final pair = Pair(
       id: pairId,
       memberUids: [uid],
@@ -234,10 +251,11 @@ class MemoryBackend
       throw const AppException('already-paired');
     }
     final normalized = code.trim().toUpperCase();
-    final pair =
-        _pairs.values.where((p) => p.inviteCode == normalized).firstOrNull;
+    final pair = _pairs.values
+        .where((p) => p.inviteCode == normalized)
+        .firstOrNull;
     if (pair == null) throw const AppException('invalid-code');
-    if (pair.isComplete) throw const AppException('pair-full');
+    if (pair.isFull) throw const AppException('pair-full');
     final joined = Pair(
       id: pair.id,
       memberUids: [...pair.memberUids, uid],
@@ -296,9 +314,9 @@ class MemoryBackend
     required String pairId,
     required String uid,
     required String date,
-  }) =>
-      _watch(() =>
-          _logs[_k(pairId, uid, date)] ?? DailyLog(uid: uid, date: date));
+  }) => _watch(
+    () => _logs[_k(pairId, uid, date)] ?? DailyLog(uid: uid, date: date),
+  );
 
   /// Writes never fail here, so this never emits.
   @override
@@ -317,8 +335,10 @@ class MemoryBackend
   }) async {
     final key = _k(pairId, uid, date);
     if (value == null && !_logs.containsKey(key)) return;
-    final log =
-        (_logs[key] ?? DailyLog(uid: uid, date: date)).withValue(goalId, value);
+    final log = (_logs[key] ?? DailyLog(uid: uid, date: date)).withValue(
+      goalId,
+      value,
+    );
     _logs[key] = log;
     _summaries[key] = summarizeDay(log, dailyGoals);
     _notify();
@@ -329,8 +349,7 @@ class MemoryBackend
     required String pairId,
     required String uid,
     required String date,
-  }) =>
-      _watch(() => _summaries[_k(pairId, uid, date)]);
+  }) => _watch(() => _summaries[_k(pairId, uid, date)]);
 
   @override
   Stream<List<DaySummary>> watchSummaries({
@@ -338,15 +357,19 @@ class MemoryBackend
     required String uid,
     required String from,
     required String to,
-  }) =>
-      _watch(() => _summaries.values
-          .where((s) =>
-              s.uid == uid &&
-              _summaries.containsKey(_k(pairId, uid, s.date)) &&
-              s.date.compareTo(from) >= 0 &&
-              s.date.compareTo(to) <= 0)
-          .toList()
-        ..sort((a, b) => a.date.compareTo(b.date)));
+  }) => _watch(
+    () =>
+        _summaries.values
+            .where(
+              (s) =>
+                  s.uid == uid &&
+                  _summaries.containsKey(_k(pairId, uid, s.date)) &&
+                  s.date.compareTo(from) >= 0 &&
+                  s.date.compareTo(to) <= 0,
+            )
+            .toList()
+          ..sort((a, b) => a.date.compareTo(b.date)),
+  );
 
   @override
   Stream<List<WorkoutEntry>> watchWorkouts({
@@ -354,14 +377,18 @@ class MemoryBackend
     required String uid,
     required String from,
     required String to,
-  }) =>
-      _watch(() => (_workouts[pairId] ?? const <WorkoutEntry>[])
-          .where((w) =>
-              w.uid == uid &&
-              w.date.compareTo(from) >= 0 &&
-              w.date.compareTo(to) <= 0)
-          .toList()
-        ..sort((a, b) => a.date.compareTo(b.date)));
+  }) => _watch(
+    () =>
+        (_workouts[pairId] ?? const <WorkoutEntry>[])
+            .where(
+              (w) =>
+                  w.uid == uid &&
+                  w.date.compareTo(from) >= 0 &&
+                  w.date.compareTo(to) <= 0,
+            )
+            .toList()
+          ..sort((a, b) => a.date.compareTo(b.date)),
+  );
 
   @override
   Future<void> addWorkout({
@@ -374,14 +401,18 @@ class MemoryBackend
             uid: entry.uid,
             date: entry.date,
             type: entry.type,
-            minutes: entry.minutes)
+            minutes: entry.minutes,
+          )
         : entry;
     (_workouts[pairId] ??= []).add(e);
     _notify();
   }
 
   @override
-  Future<void> deleteWorkout({required String pairId, required String id}) async {
+  Future<void> deleteWorkout({
+    required String pairId,
+    required String id,
+  }) async {
     _workouts[pairId]?.removeWhere((w) => w.id == id);
     _notify();
   }
@@ -394,12 +425,18 @@ class MemoryBackend
   /// order as the Firestore query: date, then createdAt. Never pending:
   /// writes here are instantly "on the server".
   List<GoalPhoto> _photosIn(
-          String pairId, String? uid, String from, String to) =>
+    String pairId,
+    String? uid,
+    String from,
+    String to,
+  ) =>
       (_photos[pairId] ?? const <GoalPhoto>[])
-          .where((p) =>
-              (uid == null || p.uid == uid) &&
-              p.date.compareTo(from) >= 0 &&
-              p.date.compareTo(to) <= 0)
+          .where(
+            (p) =>
+                (uid == null || p.uid == uid) &&
+                p.date.compareTo(from) >= 0 &&
+                p.date.compareTo(to) <= 0,
+          )
           .toList()
         ..sort((a, b) {
           final byDate = a.date.compareTo(b.date);
@@ -412,8 +449,7 @@ class MemoryBackend
     String? uid,
     required String from,
     required String to,
-  }) =>
-      _watch(() => _photosIn(pairId, uid, from, to));
+  }) => _watch(() => _photosIn(pairId, uid, from, to));
 
   @override
   Future<List<GoalPhoto>> fetchPhotos({
@@ -421,8 +457,7 @@ class MemoryBackend
     String? uid,
     required String from,
     required String to,
-  }) async =>
-      _photosIn(pairId, uid, from, to);
+  }) async => _photosIn(pairId, uid, from, to);
 
   @override
   Future<Uint8List> loadFullImage({
@@ -517,10 +552,17 @@ class MemoryBackend
   void _seed() {
     // Anchor on the logging day (respects dayStartHour), not the raw clock.
     final now = parseDayKey(todayKey());
-    const partner = AppUser(uid: 'demo-partner', email: 'noa@demo', displayName: 'Noa');
+    const partner = AppUser(
+      uid: 'demo-partner',
+      email: 'noa@demo',
+      displayName: 'Noa',
+    );
     _accounts['noa@demo'] = (password: 'demo123', user: partner);
-    _profiles[partner.uid] =
-        const UserProfile(uid: 'demo-partner', displayName: 'Noa', pairId: 'demo-pair');
+    _profiles[partner.uid] = const UserProfile(
+      uid: 'demo-partner',
+      displayName: 'Noa',
+      pairId: 'demo-pair',
+    );
     final start = dayKey(now.subtract(const Duration(days: 20)));
     final end = dayKey(now.add(const Duration(days: 69)));
     final challenge = Challenge(

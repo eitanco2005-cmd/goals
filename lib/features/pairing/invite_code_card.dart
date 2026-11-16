@@ -16,10 +16,9 @@ class InviteCodeCard extends StatelessWidget {
     if (!context.mounted) return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(
-        content: Text(message),
-        behavior: SnackBarBehavior.floating,
-      ));
+      ..showSnackBar(
+        SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
+      );
   }
 
   @override
@@ -38,16 +37,22 @@ class InviteCodeCard extends StatelessWidget {
                 Icon(Icons.favorite_outline, color: scheme.primary, size: 20),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text(l.pairInviteTitle,
-                      style: theme.textTheme.titleMedium
-                          ?.copyWith(fontWeight: FontWeight.w700)),
+                  child: Text(
+                    l.pairInviteTitle,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: 4),
-            Text(l.pairInviteExplain,
-                style: theme.textTheme.bodyMedium
-                    ?.copyWith(color: scheme.onSurfaceVariant)),
+            Text(
+              l.pairInviteExplain,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsetsDirectional.fromSTEB(16, 8, 8, 8),
@@ -81,11 +86,11 @@ class InviteCodeCard extends StatelessWidget {
                   const SizedBox(width: 8),
                   FilledButton.tonalIcon(
                     style: FilledButton.styleFrom(
-                        minimumSize: const Size(48, 48)),
+                      minimumSize: const Size(48, 48),
+                    ),
                     onPressed: () => _copy(context),
                     icon: const Icon(Icons.copy_rounded, size: 18),
-                    label: Text(l.pairCopy,
-                        semanticsLabel: l.pairCopyCode),
+                    label: Text(l.pairCopy, semanticsLabel: l.pairCopyCode),
                   ),
                 ],
               ),

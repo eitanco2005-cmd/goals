@@ -26,7 +26,7 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get authTagline =>
-      'שניים, אתגר אחד. בונים הרגלים בריאים יחד, יום אחרי יום.';
+      'אתגר אחד, ביחד. בונים הרגלים בריאים יום אחרי יום ודוחפים אחד את השני.';
 
   @override
   String get authSignInTitle => 'טוב שחזרתם';
@@ -98,20 +98,19 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get pairIntro =>
-      'פתחו אתגר חדש והזמינו את בן/בת הזוג, או הצטרפו לאתגר שבן/בת הזוג כבר פתחו.';
+      'פתחו אתגר חדש והזמינו אחרים, או הצטרפו לאתגר שמישהו כבר פתח.';
 
   @override
   String get pairCreateTitle => 'פתיחת אתגר חדש';
 
   @override
-  String get pairCreateSubtitle =>
-      'בוחרים תאריכים ומקבלים קוד לשלוח לבן/בת הזוג';
+  String get pairCreateSubtitle => 'בוחרים תאריכים ומקבלים קוד לשיתוף';
 
   @override
   String get pairJoinTitle => 'הצטרפות עם קוד';
 
   @override
-  String get pairJoinSubtitle => 'בן/בת הזוג כבר פתחו אתגר? הזינו את הקוד';
+  String get pairJoinSubtitle => 'קיבלתם קוד? הזינו אותו כאן';
 
   @override
   String get pairStartDate => 'תאריך התחלה';
@@ -168,7 +167,8 @@ class AppLocalizationsHe extends AppLocalizations {
   String get pairInviteTitle => 'קוד ההזמנה שלכם';
 
   @override
-  String get pairInviteExplain => 'שלחו את הקוד לבן/בת הזוג כדי להצטרף לאתגר.';
+  String get pairInviteExplain =>
+      'שתפו את הקוד עם מי שתרצו שיצטרפו לאתגר (עד 8 משתתפים).';
 
   @override
   String get pairCopy => 'העתקה';
@@ -189,10 +189,12 @@ class AppLocalizationsHe extends AppLocalizations {
   String get settingsChallenge => 'האתגר';
 
   @override
-  String get settingsPartner => 'בן/בת הזוג';
+  String get settingsWaitingForPartner => 'עוד אף אחד לא הצטרף';
 
   @override
-  String get settingsWaitingForPartner => 'מחכים שבן/בת הזוג יצטרפו';
+  String settingsMembers(int count, int max) {
+    return 'משתתפים ($count/$max)';
+  }
 
   @override
   String get settingsDates => 'תאריכים';
@@ -246,7 +248,7 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String demoModeBanner(String code) {
-    return 'מצב הדגמה – הנתונים לא נשמרים. הצטרפו עם הקוד $code כדי להתחבר לשותפה לדוגמה.';
+    return 'מצב הדגמה – הנתונים לא נשמרים. הצטרפו עם הקוד $code כדי לנסות עם משתתפת לדוגמה.';
   }
 
   @override
@@ -265,7 +267,7 @@ class AppLocalizationsHe extends AppLocalizations {
   String get errInvalidCode => 'לא נמצא אתגר עם הקוד הזה';
 
   @override
-  String get errPairFull => 'באתגר הזה כבר יש שני אנשים';
+  String get errPairFull => 'האתגר הזה מלא';
 
   @override
   String get errAlreadyPaired => 'את/ה כבר באתגר';
@@ -299,6 +301,26 @@ class AppLocalizationsHe extends AppLocalizations {
   String widgetNoPhotos(String name) {
     return 'עוד אין תמונות של $name היום';
   }
+
+  @override
+  String widgetMemberPercent(String name, int percent) {
+    return '$name $percent%';
+  }
+
+  @override
+  String widgetGroupPhotos(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count תמונות היום',
+      one: 'תמונה אחת היום',
+      zero: 'עוד אין תמונות היום',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get widgetNoPhotosGroup => 'עוד אין תמונות מהקבוצה היום';
 
   @override
   String get photoAdd => 'הוספת תמונה';
@@ -441,7 +463,7 @@ class AppLocalizationsHe extends AppLocalizations {
   String get todayAllDone => 'כל היעדים של היום הושלמו! 🎉';
 
   @override
-  String get todayPartnerFallbackName => 'בן/בת הזוג';
+  String get todayPartnerFallbackName => 'משתתף/ת';
 
   @override
   String todayPartnerPercent(int percent) {
@@ -457,10 +479,10 @@ class AppLocalizationsHe extends AppLocalizations {
   }
 
   @override
-  String get todayWaitingTitle => 'מחכים לבן/בת הזוג';
+  String get todayWaitingTitle => 'הזמינו אנשים לאתגר';
 
   @override
-  String get todayWaitingBody => 'שלחו את הקוד הזה כדי שיצטרפו לאתגר שלכם:';
+  String get todayWaitingBody => 'שתפו את הקוד כדי שאחרים יצטרפו:';
 
   @override
   String get todayYourGoals => 'היעדים שלי';

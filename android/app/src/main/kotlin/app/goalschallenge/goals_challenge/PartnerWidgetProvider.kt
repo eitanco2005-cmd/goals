@@ -13,8 +13,8 @@ import es.antonborri.home_widget.HomeWidgetLaunchIntent
 import es.antonborri.home_widget.HomeWidgetProvider
 
 /**
- * Home-screen widget: rotates through the partner's photos of today, with
- * their name, daily % and the goals they completed.
+ * Home-screen widget: rotates through the group members' photos of today, with
+ * their names, daily % and (for one other member) the goals they completed.
  *
  * The Flutter app (and its 15-minute background job) writes the data and
  * calls updateWidget; this class only renders it.

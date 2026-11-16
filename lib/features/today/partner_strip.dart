@@ -12,7 +12,7 @@ import '../photos/photo_thumbnails.dart';
 import 'progress_ring.dart';
 import 'today_providers.dart';
 
-/// Partner strip, or a "waiting for your partner" card until they join.
+/// One strip per other group member, or an invite card while I'm alone.
 class PartnerSection extends ConsumerWidget {
   const PartnerSection({super.key, required this.dailyGoals});
 
@@ -22,22 +22,32 @@ class PartnerSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final pair = ref.watch(pairProvider).value;
     if (pair == null) return const SizedBox.shrink();
-    final partnerUid = ref.watch(partnerUidProvider);
-    if (partnerUid == null) return WaitingForPartnerCard(code: pair.inviteCode);
-    return PartnerStrip(
-      name:
-          pair.memberNames[partnerUid] ??
-          AppLocalizations.of(context).todayPartnerFallbackName,
-      summary: ref.watch(partnerTodaySummaryProvider).value,
-      dailyGoals: dailyGoals,
-      photos: ref.watch(partnerTodayPhotosProvider),
-      photoGoals: ref.watch(challengeProvider).value?.goals,
-      myUid: ref.watch(authStateProvider.select((a) => a.value?.uid)),
+    final others = ref.watch(otherMemberUidsProvider);
+    if (others.isEmpty) return WaitingForPartnerCard(code: pair.inviteCode);
+    final myUid = ref.watch(authStateProvider.select((a) => a.value?.uid));
+    final goals = ref.watch(challengeProvider).value?.goals;
+    final fallback = AppLocalizations.of(context).todayPartnerFallbackName;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final (i, uid) in others.indexed) ...[
+          if (i > 0) const SizedBox(height: 12),
+          PartnerStrip(
+            key: ValueKey('member-$uid'),
+            name: pair.memberNames[uid] ?? fallback,
+            summary: ref.watch(memberTodaySummaryProvider(uid)).value,
+            dailyGoals: dailyGoals,
+            photos: ref.watch(memberTodayPhotosNewestFirstProvider(uid)),
+            photoGoals: goals,
+            myUid: myUid,
+          ),
+        ],
+      ],
     );
   }
 }
 
-/// The partner's day at a glance: name, % and a ✔/✘ dot per goal.
+/// One member's day at a glance: name, % and a ✔/✘ dot per goal.
 /// Built ONLY from their public [DaySummary].
 class PartnerStrip extends StatelessWidget {
   const PartnerStrip({
@@ -54,7 +64,7 @@ class PartnerStrip extends StatelessWidget {
   final DaySummary? summary;
   final List<GoalDef> dailyGoals;
 
-  /// The partner's photos today, newest first. The row is hidden when empty.
+  /// The member's photos today, newest first. The row is hidden when empty.
   final List<GoalPhoto> photos;
 
   /// Goals used to label [photos] (all challenge goals, so photos of weekly

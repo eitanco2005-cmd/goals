@@ -11,18 +11,24 @@ import 'dates.dart';
 // Repositories – overridden in main.dart (Firebase or in-memory demo) and in
 // tests (in-memory).
 // --------------------------------------------------------------------------
-final authRepositoryProvider =
-    Provider<AuthRepository>((ref) => throw UnimplementedError());
-final profileRepositoryProvider =
-    Provider<ProfileRepository>((ref) => throw UnimplementedError());
-final pairRepositoryProvider =
-    Provider<PairRepository>((ref) => throw UnimplementedError());
-final challengeRepositoryProvider =
-    Provider<ChallengeRepository>((ref) => throw UnimplementedError());
-final logRepositoryProvider =
-    Provider<LogRepository>((ref) => throw UnimplementedError());
-final photoRepositoryProvider =
-    Provider<PhotoRepository>((ref) => throw UnimplementedError());
+final authRepositoryProvider = Provider<AuthRepository>(
+  (ref) => throw UnimplementedError(),
+);
+final profileRepositoryProvider = Provider<ProfileRepository>(
+  (ref) => throw UnimplementedError(),
+);
+final pairRepositoryProvider = Provider<PairRepository>(
+  (ref) => throw UnimplementedError(),
+);
+final challengeRepositoryProvider = Provider<ChallengeRepository>(
+  (ref) => throw UnimplementedError(),
+);
+final logRepositoryProvider = Provider<LogRepository>(
+  (ref) => throw UnimplementedError(),
+);
+final photoRepositoryProvider = Provider<PhotoRepository>(
+  (ref) => throw UnimplementedError(),
+);
 
 /// True when running against the in-memory demo backend.
 final isDemoModeProvider = Provider<bool>((ref) => false);
@@ -31,7 +37,8 @@ final isDemoModeProvider = Provider<bool>((ref) => false);
 // Session state
 // --------------------------------------------------------------------------
 final authStateProvider = StreamProvider<AppUser?>(
-    (ref) => ref.watch(authRepositoryProvider).authStateChanges());
+  (ref) => ref.watch(authRepositoryProvider).authStateChanges(),
+);
 
 final profileProvider = StreamProvider<UserProfile?>((ref) {
   final user = ref.watch(authStateProvider).value;
@@ -51,17 +58,19 @@ final challengeProvider = StreamProvider<Challenge?>((ref) {
   return ref.watch(challengeRepositoryProvider).watchActiveChallenge(pairId);
 });
 
-/// The partner's uid, or null until the partner has joined.
-final partnerUidProvider = Provider<String?>((ref) {
+/// The other members of my group (everyone but me), in joining order.
+/// Empty until someone joins.
+final otherMemberUidsProvider = Provider<List<String>>((ref) {
   final uid = ref.watch(authStateProvider).value?.uid;
   final pair = ref.watch(pairProvider).value;
-  if (uid == null || pair == null) return null;
-  return pair.partnerOf(uid);
+  if (uid == null || pair == null) return const [];
+  return pair.othersOf(uid);
 });
 
 /// Today's logging-day key. Rolls over automatically at [dayStartHour].
 final todayKeyProvider = NotifierProvider<TodayKeyNotifier, String>(
-    TodayKeyNotifier.new);
+  TodayKeyNotifier.new,
+);
 
 class TodayKeyNotifier extends Notifier<String> {
   Timer? _timer;
@@ -95,7 +104,8 @@ class TodayKeyNotifier extends Notifier<String> {
 // --------------------------------------------------------------------------
 final preLoginLanguageProvider =
     NotifierProvider<PreLoginLanguageNotifier, String>(
-        PreLoginLanguageNotifier.new);
+      PreLoginLanguageNotifier.new,
+    );
 
 class PreLoginLanguageNotifier extends Notifier<String> {
   @override
@@ -104,7 +114,8 @@ class PreLoginLanguageNotifier extends Notifier<String> {
 }
 
 final localeProvider = Provider<Locale>((ref) {
-  final profileLang =
-      ref.watch(profileProvider.select((p) => p.value?.languageCode));
+  final profileLang = ref.watch(
+    profileProvider.select((p) => p.value?.languageCode),
+  );
   return Locale(profileLang ?? ref.watch(preLoginLanguageProvider));
 });

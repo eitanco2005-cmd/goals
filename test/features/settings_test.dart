@@ -13,15 +13,17 @@ Future<void> _openSettings(WidgetTester tester) async {
 }
 
 void main() {
-  testWidgets('shows partner, dates and a disabled edit-goals tile', (
+  testWidgets('shows members, dates and a disabled edit-goals tile', (
     tester,
   ) async {
     await pumpApp(tester, await signedInPairedBackend());
     await _openSettings(tester);
 
     expect(find.text('Me'), findsOneWidget);
+    expect(find.text('Members (2/8)'), findsOneWidget);
     expect(find.text('Noa'), findsOneWidget);
-    expect(find.byType(InviteCodeCard), findsNothing);
+    // The group has room, so the code to invite more people stays visible.
+    expect(find.byType(InviteCodeCard), findsOneWidget);
     expect(find.textContaining('Day 21 of 90'), findsOneWidget);
     final editGoals = tester.widget<ListTile>(
       find.widgetWithText(ListTile, 'Edit goals'),
@@ -36,7 +38,8 @@ void main() {
     await pumpApp(tester, backend);
     await _openSettings(tester);
 
-    expect(find.text('Waiting for your partner to join'), findsOneWidget);
+    expect(find.text('No one else has joined yet'), findsOneWidget);
+    expect(find.text('Members (1/8)'), findsOneWidget);
     expect(find.byType(InviteCodeCard), findsWidgets);
     expect(find.text('Jan 1, 2026 – Dec 31, 2026'), findsOneWidget);
   });
@@ -85,6 +88,11 @@ void main() {
     await pumpApp(tester, await signedInPairedBackend());
     await _openSettings(tester);
 
+    await tester.scrollUntilVisible(
+      find.widgetWithText(ListTile, 'Sign out'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.tap(find.widgetWithText(ListTile, 'Sign out'));
     await tester.pumpAndSettle();
     expect(find.text('Sign out?'), findsOneWidget);

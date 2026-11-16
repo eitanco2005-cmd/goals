@@ -125,7 +125,7 @@ abstract class AppLocalizations {
   /// No description provided for @authTagline.
   ///
   /// In en, this message translates to:
-  /// **'Two people, one challenge. Build healthy habits together, one day at a time.'**
+  /// **'One challenge, together. Build healthy habits day by day and keep each other going.'**
   String get authTagline;
 
   /// No description provided for @authSignInTitle.
@@ -257,7 +257,7 @@ abstract class AppLocalizations {
   /// No description provided for @pairIntro.
   ///
   /// In en, this message translates to:
-  /// **'Start a new challenge and invite your partner, or join the challenge your partner already started.'**
+  /// **'Start a new challenge and invite others, or join a challenge someone already started.'**
   String get pairIntro;
 
   /// No description provided for @pairCreateTitle.
@@ -269,7 +269,7 @@ abstract class AppLocalizations {
   /// No description provided for @pairCreateSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Pick the dates and get a code to send your partner'**
+  /// **'Pick the dates and get a code to share'**
   String get pairCreateSubtitle;
 
   /// No description provided for @pairJoinTitle.
@@ -281,7 +281,7 @@ abstract class AppLocalizations {
   /// No description provided for @pairJoinSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Your partner already started? Enter their code'**
+  /// **'Got a code from someone? Enter it here'**
   String get pairJoinSubtitle;
 
   /// No description provided for @pairStartDate.
@@ -377,7 +377,7 @@ abstract class AppLocalizations {
   /// No description provided for @pairInviteExplain.
   ///
   /// In en, this message translates to:
-  /// **'Send this code to your partner so they can join the challenge.'**
+  /// **'Share this code with the people you want in the challenge (up to 8).'**
   String get pairInviteExplain;
 
   /// No description provided for @pairCopy.
@@ -416,17 +416,17 @@ abstract class AppLocalizations {
   /// **'Challenge'**
   String get settingsChallenge;
 
-  /// No description provided for @settingsPartner.
-  ///
-  /// In en, this message translates to:
-  /// **'Partner'**
-  String get settingsPartner;
-
   /// No description provided for @settingsWaitingForPartner.
   ///
   /// In en, this message translates to:
-  /// **'Waiting for your partner to join'**
+  /// **'No one else has joined yet'**
   String get settingsWaitingForPartner;
+
+  /// No description provided for @settingsMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Members ({count}/{max})'**
+  String settingsMembers(int count, int max);
 
   /// No description provided for @settingsDates.
   ///
@@ -521,7 +521,7 @@ abstract class AppLocalizations {
   /// No description provided for @demoModeBanner.
   ///
   /// In en, this message translates to:
-  /// **'Demo mode – data is not saved. Join code {code} to pair with a demo partner.'**
+  /// **'Demo mode – data is not saved. Join with code {code} to try it with a demo member.'**
   String demoModeBanner(String code);
 
   /// No description provided for @errInvalidCredentials.
@@ -557,7 +557,7 @@ abstract class AppLocalizations {
   /// No description provided for @errPairFull.
   ///
   /// In en, this message translates to:
-  /// **'This challenge already has two people'**
+  /// **'This challenge is full'**
   String get errPairFull;
 
   /// No description provided for @errAlreadyPaired.
@@ -613,6 +613,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No photos from {name} yet today'**
   String widgetNoPhotos(String name);
+
+  /// No description provided for @widgetMemberPercent.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} {percent}%'**
+  String widgetMemberPercent(String name, int percent);
+
+  /// No description provided for @widgetGroupPhotos.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No photos yet today} =1{1 photo today} other{{count} photos today}}'**
+  String widgetGroupPhotos(int count);
+
+  /// No description provided for @widgetNoPhotosGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'No photos from the group yet today'**
+  String get widgetNoPhotosGroup;
 
   /// No description provided for @photoAdd.
   ///
@@ -833,7 +851,7 @@ abstract class AppLocalizations {
   /// No description provided for @todayPartnerFallbackName.
   ///
   /// In en, this message translates to:
-  /// **'Your partner'**
+  /// **'Member'**
   String get todayPartnerFallbackName;
 
   /// No description provided for @todayPartnerPercent.
@@ -857,13 +875,13 @@ abstract class AppLocalizations {
   /// No description provided for @todayWaitingTitle.
   ///
   /// In en, this message translates to:
-  /// **'Waiting for your partner'**
+  /// **'Invite people to your challenge'**
   String get todayWaitingTitle;
 
   /// No description provided for @todayWaitingBody.
   ///
   /// In en, this message translates to:
-  /// **'Send them this code so they can join your challenge:'**
+  /// **'Share this code so others can join:'**
   String get todayWaitingBody;
 
   /// No description provided for @todayYourGoals.

@@ -46,7 +46,8 @@ class AppException implements Exception {
   final Object? details;
 
   @override
-  String toString() => 'AppException($code${details == null ? '' : ': $details'})';
+  String toString() =>
+      'AppException($code${details == null ? '' : ': $details'})';
 }
 
 abstract interface class AuthRepository {
@@ -166,7 +167,10 @@ abstract interface class LogRepository {
     required String from,
     required String to,
   });
-  Future<void> addWorkout({required String pairId, required WorkoutEntry entry});
+  Future<void> addWorkout({
+    required String pairId,
+    required WorkoutEntry entry,
+  });
   Future<void> deleteWorkout({required String pairId, required String id});
 }
 

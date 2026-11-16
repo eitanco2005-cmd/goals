@@ -9,6 +9,7 @@ import '../../core/dates.dart';
 import '../../data/firebase/firebase_backend.dart';
 import '../../data/firebase/firebase_setup.dart';
 import '../../l10n/gen/app_localizations.dart';
+import 'widget_snapshot.dart';
 import 'widget_sync.dart';
 
 /// Unique name of the periodic widget refresh (one per install).
@@ -52,7 +53,7 @@ void widgetCallbackDispatcher() {
   });
 }
 
-/// Loads the partner's day from Firebase and updates the widget. Does
+/// Loads the group's day from Firebase and updates the widget. Does
 /// nothing when signed out or not paired yet.
 Future<void> refreshWidgetInBackground() async {
   if (!useFirebase) return;
@@ -66,8 +67,8 @@ Future<void> refreshWidgetInBackground() async {
   final pairId = profile?.pairId;
   if (profile == null || pairId == null) return;
   final pair = await backend.watchPair(pairId).first.timeout(wait);
-  final partnerUid = pair?.partnerOf(user.uid);
-  if (pair == null || partnerUid == null) return;
+  final others = pair?.othersOf(user.uid) ?? const <String>[];
+  if (pair == null || others.isEmpty) return;
   final challenge = await backend
       .watchActiveChallenge(pairId)
       .first
@@ -76,21 +77,27 @@ Future<void> refreshWidgetInBackground() async {
 
   final today = todayKey();
   final photos = await backend
-      .fetchPhotos(pairId: pairId, uid: partnerUid, from: today, to: today)
+      .fetchPhotos(pairId: pairId, from: today, to: today)
       .timeout(wait);
-  final summary = await backend
-      .watchDaySummary(pairId: pairId, uid: partnerUid, date: today)
-      .first
-      .timeout(wait);
+  final members = [
+    for (final uid in others)
+      WidgetMember(
+        uid: uid,
+        name: pair.memberNames[uid] ?? '',
+        summary: await backend
+            .watchDaySummary(pairId: pairId, uid: uid, date: today)
+            .first
+            .timeout(wait),
+      ),
+  ];
 
-  await syncPartnerWidget(
+  await syncGroupWidget(
     store: HomeWidgetStore(),
     photoRepo: backend,
     pairId: pairId,
     l: lookupAppLocalizations(Locale(profile.languageCode)),
-    partnerName: pair.memberNames[partnerUid] ?? '',
-    summary: summary,
+    members: members,
     goals: challenge.goals,
-    partnerPhotos: photos,
+    photos: photos,
   );
 }

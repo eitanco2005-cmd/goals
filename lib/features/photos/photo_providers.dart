@@ -40,11 +40,20 @@ final myGoalPhotosProvider = Provider.family<List<GoalPhoto>, String>((
   ];
 });
 
-/// The partner's photos today, newest first. Empty until they joined.
-final partnerTodayPhotosProvider = Provider<List<GoalPhoto>>((ref) {
-  final partner = ref.watch(partnerUidProvider);
-  if (partner == null) return const [];
-  return ref.watch(userTodayPhotosProvider(partner)).reversed.toList();
+/// A member's photos today, newest first.
+final memberTodayPhotosNewestFirstProvider =
+    Provider.family<List<GoalPhoto>, String>(
+      (ref, uid) => ref.watch(userTodayPhotosProvider(uid)).reversed.toList(),
+    );
+
+/// All other members' photos today, newest first. Empty while I'm alone.
+final othersTodayPhotosProvider = Provider<List<GoalPhoto>>((ref) {
+  final others = ref.watch(otherMemberUidsProvider).toSet();
+  if (others.isEmpty) return const [];
+  return [
+    for (final p in ref.watch(todayPhotosProvider).value ?? const <GoalPhoto>[])
+      if (others.contains(p.uid)) p,
+  ].reversed.toList();
 });
 
 /// Full-size JPEG of a photo of the current pair (the repository caches it).

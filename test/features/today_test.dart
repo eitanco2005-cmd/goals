@@ -162,7 +162,7 @@ void main() {
     });
   });
 
-  testWidgets('paired user sees all daily goals and the partner strip', (
+  testWidgets('paired user sees all daily goals and the member strip', (
     tester,
   ) async {
     final b = await signedInPairedBackend();
@@ -173,7 +173,7 @@ void main() {
       expect(find.text(g.titleEn), findsOneWidget);
     }
     expect(find.text('Noa'), findsOneWidget);
-    expect(find.text('Waiting for your partner'), findsNothing);
+    expect(find.text('Invite people to your challenge'), findsNothing);
     expect(_inHeader(find.text('0%')), findsOneWidget);
     expect(_inHeader(find.text('0 of 9 goals done')), findsOneWidget);
     expect(_inHeader(find.text('Day 21 of 90')), findsOneWidget);
@@ -349,13 +349,13 @@ void main() {
     expect(find.text("All of today's goals are done! 🎉"), findsOneWidget);
   });
 
-  testWidgets('solo user sees waiting-for-partner card with invite code', (
+  testWidgets('solo user sees the invite card with the code', (
     tester,
   ) async {
     final b = await signedInSoloBackend();
     await pumpApp(tester, b, size: _tall);
 
-    expect(find.text('Waiting for your partner'), findsOneWidget);
+    expect(find.text('Invite people to your challenge'), findsOneWidget);
     final card = tester.widget<InviteCodeCard>(find.byType(InviteCodeCard));
     expect(card.code, hasLength(6));
     expect(find.text('Noa'), findsNothing);
@@ -487,6 +487,6 @@ void main() {
     final b = await signedInSoloBackend(languageCode: 'he');
     await pumpApp(tester, b, size: const Size(360, 3400));
     expect(tester.takeException(), isNull);
-    expect(find.text('מחכים לבן/בת הזוג'), findsOneWidget);
+    expect(find.text('הזמינו אנשים לאתגר'), findsOneWidget);
   });
 }

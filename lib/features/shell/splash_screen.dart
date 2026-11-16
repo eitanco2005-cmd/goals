@@ -56,7 +56,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     if (user == null || _ensuring) return;
     _ensuring = true;
     try {
-      await ref.read(profileRepositoryProvider).ensureProfile(
+      await ref
+          .read(profileRepositoryProvider)
+          .ensureProfile(
             user,
             languageCode: ref.read(preLoginLanguageProvider),
           );
@@ -81,7 +83,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     final signedIn = ref.watch(authStateProvider).value != null;
-    final profileFailed = signedIn &&
+    final profileFailed =
+        signedIn &&
         profileStatusOf(ref.watch(profileProvider)) == ProfileStatus.error;
     if (!_timedOut && !_ensureFailed && !profileFailed) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -95,18 +98,19 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.cloud_off_outlined,
-                    size: 48, color: Theme.of(context).colorScheme.outline),
+                Icon(
+                  Icons.cloud_off_outlined,
+                  size: 48,
+                  color: Theme.of(context).colorScheme.outline,
+                ),
                 const SizedBox(height: 16),
                 Text(l.sessionStuckMessage, textAlign: TextAlign.center),
                 const SizedBox(height: 24),
-                FilledButton(
-                    onPressed: _retry, child: Text(l.sessionTryAgain)),
+                FilledButton(onPressed: _retry, child: Text(l.sessionTryAgain)),
                 if (signedIn) ...[
                   const SizedBox(height: 8),
                   TextButton(
-                    onPressed: () =>
-                        ref.read(authRepositoryProvider).signOut(),
+                    onPressed: () => ref.read(authRepositoryProvider).signOut(),
                     child: Text(l.signOut),
                   ),
                 ],

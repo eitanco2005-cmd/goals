@@ -75,15 +75,16 @@ class _CreateChallengeFormState extends ConsumerState<CreateChallengeForm> {
     final l = AppLocalizations.of(context);
     final user = ref.read(authStateProvider).value;
     if (user == null) return;
-    final name = ref.read(profileProvider).value?.displayName ??
-        user.displayName ??
-        '';
+    final name =
+        ref.read(profileProvider).value?.displayName ?? user.displayName ?? '';
     setState(() {
       _loading = true;
       _error = null;
     });
     try {
-      await ref.read(pairRepositoryProvider).createPair(
+      await ref
+          .read(pairRepositoryProvider)
+          .createPair(
             uid: user.uid,
             displayName: name,
             startDate: dayKey(_start),
@@ -201,16 +202,21 @@ class _GoalsPreview extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final daily =
-        defaultGoals.where((g) => g.period == GoalPeriod.daily).toList();
-    final weekly =
-        defaultGoals.where((g) => g.period == GoalPeriod.weekly).toList();
+    final daily = defaultGoals
+        .where((g) => g.period == GoalPeriod.daily)
+        .toList();
+    final weekly = defaultGoals
+        .where((g) => g.period == GoalPeriod.weekly)
+        .toList();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(l.pairGoalsIncluded,
-            style: theme.textTheme.titleSmall
-                ?.copyWith(fontWeight: FontWeight.w700)),
+        Text(
+          l.pairGoalsIncluded,
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
         const SizedBox(height: 8),
         _GoalGroup(title: l.pairDailyGoals, goals: daily, lang: languageCode),
         const SizedBox(height: 8),
@@ -218,13 +224,19 @@ class _GoalsPreview extends StatelessWidget {
         const SizedBox(height: 8),
         Row(
           children: [
-            Icon(Icons.edit_note,
-                size: 18, color: theme.colorScheme.onSurfaceVariant),
+            Icon(
+              Icons.edit_note,
+              size: 18,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
             const SizedBox(width: 6),
             Expanded(
-              child: Text(l.pairGoalsEditLater,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant)),
+              child: Text(
+                l.pairGoalsEditLater,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
             ),
           ],
         ),
@@ -250,9 +262,12 @@ class _GoalGroup extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title,
-            style: theme.textTheme.labelMedium
-                ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+        Text(
+          title,
+          style: theme.textTheme.labelMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
         const SizedBox(height: 6),
         Wrap(
           spacing: 6,
@@ -262,12 +277,15 @@ class _GoalGroup extends StatelessWidget {
               Container(
                 padding: const EdgeInsetsDirectional.fromSTEB(8, 4, 10, 4),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.secondaryContainer
-                      .withValues(alpha: 0.6),
+                  color: theme.colorScheme.secondaryContainer.withValues(
+                    alpha: 0.6,
+                  ),
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: Text('${g.icon} ${g.title(lang)}',
-                    style: theme.textTheme.bodySmall),
+                child: Text(
+                  '${g.icon} ${g.title(lang)}',
+                  style: theme.textTheme.bodySmall,
+                ),
               ),
           ],
         ),

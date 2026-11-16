@@ -27,7 +27,7 @@ void main() {
       goals: defaultGoals,
     );
     expect(pair.inviteCode, hasLength(6));
-    expect(pair.isComplete, isFalse);
+    expect(pair.memberUids, hasLength(1));
 
     await b.signOut();
     final c = await b.signUp(
@@ -47,8 +47,8 @@ void main() {
       displayName: 'C',
       code: pair.inviteCode.toLowerCase(),
     );
-    expect(joined.isComplete, isTrue);
-    expect(joined.partnerOf(c.uid), a.uid);
+    expect(joined.memberUids, hasLength(2));
+    expect(joined.othersOf(c.uid), [a.uid]);
 
     final challenge = (await b.watchActiveChallenge(pair.id).first)!;
     await b.setGoalValue(
@@ -79,7 +79,7 @@ void main() {
       displayName: 'Me',
       code: MemoryBackend.demoInviteCode,
     );
-    expect(pair.isComplete, isTrue);
+    expect(pair.memberUids, hasLength(2));
     final partnerToday = await b
         .watchSummaries(
           pairId: pair.id,
@@ -258,5 +258,44 @@ void main() {
       expect((thumb.width, thumb.height), (demoThumbWidth, demoThumbHeight));
       expect(identical(demoPhoto(motif), photo), isTrue); // cached
     }
+  });
+
+  test('groups take up to maxGroupMembers people', () async {
+    final b = MemoryBackend();
+    final first = await b.signUp(
+      email: 'm1@x.com',
+      password: 'secret1',
+      displayName: 'M1',
+      languageCode: 'en',
+    );
+    final pair = await b.createPair(
+      uid: first.uid,
+      displayName: 'M1',
+      startDate: '2026-11-15',
+      endDate: '2026-12-14',
+      goals: defaultGoals,
+    );
+    for (var i = 2; i <= maxGroupMembers; i++) {
+      final u = await b.signUp(
+        email: 'm$i@x.com',
+        password: 'secret1',
+        displayName: 'M$i',
+        languageCode: 'en',
+      );
+      await b.joinPair(uid: u.uid, displayName: 'M$i', code: pair.inviteCode);
+    }
+    final full = (await b.watchPair(pair.id).first)!;
+    expect(full.isFull, isTrue);
+    expect(full.othersOf(first.uid), hasLength(maxGroupMembers - 1));
+    final late = await b.signUp(
+      email: 'late@x.com',
+      password: 'secret1',
+      displayName: 'L',
+      languageCode: 'en',
+    );
+    await expectLater(
+      b.joinPair(uid: late.uid, displayName: 'L', code: pair.inviteCode),
+      throwsA(isA<AppException>().having((e) => e.code, 'code', 'pair-full')),
+    );
   });
 }

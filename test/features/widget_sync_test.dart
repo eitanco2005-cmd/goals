@@ -73,8 +73,7 @@ void main() {
     test('title, met goals and captions (English)', () {
       final s = buildWidgetSnapshot(
         l: en,
-        partnerName: 'Noa',
-        summary: summary,
+        members: [WidgetMember(uid: 'p', name: 'Noa', summary: summary)],
         goals: defaultGoals,
         photos: [
           photo('b', GoalIds.workouts, 20),
@@ -96,8 +95,7 @@ void main() {
     test('Hebrew is RTL; photos without a stored file are skipped', () {
       final s = buildWidgetSnapshot(
         l: he,
-        partnerName: 'נועה',
-        summary: null,
+        members: const [WidgetMember(uid: 'p', name: 'נועה', summary: null)],
         goals: defaultGoals,
         photos: [photo('a', GoalIds.water, 1), photo('x', GoalIds.water, 2)],
         paths: {'a': '/w/a.jpg'},
@@ -107,6 +105,30 @@ void main() {
       expect(s.status, '0/9');
       expect(s.emptyText, contains('נועה'));
       expect(s.photos.map((p) => p.id), ['a']);
+    });
+
+    test('a group: everyone\'s %, best first, and who took each photo', () {
+      DaySummary pct(String uid, int p) => DaySummary(
+        uid: uid,
+        date: '2026-11-16',
+        statuses: const {},
+        percent: p,
+      );
+      final s = buildWidgetSnapshot(
+        l: en,
+        members: [
+          WidgetMember(uid: 'p', name: 'Noa', summary: pct('p', 40)),
+          WidgetMember(uid: 'q', name: 'Dan', summary: pct('q', 75)),
+          const WidgetMember(uid: 'r', name: 'Lior', summary: null),
+        ],
+        goals: defaultGoals,
+        photos: [photo('a', GoalIds.water, 7)],
+        paths: {'a': '/w/a.jpg'},
+      );
+      expect(s.title, 'Dan 75% · Noa 40% · Lior 0%');
+      expect(s.status, '1 photo today');
+      expect(s.emptyText, 'No photos from the group yet today');
+      expect(s.photos.single.caption, 'Noa · 💧 8 glasses of water · 13:07');
     });
   });
 
@@ -123,15 +145,16 @@ void main() {
       );
       expect(noa, isNotEmpty);
 
-      Future<WidgetSnapshot> sync() => syncPartnerWidget(
+      Future<WidgetSnapshot> sync() => syncGroupWidget(
         store: store,
         photoRepo: b,
         pairId: 'demo-pair',
         l: en,
-        partnerName: 'Noa',
-        summary: null,
+        members: const [
+          WidgetMember(uid: 'demo-partner', name: 'Noa', summary: null),
+        ],
         goals: defaultGoals,
-        partnerPhotos: noa,
+        photos: noa,
       );
 
       final first = await sync();
@@ -149,15 +172,14 @@ void main() {
     test('a photo that fails to download is skipped, not fatal', () async {
       final b = await signedInPairedBackend();
       final store = FakeWidgetStore();
-      final s = await syncPartnerWidget(
+      final s = await syncGroupWidget(
         store: store,
         photoRepo: b,
         pairId: 'demo-pair',
         l: en,
-        partnerName: 'Noa',
-        summary: null,
+        members: const [WidgetMember(uid: 'p', name: 'Noa', summary: null)],
         goals: defaultGoals,
-        partnerPhotos: [photo('missing', GoalIds.water, 1)],
+        photos: [photo('missing', GoalIds.water, 1)],
       );
       expect(s.photos, isEmpty);
       expect(store.published, hasLength(1));

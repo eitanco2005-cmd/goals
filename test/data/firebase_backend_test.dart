@@ -98,7 +98,7 @@ void main() {
     expect(pair.inviteCode, hasLength(6));
     expect(pair.inviteCode, matches(RegExp(r'^[A-HJ-NP-Z2-9]{6}$')));
     expect(pair.memberUids, [a.uid]);
-    expect(pair.isComplete, isFalse);
+    expect(pair.memberUids, hasLength(1));
 
     expect((await b.watchPair(pair.id).first)!.memberNames, {a.uid: 'A'});
     expect((await b.watchProfile(a.uid).first)!.pairId, pair.id);
@@ -128,8 +128,8 @@ void main() {
       );
 
       final joined = await join(c, pair.inviteCode.toLowerCase());
-      expect(joined.isComplete, isTrue);
-      expect(joined.partnerOf(c.uid), a.uid);
+      expect(joined.memberUids, hasLength(2));
+      expect(joined.othersOf(c.uid), [a.uid]);
       final stored = (await b.watchPair(pair.id).first)!;
       expect(stored.memberUids, [a.uid, c.uid]);
       expect(stored.memberNames, {a.uid: 'A', c.uid: 'C'});
@@ -140,10 +140,20 @@ void main() {
         b.joinPair(uid: c.uid, displayName: 'C', code: pair.inviteCode),
         throwsAppException('already-paired'),
       );
-      // A third user -> pair full.
-      final d = await signUp('D');
+      // More people can join until the group is full; the invite code
+      // stays open until the last spot is taken.
+      for (var i = 3; i <= maxGroupMembers; i++) {
+        await join(await signUp('M$i'), pair.inviteCode);
+        final invite = await db.doc('inviteCodes/${pair.inviteCode}').get();
+        expect(invite.data()!['open'], i < maxGroupMembers);
+      }
+      expect(
+        (await b.watchPair(pair.id).first)!.memberUids,
+        hasLength(maxGroupMembers),
+      );
+      final late = await signUp('Late');
       await expectLater(
-        b.joinPair(uid: d.uid, displayName: 'D', code: pair.inviteCode),
+        b.joinPair(uid: late.uid, displayName: 'Late', code: pair.inviteCode),
         throwsAppException('pair-full'),
       );
     },

@@ -89,24 +89,26 @@ class HomeWidgetStore implements WidgetStore {
 bool get platformHasWidget =>
     !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
 
-/// Refreshes the widget with the partner's photos of today.
+/// Refreshes the widget with the other members' day and photos.
 ///
 /// Shared by the running app and the background job. Downloads full images
 /// only for photos not stored yet, keeps at most [maxWidgetPhotos], and
 /// deletes older files. Photos that fail to download are skipped (the next
 /// sync retries them).
-Future<WidgetSnapshot> syncPartnerWidget({
+Future<WidgetSnapshot> syncGroupWidget({
   required WidgetStore store,
   required PhotoRepository photoRepo,
   required String pairId,
   required AppLocalizations l,
-  required String partnerName,
-  required DaySummary? summary,
+  required List<WidgetMember> members,
   required List<GoalDef> goals,
-  required List<GoalPhoto> partnerPhotos,
+  required List<GoalPhoto> photos,
 }) async {
-  final newest = [...partnerPhotos]
-    ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+  final others = {for (final m in members) m.uid};
+  final newest = [
+    for (final p in photos)
+      if (others.contains(p.uid)) p,
+  ]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
   final shown = newest.take(maxWidgetPhotos).toList();
   final paths = <String, String>{};
   for (final p in shown) {
@@ -123,8 +125,7 @@ Future<WidgetSnapshot> syncPartnerWidget({
   }
   final snapshot = buildWidgetSnapshot(
     l: l,
-    partnerName: partnerName,
-    summary: summary,
+    members: members,
     goals: goals,
     photos: shown,
     paths: paths,
@@ -139,36 +140,36 @@ final widgetStoreProvider = Provider<WidgetStore?>(
   (ref) => platformHasWidget ? HomeWidgetStore() : null,
 );
 
-/// While the app runs, keeps the widget in sync with the partner's day.
+/// While the app runs, keeps the widget in sync with the group's day.
 /// Watched by the home shell; changes are debounced into one sync.
-final partnerWidgetSyncProvider = Provider<void>((ref) {
+final groupWidgetSyncProvider = Provider<void>((ref) {
   final store = ref.watch(widgetStoreProvider);
   if (store == null) return;
   final pair = ref.watch(pairProvider).value;
-  final myUid = ref.watch(authStateProvider.select((a) => a.value?.uid));
-  final partnerUid = ref.watch(partnerUidProvider);
+  final others = ref.watch(otherMemberUidsProvider);
   final challenge = ref.watch(challengeProvider).value;
-  final photos = ref.watch(partnerTodayPhotosProvider);
-  final summary = ref.watch(partnerTodaySummaryProvider).value;
+  final photos = ref.watch(othersTodayPhotosProvider);
   final locale = ref.watch(localeProvider);
-  if (pair == null ||
-      myUid == null ||
-      partnerUid == null ||
-      challenge == null) {
-    return;
-  }
+  if (pair == null || others.isEmpty || challenge == null) return;
+  final members = [
+    for (final uid in others)
+      WidgetMember(
+        uid: uid,
+        name: pair.memberNames[uid] ?? '',
+        summary: ref.watch(memberTodaySummaryProvider(uid)).value,
+      ),
+  ];
   final repo = ref.watch(photoRepositoryProvider);
   final timer = Timer(widgetSyncDebounce, () async {
     try {
-      await syncPartnerWidget(
+      await syncGroupWidget(
         store: store,
         photoRepo: repo,
         pairId: pair.id,
         l: lookupAppLocalizations(Locale(locale.languageCode)),
-        partnerName: pair.memberNames[partnerUid] ?? '',
-        summary: summary,
+        members: members,
         goals: challenge.goals,
-        partnerPhotos: photos,
+        photos: photos,
       );
     } catch (e) {
       debugPrint('widget sync failed: $e');

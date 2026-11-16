@@ -23,9 +23,7 @@ class SettingsScreen extends ConsumerWidget {
         // Same large bold header as the Today screen.
         title: Text(
           l.settingsTitle,
-          style: Theme.of(context)
-              .textTheme
-              .headlineMedium
+          style: Theme.of(context).textTheme.headlineMedium
               ?.copyWith(fontWeight: FontWeight.w800),
         ),
       ),
@@ -38,15 +36,21 @@ class SettingsScreen extends ConsumerWidget {
               padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 16, 24),
               children: [
                 SettingsSection(
-                    title: l.settingsProfile, children: const [_ProfileTile()]),
+                  title: l.settingsProfile,
+                  children: const [_ProfileTile()],
+                ),
                 SettingsSection(
-                    title: l.language, children: const [_LanguageTile()]),
+                  title: l.language,
+                  children: const [_LanguageTile()],
+                ),
                 SettingsSection(
-                    title: l.settingsChallenge,
-                    children: const [_ChallengeTiles()]),
+                  title: l.settingsChallenge,
+                  children: const [_ChallengeTiles()],
+                ),
                 SettingsSection(
-                    title: l.settingsAccount,
-                    children: const [_SignOutTile()]),
+                  title: l.settingsAccount,
+                  children: const [_SignOutTile()],
+                ),
               ],
             ),
           ),
@@ -57,7 +61,10 @@ class SettingsScreen extends ConsumerWidget {
 }
 
 /// Runs [action] and shows a localized snackbar if it fails.
-Future<void> _guard(BuildContext context, Future<void> Function() action) async {
+Future<void> _guard(
+  BuildContext context,
+  Future<void> Function() action,
+) async {
   final l = AppLocalizations.of(context);
   final messenger = ScaffoldMessenger.of(context);
   try {
@@ -140,18 +147,24 @@ class _ChallengeTiles extends ConsumerWidget {
     final l = AppLocalizations.of(context);
     final pair = ref.watch(pairProvider).value;
     final challenge = ref.watch(challengeProvider).value;
-    final partnerUid = ref.watch(partnerUidProvider);
-    final partnerName = partnerUid == null ? null : pair?.memberNames[partnerUid];
+    final others = ref.watch(otherMemberUidsProvider);
+    final names = [for (final uid in others) pair?.memberNames[uid] ?? '']
+        .where((n) => n.isNotEmpty)
+        .toList();
 
     return Column(
       children: [
         if (pair != null)
           ListTile(
-            leading: const Icon(Icons.favorite_outline),
-            title: Text(l.settingsPartner),
-            subtitle: Text(partnerName ?? l.settingsWaitingForPartner),
+            leading: const Icon(Icons.group_outlined),
+            title: Text(
+              l.settingsMembers(pair.memberUids.length, maxGroupMembers),
+            ),
+            subtitle: Text(
+              names.isEmpty ? l.settingsWaitingForPartner : names.join(', '),
+            ),
           ),
-        if (pair != null && !pair.isComplete)
+        if (pair != null && !pair.isFull)
           Padding(
             padding: const EdgeInsetsDirectional.fromSTEB(12, 0, 12, 12),
             child: InviteCodeCard(code: pair.inviteCode),
@@ -176,8 +189,9 @@ class _DatesTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
     final today = ref.watch(todayKeyProvider);
-    final format =
-        DateFormat.yMMMd(Localizations.localeOf(context).toLanguageTag());
+    final format = DateFormat.yMMMd(
+      Localizations.localeOf(context).toLanguageTag(),
+    );
     final start = parseDayKey(challenge.startDate);
     final end = parseDayKey(challenge.endDate);
     final progress = challengeProgress(challenge, today);
@@ -190,8 +204,10 @@ class _DatesTile extends ConsumerWidget {
       ),
       trailing: !progress.inProgress
           ? null
-          : Text(l.settingsDayOf(progress.day, progress.total),
-              style: Theme.of(context).textTheme.labelMedium),
+          : Text(
+              l.settingsDayOf(progress.day, progress.total),
+              style: Theme.of(context).textTheme.labelMedium,
+            ),
     );
   }
 }
@@ -233,8 +249,10 @@ class _SignOutTile extends ConsumerWidget {
     final scheme = Theme.of(context).colorScheme;
     return ListTile(
       leading: Icon(Icons.logout, color: scheme.error),
-      title: Text(AppLocalizations.of(context).signOut,
-          style: TextStyle(color: scheme.error)),
+      title: Text(
+        AppLocalizations.of(context).signOut,
+        style: TextStyle(color: scheme.error),
+      ),
       onTap: () => _confirm(context, ref),
     );
   }

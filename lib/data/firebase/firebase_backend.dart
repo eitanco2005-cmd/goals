@@ -366,8 +366,8 @@ class FirebaseBackend
         failure = const AppException('invalid-code');
         return null;
       }
-      // A full pair is not readable by outsiders, so the invite code
-      // doc carries an `open` flag that is cleared when the pair fills.
+      // A full group is not readable by outsiders, so the invite code
+      // doc carries an `open` flag that is cleared when the group fills.
       if (invite.data()!['open'] != true) {
         failure = const AppException('pair-full');
         return null;
@@ -379,7 +379,7 @@ class FirebaseBackend
         return null;
       }
       final pair = Pair.fromMap(pairSnap.data()!);
-      if (pair.isComplete) {
+      if (pair.isFull) {
         failure = const AppException('pair-full');
         return null;
       }
@@ -396,8 +396,9 @@ class FirebaseBackend
           FieldPath(['memberNames', uid]): displayName,
           ..._stamp,
         })
-        ..update(inviteRef, {'open': false})
         ..update(userRef, {'pairId': pair.id, ..._stamp});
+      // The last free spot: close the invite code.
+      if (joined.isFull) tx.update(inviteRef, {'open': false});
       return joined;
     });
     if (failure != null) throw failure!;

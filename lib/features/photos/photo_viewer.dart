@@ -182,8 +182,14 @@ class _PhotoViewerState extends ConsumerState<PhotoViewer> {
     final goals = ref.watch(challengeProvider).value?.goals ?? const [];
     final photo = live[_photos[_index].id] ?? _photos[_index];
     final mine = photo.uid == myUid;
-    final partnerUid = myUid == null ? null : pair?.partnerOf(myUid);
-    final partnerReaction = mine ? photo.reactions[partnerUid] : null;
+    // On my own photo: everyone else's reactions, in group order.
+    final reactions = !mine
+        ? const <(String, String)>[]
+        : [
+            for (final uid in pair?.memberUids ?? const <String>[])
+              if (uid != myUid)
+                if (photo.reactions[uid] case final emoji?) (uid, emoji),
+          ];
     final goal = goals.where((g) => g.id == photo.goalId).firstOrNull;
     final l = AppLocalizations.of(context);
 
@@ -254,13 +260,21 @@ class _PhotoViewerState extends ConsumerState<PhotoViewer> {
                           selected: _myReaction(photo, myUid),
                           onTap: (e) => _toggleReaction(photo, e),
                         )
-                      else if (partnerReaction != null)
-                        _ReactionPill(
-                          text: l.photoPartnerReacted(
-                            pair?.memberNames[partnerUid] ??
-                                l.todayPartnerFallbackName,
-                            partnerReaction,
-                          ),
+                      else if (reactions.isNotEmpty)
+                        Wrap(
+                          alignment: WrapAlignment.center,
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            for (final (uid, emoji) in reactions)
+                              _ReactionPill(
+                                text: l.photoPartnerReacted(
+                                  pair?.memberNames[uid] ??
+                                      l.todayPartnerFallbackName,
+                                  emoji,
+                                ),
+                              ),
+                          ],
                         ),
                     ],
                   ),

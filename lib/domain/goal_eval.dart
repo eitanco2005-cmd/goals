@@ -19,8 +19,9 @@ DaySummary summarizeDay(DailyLog log, List<GoalDef> dailyGoals) {
     for (final g in dailyGoals) g.id: evaluateGoal(g, log.valueOf(g.id)),
   };
   final met = statuses.values.where((s) => s == GoalStatus.met).length;
-  final percent =
-      dailyGoals.isEmpty ? 0 : ((met / dailyGoals.length) * 100).round();
+  final percent = dailyGoals.isEmpty
+      ? 0
+      : ((met / dailyGoals.length) * 100).round();
   return DaySummary(
     uid: log.uid,
     date: log.date,
@@ -41,7 +42,8 @@ GoalStatus evaluateWorkouts(GoalDef goal, List<WorkoutEntry> weekEntries) {
   if (valid.isEmpty) return GoalStatus.unlogged;
   final runs = valid.where((e) => e.type == WorkoutType.run).length;
   final strength = valid.where((e) => e.type == WorkoutType.strength).length;
-  final ok = valid.length >= goal.target &&
+  final ok =
+      valid.length >= goal.target &&
       runs >= (goal.requirements['run'] ?? 0) &&
       strength >= (goal.requirements['strength'] ?? 0);
   return ok ? GoalStatus.met : GoalStatus.notMet;

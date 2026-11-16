@@ -67,36 +67,75 @@ class WidgetSnapshot {
   String encode() => jsonEncode(toJson());
 }
 
-/// Builds the widget content from the partner's public data only (summary
-/// and shared photos — never their detailed log).
+/// Another member of the group, as the widget shows them.
+class WidgetMember {
+  const WidgetMember({
+    required this.uid,
+    required this.name,
+    required this.summary,
+  });
+
+  final String uid;
+  final String name;
+
+  /// Their public summary of today (null until they log something).
+  final DaySummary? summary;
+}
+
+/// Builds the widget content from the other members' public data only
+/// (summaries and shared photos, never their detailed logs).
 ///
-/// [photos] must be the partner's photos of today, newest first, and
+/// [photos] must be the other members' photos of today, newest first, and
 /// [paths] maps photo ids to local files; photos without a file are skipped.
+/// With one other member the widget is about them; with several, the title
+/// lists everyone's % and each caption names who took the photo.
 WidgetSnapshot buildWidgetSnapshot({
   required AppLocalizations l,
-  required String partnerName,
-  required DaySummary? summary,
+  required List<WidgetMember> members,
   required List<GoalDef> goals,
   required List<GoalPhoto> photos,
   required Map<String, String> paths,
   DateTime? now,
 }) {
+  final lang = l.localeName.substring(0, 2);
   final daily = goals.where((g) => g.period == GoalPeriod.daily).toList();
-  final percent = summary?.percent ?? 0;
-  final metIcons = [
-    for (final g in daily)
-      if (summary?.statuses[g.id] == GoalStatus.met) g.icon,
-  ];
   final byId = {for (final g in goals) g.id: g};
+  final names = {for (final m in members) m.uid: m.name};
+  final single = members.length == 1 ? members.single : null;
 
-  return WidgetSnapshot(
-    title: l.widgetTitle(partnerName, percent),
-    status: [
+  final String title;
+  final String status;
+  final String emptyText;
+  if (single != null) {
+    final metIcons = [
+      for (final g in daily)
+        if (single.summary?.statuses[g.id] == GoalStatus.met) g.icon,
+    ];
+    title = l.widgetTitle(single.name, single.summary?.percent ?? 0);
+    status = [
       l.widgetGoalsDone(metIcons.length, daily.length),
       if (metIcons.isNotEmpty) metIcons.join(),
-    ].join(' · '),
-    emptyText: l.widgetNoPhotos(partnerName),
-    rtl: l.localeName.startsWith('he'),
+    ].join(' · ');
+    emptyText = l.widgetNoPhotos(single.name);
+  } else {
+    // Highest % first: a friendly nudge.
+    final ranked = [...members]
+      ..sort(
+        (a, b) => (b.summary?.percent ?? 0).compareTo(a.summary?.percent ?? 0),
+      );
+    title = [
+      for (final m in ranked)
+        l.widgetMemberPercent(m.name, m.summary?.percent ?? 0),
+    ].join(' · ');
+    status = l.widgetGroupPhotos(photos.length);
+    emptyText = l.widgetNoPhotosGroup;
+  }
+
+  return WidgetSnapshot(
+    title: title,
+    status: status,
+    emptyText: emptyText,
+    rtl: lang == 'he',
     photos: [
       for (final p in photos.take(maxWidgetPhotos))
         if (paths[p.id] case final path?)
@@ -104,8 +143,8 @@ WidgetSnapshot buildWidgetSnapshot({
             id: p.id,
             path: path,
             caption: [
-              if (byId[p.goalId] case final g?)
-                '${g.icon} ${g.title(l.localeName.substring(0, 2))}',
+              if (single == null && names[p.uid] != null) names[p.uid]!,
+              if (byId[p.goalId] case final g?) '${g.icon} ${g.title(lang)}',
               _hhmm(p.createdAt),
             ].join(' · '),
           ),

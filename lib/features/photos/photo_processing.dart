@@ -119,9 +119,8 @@ Future<ProcessedPhoto> processPhotoWithCodec(
 
 /// Runs [processPhoto] off the UI thread: in an isolate on mobile, and with
 /// the browser's image decoder on the web (see [processPhotoWithCodec]).
-Future<ProcessedPhoto> processPhotoInBackground(Uint8List bytes) => kIsWeb
-    ? processPhotoWithCodec(bytes)
-    : compute(_processDefault, bytes);
+Future<ProcessedPhoto> processPhotoInBackground(Uint8List bytes) =>
+    kIsWeb ? processPhotoWithCodec(bytes) : compute(_processDefault, bytes);
 
 ProcessedPhoto _processDefault(Uint8List bytes) => processPhoto(bytes);
 

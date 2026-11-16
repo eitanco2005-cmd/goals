@@ -72,17 +72,21 @@ function createPair(uid, { pairId = PAIR, code = CODE } = {}) {
   });
 }
 
-function joinPair(uid, { code = CODE, closeInvite = true, setProfile = true } = {}) {
+const MAX_MEMBERS = 8; // maxGroupMembers in lib/domain/models.dart
+
+// Mirrors FirebaseBackend.joinPair: the invite code is closed only by the
+// member who takes the last spot. `closeInvite` forces it either way.
+function joinPair(uid, { code = CODE, closeInvite, setProfile = true } = {}) {
   const f = db(uid);
   return runTransaction(f, async (tx) => {
     await tx.get(doc(f, `users/${uid}`));
     const invite = await tx.get(doc(f, `inviteCodes/${code}`));
     const pairRef = doc(f, `pairs/${invite.data().pairId}`);
     const pair = (await tx.get(pairRef)).data();
-    tx.update(pairRef, {
-      memberUids: [...pair.memberUids, uid], [`memberNames.${uid}`]: uid, ...stamp(),
-    });
-    if (closeInvite) tx.update(doc(f, `inviteCodes/${code}`), { open: false });
+    const memberUids = [...pair.memberUids, uid];
+    tx.update(pairRef, { memberUids, [`memberNames.${uid}`]: uid, ...stamp() });
+    const close = closeInvite ?? memberUids.length >= MAX_MEMBERS;
+    if (close) tx.update(doc(f, `inviteCodes/${code}`), { open: false });
     if (setProfile) tx.update(doc(f, `users/${uid}`), { pairId: pair.id, ...stamp() });
   });
 }
@@ -175,7 +179,7 @@ describe('pairing', () => {
     await assertFails(getDocs(collection(db('bob'), 'inviteCodes')));
   });
 
-  it('partner joins with the join transaction', async () => {
+  it('someone joins with the join transaction', async () => {
     await signUp('alice');
     await signUp('bob');
     await createPair('alice');
@@ -184,19 +188,43 @@ describe('pairing', () => {
     if (pair.memberUids.length !== 2) throw new Error('not joined');
   });
 
-  it('join must close the invite code', async () => {
+  it('the invite code stays open until the last spot is taken', async () => {
     await signUp('alice');
     await signUp('bob');
     await createPair('alice');
-    await assertFails(joinPair('bob', { closeInvite: false }));
+    // Closing it early would lock others out.
+    await assertFails(joinPair('bob', { closeInvite: true }));
+    await assertSucceeds(joinPair('bob'));
   });
 
-  it('third person cannot join or read a full pair', async () => {
+  it('a group takes up to 8 people; the last one must close the code', async () => {
+    await signUp('m1');
+    await createPair('m1');
+    for (let i = 2; i < MAX_MEMBERS; i++) {
+      await signUp(`m${i}`);
+      await assertSucceeds(joinPair(`m${i}`));
+    }
+    await signUp(`m${MAX_MEMBERS}`);
+    await assertFails(joinPair(`m${MAX_MEMBERS}`, { closeInvite: false }));
+    await assertSucceeds(joinPair(`m${MAX_MEMBERS}`));
+    const invite = (await getDoc(doc(db('m1'), `inviteCodes/${CODE}`))).data();
+    if (invite.open !== false) throw new Error('code not closed');
+
+    // A full group is closed to outsiders.
+    await signUp('late');
+    await assertFails(getDoc(doc(db('late'), `pairs/${PAIR}`)));
+    await assertFails(joinPair('late', { closeInvite: false }));
+  });
+
+  it('a third person can join a group with room', async () => {
     await pairedAliceBob();
     await signUp('carol');
-    await assertFails(getDoc(doc(db('carol'), `pairs/${PAIR}`)));
-    await assertFails(updateDoc(doc(db('carol'), `pairs/${PAIR}`), {
-      memberUids: ['alice', 'bob', 'carol'],
+    await assertSucceeds(getDoc(doc(db('carol'), `pairs/${PAIR}`)));
+    await assertSucceeds(joinPair('carol'));
+    // ...but cannot rewrite the member list.
+    await signUp('dave');
+    await assertFails(updateDoc(doc(db('dave'), `pairs/${PAIR}`), {
+      memberUids: ['dave'],
     }));
   });
 
@@ -213,7 +241,7 @@ describe('pairing', () => {
     }));
   });
 
-  it('a member cannot remove the partner', async () => {
+  it('a member cannot remove another member', async () => {
     await pairedAliceBob();
     await assertFails(updateDoc(doc(db('alice'), `pairs/${PAIR}`), { memberUids: ['alice'] }));
   });

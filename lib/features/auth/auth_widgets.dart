@@ -38,7 +38,9 @@ class AuthScaffold extends ConsumerWidget {
                     alignment: AlignmentDirectional.centerEnd,
                     child: LanguageSwitch(
                       languageCode: language,
-                      onChanged: ref.read(preLoginLanguageProvider.notifier).set,
+                      onChanged: ref
+                          .read(preLoginLanguageProvider.notifier)
+                          .set,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -56,9 +58,7 @@ class AuthScaffold extends ConsumerWidget {
                         children: [
                           Text(
                             title,
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleLarge
+                            style: Theme.of(context).textTheme.titleLarge
                                 ?.copyWith(fontWeight: FontWeight.w700),
                           ),
                           const SizedBox(height: 16),
@@ -113,8 +113,9 @@ class _Hero extends StatelessWidget {
         Text(
           l.authTagline,
           textAlign: TextAlign.center,
-          style: theme.textTheme.bodyLarge
-              ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+          style: theme.textTheme.bodyLarge?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
         ),
       ],
     );
@@ -137,16 +138,17 @@ class _DemoBanner extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(Icons.info_outline,
-                size: 20, color: scheme.onSecondaryContainer),
+            Icon(
+              Icons.info_outline,
+              size: 20,
+              color: scheme.onSecondaryContainer,
+            ),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
                 AppLocalizations.of(context)
                     .demoModeBanner(MemoryBackend.demoInviteCode),
-                style: Theme.of(context)
-                    .textTheme
-                    .bodySmall
+                style: Theme.of(context).textTheme.bodySmall
                     ?.copyWith(color: scheme.onSecondaryContainer),
               ),
             ),
@@ -200,9 +202,11 @@ class _PasswordFieldState extends State<PasswordField> {
         prefixIcon: const Icon(Icons.lock_outline),
         suffixIcon: IconButton(
           tooltip: _obscured ? l.authShowPassword : l.authHidePassword,
-          icon: Icon(_obscured
-              ? Icons.visibility_outlined
-              : Icons.visibility_off_outlined),
+          icon: Icon(
+            _obscured
+                ? Icons.visibility_outlined
+                : Icons.visibility_off_outlined,
+          ),
           onPressed: () => setState(() => _obscured = !_obscured),
         ),
       ),
@@ -225,17 +229,17 @@ class LoadingButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => FilledButton(
-        onPressed: loading ? null : onPressed,
-        child: loading
-            ? SizedBox.square(
-                dimension: 22,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.5,
-                  semanticsLabel: label,
-                ),
-              )
-            : Text(label),
-      );
+    onPressed: loading ? null : onPressed,
+    child: loading
+        ? SizedBox.square(
+            dimension: 22,
+            child: CircularProgressIndicator(
+              strokeWidth: 2.5,
+              semanticsLabel: label,
+            ),
+          )
+        : Text(label),
+  );
 }
 
 /// "New here? Create an account" style row.
@@ -253,17 +257,17 @@ class AuthFooterLink extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Wrap(
-        alignment: WrapAlignment.center,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: [
-          Text(prompt),
-          TextButton(
-            style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
-            onPressed: onPressed,
-            child: Text(action),
-          ),
-        ],
-      );
+    alignment: WrapAlignment.center,
+    crossAxisAlignment: WrapCrossAlignment.center,
+    children: [
+      Text(prompt),
+      TextButton(
+        style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
+        onPressed: onPressed,
+        child: Text(action),
+      ),
+    ],
+  );
 }
 
 /// Inline error shown above a form's submit button.
@@ -287,8 +291,10 @@ class FormErrorText extends StatelessWidget {
             Icon(Icons.error_outline, size: 20, color: scheme.onErrorContainer),
             const SizedBox(width: 8),
             Expanded(
-              child: Text(message,
-                  style: TextStyle(color: scheme.onErrorContainer)),
+              child: Text(
+                message,
+                style: TextStyle(color: scheme.onErrorContainer),
+              ),
             ),
           ],
         ),
@@ -301,8 +307,7 @@ class FormErrorText extends StatelessWidget {
 void showAuthSnack(BuildContext context, String message) {
   ScaffoldMessenger.of(context)
     ..hideCurrentSnackBar()
-    ..showSnackBar(SnackBar(
-      content: Text(message),
-      behavior: SnackBarBehavior.floating,
-    ));
+    ..showSnackBar(
+      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
+    );
 }

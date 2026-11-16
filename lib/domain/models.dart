@@ -87,46 +87,46 @@ class GoalDef {
     num? target,
     num? step,
     Map<String, num>? requirements,
-  }) =>
-      GoalDef(
-        id: id,
-        titleHe: titleHe ?? this.titleHe,
-        titleEn: titleEn ?? this.titleEn,
-        type: type,
-        comparison: comparison ?? this.comparison,
-        target: target ?? this.target,
-        period: period,
-        icon: icon,
-        step: step ?? this.step,
-        requirements: requirements ?? this.requirements,
-      );
+  }) => GoalDef(
+    id: id,
+    titleHe: titleHe ?? this.titleHe,
+    titleEn: titleEn ?? this.titleEn,
+    type: type,
+    comparison: comparison ?? this.comparison,
+    target: target ?? this.target,
+    period: period,
+    icon: icon,
+    step: step ?? this.step,
+    requirements: requirements ?? this.requirements,
+  );
 
   Map<String, dynamic> toMap() => {
-        'id': id,
-        'titleHe': titleHe,
-        'titleEn': titleEn,
-        'type': type.name,
-        'comparison': comparison.name,
-        'target': target,
-        'period': period.name,
-        'icon': icon,
-        'step': step,
-        'requirements': requirements,
-      };
+    'id': id,
+    'titleHe': titleHe,
+    'titleEn': titleEn,
+    'type': type.name,
+    'comparison': comparison.name,
+    'target': target,
+    'period': period.name,
+    'icon': icon,
+    'step': step,
+    'requirements': requirements,
+  };
 
   factory GoalDef.fromMap(Map<String, dynamic> m) => GoalDef(
-        id: m['id'] as String,
-        titleHe: m['titleHe'] as String,
-        titleEn: m['titleEn'] as String,
-        type: GoalType.values.byName(m['type'] as String),
-        comparison: Comparison.values.byName(m['comparison'] as String),
-        target: m['target'] as num,
-        period: GoalPeriod.values.byName(m['period'] as String),
-        icon: m['icon'] as String,
-        step: (m['step'] as num?) ?? 1,
-        requirements: Map<String, num>.from(
-            (m['requirements'] as Map?)?.cast<String, num>() ?? const {}),
-      );
+    id: m['id'] as String,
+    titleHe: m['titleHe'] as String,
+    titleEn: m['titleEn'] as String,
+    type: GoalType.values.byName(m['type'] as String),
+    comparison: Comparison.values.byName(m['comparison'] as String),
+    target: m['target'] as num,
+    period: GoalPeriod.values.byName(m['period'] as String),
+    icon: m['icon'] as String,
+    step: (m['step'] as num?) ?? 1,
+    requirements: Map<String, num>.from(
+      (m['requirements'] as Map?)?.cast<String, num>() ?? const {},
+    ),
+  );
 }
 
 /// A challenge round: a date range plus the goals for that range.
@@ -153,22 +153,22 @@ class Challenge {
       goals.where((g) => g.period == GoalPeriod.weekly).toList();
 
   Map<String, dynamic> toMap() => {
-        'id': id,
-        'pairId': pairId,
-        'startDate': startDate,
-        'endDate': endDate,
-        'goals': goals.map((g) => g.toMap()).toList(),
-      };
+    'id': id,
+    'pairId': pairId,
+    'startDate': startDate,
+    'endDate': endDate,
+    'goals': goals.map((g) => g.toMap()).toList(),
+  };
 
   factory Challenge.fromMap(Map<String, dynamic> m) => Challenge(
-        id: m['id'] as String,
-        pairId: m['pairId'] as String,
-        startDate: m['startDate'] as String,
-        endDate: m['endDate'] as String,
-        goals: (m['goals'] as List)
-            .map((e) => GoalDef.fromMap(Map<String, dynamic>.from(e as Map)))
-            .toList(),
-      );
+    id: m['id'] as String,
+    pairId: m['pairId'] as String,
+    startDate: m['startDate'] as String,
+    endDate: m['endDate'] as String,
+    goals: (m['goals'] as List)
+        .map((e) => GoalDef.fromMap(Map<String, dynamic>.from(e as Map)))
+        .toList(),
+  );
 }
 
 /// The signed-in account (auth layer only).
@@ -199,30 +199,35 @@ class UserProfile {
     String? displayName,
     String? languageCode,
     String? pairId,
-  }) =>
-      UserProfile(
-        uid: uid,
-        displayName: displayName ?? this.displayName,
-        languageCode: languageCode ?? this.languageCode,
-        pairId: pairId ?? this.pairId,
-      );
+  }) => UserProfile(
+    uid: uid,
+    displayName: displayName ?? this.displayName,
+    languageCode: languageCode ?? this.languageCode,
+    pairId: pairId ?? this.pairId,
+  );
 
   Map<String, dynamic> toMap() => {
-        'uid': uid,
-        'displayName': displayName,
-        'languageCode': languageCode,
-        'pairId': pairId,
-      };
+    'uid': uid,
+    'displayName': displayName,
+    'languageCode': languageCode,
+    'pairId': pairId,
+  };
 
   factory UserProfile.fromMap(Map<String, dynamic> m) => UserProfile(
-        uid: m['uid'] as String,
-        displayName: (m['displayName'] as String?) ?? '',
-        languageCode: (m['languageCode'] as String?) ?? 'he',
-        pairId: m['pairId'] as String?,
-      );
+    uid: m['uid'] as String,
+    displayName: (m['displayName'] as String?) ?? '',
+    languageCode: (m['languageCode'] as String?) ?? 'he',
+    pairId: m['pairId'] as String?,
+  );
 }
 
-/// Two people doing the challenge together.
+/// Maximum number of people in one challenge group.
+const maxGroupMembers = 8;
+
+/// A challenge group: 1 person (just created) up to [maxGroupMembers].
+///
+/// Named `Pair` for historical reasons (the Firestore collection is still
+/// `pairs`), but it is a group of any size.
 class Pair {
   const Pair({
     required this.id,
@@ -234,35 +239,40 @@ class Pair {
 
   final String id;
 
-  /// 1 member until the partner joins, then 2.
+  /// In joining order; the creator first.
   final List<String> memberUids;
 
-  /// uid -> display name, so each side can show the partner's name.
+  /// uid -> display name, so everyone can show the others' names.
   final Map<String, String> memberNames;
   final String inviteCode;
   final String? activeChallengeId;
 
-  bool get isComplete => memberUids.length == 2;
+  /// No one else can join.
+  bool get isFull => memberUids.length >= maxGroupMembers;
 
-  String? partnerOf(String uid) =>
-      memberUids.where((u) => u != uid).firstOrNull;
+  /// Everyone in the group except [uid], in joining order.
+  List<String> othersOf(String uid) => [
+    for (final u in memberUids)
+      if (u != uid) u,
+  ];
 
   Map<String, dynamic> toMap() => {
-        'id': id,
-        'memberUids': memberUids,
-        'memberNames': memberNames,
-        'inviteCode': inviteCode,
-        'activeChallengeId': activeChallengeId,
-      };
+    'id': id,
+    'memberUids': memberUids,
+    'memberNames': memberNames,
+    'inviteCode': inviteCode,
+    'activeChallengeId': activeChallengeId,
+  };
 
   factory Pair.fromMap(Map<String, dynamic> m) => Pair(
-        id: m['id'] as String,
-        memberUids: List<String>.from(m['memberUids'] as List),
-        memberNames:
-            Map<String, String>.from((m['memberNames'] as Map?) ?? const {}),
-        inviteCode: m['inviteCode'] as String,
-        activeChallengeId: m['activeChallengeId'] as String?,
-      );
+    id: m['id'] as String,
+    memberUids: List<String>.from(m['memberUids'] as List),
+    memberNames: Map<String, String>.from(
+      (m['memberNames'] as Map?) ?? const {},
+    ),
+    inviteCode: m['inviteCode'] as String,
+    activeChallengeId: m['activeChallengeId'] as String?,
+  );
 }
 
 /// Private, detailed log of one user for one day. Only the owner can read it.
@@ -293,15 +303,15 @@ class DailyLog {
     return DailyLog(uid: uid, date: date, values: next);
   }
 
-  Map<String, dynamic> toMap() =>
-      {'uid': uid, 'date': date, 'values': values};
+  Map<String, dynamic> toMap() => {'uid': uid, 'date': date, 'values': values};
 
   factory DailyLog.fromMap(Map<String, dynamic> m) => DailyLog(
-        uid: m['uid'] as String,
-        date: m['date'] as String,
-        values: Map<String, num>.from(
-            (m['values'] as Map?)?.cast<String, num>() ?? const {}),
-      );
+    uid: m['uid'] as String,
+    date: m['date'] as String,
+    values: Map<String, num>.from(
+      (m['values'] as Map?)?.cast<String, num>() ?? const {},
+    ),
+  );
 }
 
 /// Public summary of one user's day. This is all the partner can see
@@ -322,20 +332,20 @@ class DaySummary {
   final int percent;
 
   Map<String, dynamic> toMap() => {
-        'uid': uid,
-        'date': date,
-        'statuses': statuses.map((k, v) => MapEntry(k, v.name)),
-        'percent': percent,
-      };
+    'uid': uid,
+    'date': date,
+    'statuses': statuses.map((k, v) => MapEntry(k, v.name)),
+    'percent': percent,
+  };
 
   factory DaySummary.fromMap(Map<String, dynamic> m) => DaySummary(
-        uid: m['uid'] as String,
-        date: m['date'] as String,
-        statuses: ((m['statuses'] as Map?) ?? const {}).map(
-          (k, v) => MapEntry(k as String, GoalStatus.values.byName(v as String)),
-        ),
-        percent: (m['percent'] as num).toInt(),
-      );
+    uid: m['uid'] as String,
+    date: m['date'] as String,
+    statuses: ((m['statuses'] as Map?) ?? const {}).map(
+      (k, v) => MapEntry(k as String, GoalStatus.values.byName(v as String)),
+    ),
+    percent: (m['percent'] as num).toInt(),
+  );
 }
 
 /// One logged workout (used by the weekly workouts goal).
@@ -355,20 +365,20 @@ class WorkoutEntry {
   final int minutes;
 
   Map<String, dynamic> toMap() => {
-        'id': id,
-        'uid': uid,
-        'date': date,
-        'type': type.name,
-        'minutes': minutes,
-      };
+    'id': id,
+    'uid': uid,
+    'date': date,
+    'type': type.name,
+    'minutes': minutes,
+  };
 
   factory WorkoutEntry.fromMap(Map<String, dynamic> m) => WorkoutEntry(
-        id: m['id'] as String,
-        uid: m['uid'] as String,
-        date: m['date'] as String,
-        type: WorkoutType.values.byName(m['type'] as String),
-        minutes: (m['minutes'] as num).toInt(),
-      );
+    id: m['id'] as String,
+    uid: m['uid'] as String,
+    date: m['date'] as String,
+    type: WorkoutType.values.byName(m['type'] as String),
+    minutes: (m['minutes'] as num).toInt(),
+  );
 }
 
 /// Reactions a partner can put on a photo.
@@ -419,34 +429,35 @@ class GoalPhoto {
   final bool isPending;
 
   Map<String, dynamic> toMap() => {
-        'id': id,
-        'uid': uid,
-        'date': date,
-        'goalId': goalId,
-        'createdAt': createdAt.millisecondsSinceEpoch,
-        'thumbnail': thumbnail,
-        'width': width,
-        'height': height,
-        'reactions': reactions,
-      };
+    'id': id,
+    'uid': uid,
+    'date': date,
+    'goalId': goalId,
+    'createdAt': createdAt.millisecondsSinceEpoch,
+    'thumbnail': thumbnail,
+    'width': width,
+    'height': height,
+    'reactions': reactions,
+  };
 
   /// [thumbnail] must already be converted to [Uint8List] by the caller
   /// (Firestore returns a `Blob`). [isPending] comes from the snapshot
   /// metadata, not from the map.
-  factory GoalPhoto.fromMap(Map<String, dynamic> m,
-          {bool isPending = false}) =>
+  factory GoalPhoto.fromMap(Map<String, dynamic> m, {bool isPending = false}) =>
       GoalPhoto(
         id: m['id'] as String,
         uid: m['uid'] as String,
         date: m['date'] as String,
         goalId: m['goalId'] as String,
         createdAt: DateTime.fromMillisecondsSinceEpoch(
-            (m['createdAt'] as num).toInt()),
+          (m['createdAt'] as num).toInt(),
+        ),
         thumbnail: m['thumbnail'] as Uint8List,
         width: (m['width'] as num).toInt(),
         height: (m['height'] as num).toInt(),
-        reactions:
-            Map<String, String>.from((m['reactions'] as Map?) ?? const {}),
+        reactions: Map<String, String>.from(
+          (m['reactions'] as Map?) ?? const {},
+        ),
         isPending: isPending,
       );
 }
