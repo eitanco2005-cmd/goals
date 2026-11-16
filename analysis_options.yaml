@@ -6,3 +6,4 @@ analyzer:
     - android/**
     - web/**
     - lib/l10n/gen/**
+    - test/firestore_rules/**
