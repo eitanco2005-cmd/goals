@@ -184,7 +184,7 @@ class _Cell extends StatelessWidget {
               label!,
               textDirection: TextDirection.ltr,
               style: TextStyle(
-                fontSize: size * 0.36,
+                fontSize: size * 0.4,
                 fontWeight: isToday ? FontWeight.w800 : FontWeight.w600,
                 color: fill != null
                     ? (ThemeData.estimateBrightnessForColor(fill) ==
@@ -321,7 +321,7 @@ class _Heatmap extends StatelessWidget {
 
   static const gap = 4.0;
   static const minCell = 14.0;
-  static const maxCell = 44.0;
+  static const maxCell = 30.0;
 
   /// Cells at least this big show the day of the month.
   static const labelCell = 22.0;
