@@ -164,7 +164,7 @@ class _Cell extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         color: fill ?? (isFuture ? null : scheme.surfaceContainerHighest),
-        borderRadius: BorderRadius.circular(size * 0.24),
+        borderRadius: BorderRadius.circular(size * 0.3),
         border: isToday
             ? Border.all(color: scheme.onSurface, width: 1.5)
             : (fill == null
@@ -464,7 +464,7 @@ class _Heatmap extends StatelessWidget {
                             label: l.boardCellLabel(dateLabel, value),
                             child: InkWell(
                               key: ValueKey('cell-$key'),
-                              borderRadius: BorderRadius.circular(cell * 0.24),
+                              borderRadius: BorderRadius.circular(cell * 0.3),
                               onTap: () => showDayDiary(context, key),
                               child: square,
                             ),
