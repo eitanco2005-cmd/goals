@@ -168,6 +168,30 @@ void main() {
     expect((await b.watchPair(pair.id).first)!.memberNames[a.uid], 'Eitan');
   });
 
+  test('week summaries: set, overwrite, and list a week', () async {
+    final a = await signUp('A');
+    final pair = await createPair(a);
+    WeekSummary ws(GoalStatus s, {String week = '2026-11-15'}) => WeekSummary(
+      uid: a.uid,
+      weekStart: week,
+      statuses: {GoalIds.workouts: s},
+    );
+    await b.setWeekSummary(pairId: pair.id, summary: ws(GoalStatus.notMet));
+    await b.setWeekSummary(pairId: pair.id, summary: ws(GoalStatus.met));
+    await b.setWeekSummary(
+      pairId: pair.id,
+      summary: ws(GoalStatus.notMet, week: '2026-11-08'),
+    );
+    final week = await b
+        .watchWeekSummaries(pairId: pair.id, weekStart: '2026-11-15')
+        .first;
+    expect(week, [ws(GoalStatus.met)]);
+    final doc = await db
+        .doc('pairs/${pair.id}/weekSummaries/${a.uid}_2026-11-15')
+        .get();
+    expect(doc.data()!['statuses'], {GoalIds.workouts: 'met'});
+  });
+
   test('setGoalValue writes the log and the summary', () async {
     final a = await signUp('A');
     final pair = await createPair(a);

@@ -48,3 +48,38 @@ GoalStatus evaluateWorkouts(GoalDef goal, List<WorkoutEntry> weekEntries) {
       strength >= (goal.requirements['strength'] ?? 0);
   return ok ? GoalStatus.met : GoalStatus.notMet;
 }
+
+/// Builds the public [WeekSummary] for [weeklyGoals].
+///
+/// Workout goals are scored from [workouts] (this week's entries). Counter
+/// goals (e.g. junk food) are scored from [totals]: the sum of that goal's
+/// value over the week's daily logs. For a limit ("at most") nothing logged
+/// counts as 0, i.e. on track; for a minimum it stays unlogged.
+WeekSummary summarizeWeek({
+  required String uid,
+  required String weekStart,
+  required List<GoalDef> weeklyGoals,
+  required List<WorkoutEntry> workouts,
+  required Map<String, num> totals,
+}) => WeekSummary(
+  uid: uid,
+  weekStart: weekStart,
+  statuses: {
+    for (final g in weeklyGoals)
+      g.id: g.type == GoalType.workouts
+          ? evaluateWorkouts(g, workouts)
+          : evaluateGoal(
+              g,
+              totals[g.id] ?? (g.comparison == Comparison.atMost ? 0 : null),
+            ),
+  },
+);
+
+/// Sums each goal's values over several daily logs (e.g. one week).
+Map<String, num> sumLogs(Iterable<DailyLog> logs) {
+  final totals = <String, num>{};
+  for (final log in logs) {
+    log.values.forEach((k, v) => totals[k] = (totals[k] ?? 0) + v);
+  }
+  return totals;
+}

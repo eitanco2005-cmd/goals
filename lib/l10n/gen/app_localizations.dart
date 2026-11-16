@@ -596,6 +596,138 @@ abstract class AppLocalizations {
   /// **'Not logged'**
   String get statusUnlogged;
 
+  /// No description provided for @weekTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get weekTitle;
+
+  /// No description provided for @weekPastTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Week of {date}'**
+  String weekPastTitle(String date);
+
+  /// No description provided for @weekPrev.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous week'**
+  String get weekPrev;
+
+  /// No description provided for @weekNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next week'**
+  String get weekNext;
+
+  /// No description provided for @weekDone.
+  ///
+  /// In en, this message translates to:
+  /// **'{done}/{total}'**
+  String weekDone(int done, int total);
+
+  /// No description provided for @workoutRun.
+  ///
+  /// In en, this message translates to:
+  /// **'Run'**
+  String get workoutRun;
+
+  /// No description provided for @workoutStrength.
+  ///
+  /// In en, this message translates to:
+  /// **'Strength'**
+  String get workoutStrength;
+
+  /// No description provided for @workoutOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get workoutOther;
+
+  /// No description provided for @weekAddWorkout.
+  ///
+  /// In en, this message translates to:
+  /// **'Add workout'**
+  String get weekAddWorkout;
+
+  /// No description provided for @weekMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min'**
+  String weekMinutes(int minutes);
+
+  /// No description provided for @weekTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Under {minutes} min – doesn\'t count'**
+  String weekTooShort(int minutes);
+
+  /// No description provided for @weekNoWorkouts.
+  ///
+  /// In en, this message translates to:
+  /// **'No workouts logged this week'**
+  String get weekNoWorkouts;
+
+  /// No description provided for @weekWorkoutType.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get weekWorkoutType;
+
+  /// No description provided for @weekWorkoutDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get weekWorkoutDuration;
+
+  /// No description provided for @weekWorkoutDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Day'**
+  String get weekWorkoutDay;
+
+  /// No description provided for @weekDeleteWorkout.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete workout'**
+  String get weekDeleteWorkout;
+
+  /// No description provided for @weekLimitTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'{total} this week · max {limit}'**
+  String weekLimitTotal(int total, int limit);
+
+  /// No description provided for @weekOnDay.
+  ///
+  /// In en, this message translates to:
+  /// **'On {day}: {count}'**
+  String weekOnDay(String day, int count);
+
+  /// No description provided for @weekGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'The group this week'**
+  String get weekGroup;
+
+  /// No description provided for @weekSeeWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the week'**
+  String get weekSeeWeek;
+
+  /// No description provided for @weekNeeds.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs: {requirements}'**
+  String weekNeeds(String requirements);
+
+  /// No description provided for @weekMinMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'at least {minutes} min each'**
+  String weekMinMinutes(int minutes);
+
   /// No description provided for @shortcutLogWater.
   ///
   /// In en, this message translates to:

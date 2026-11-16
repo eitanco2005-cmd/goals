@@ -417,6 +417,30 @@ class MemoryBackend
     _notify();
   }
 
+  // -------------------------------------------------------- Week summaries
+  final Map<String, WeekSummary> _weekSummaries = {}; // pairId|uid|weekStart
+
+  @override
+  Stream<List<WeekSummary>> watchWeekSummaries({
+    required String pairId,
+    required String weekStart,
+  }) => _watch(
+    () => [
+      for (final e in _weekSummaries.entries)
+        if (e.key.startsWith('$pairId|') && e.value.weekStart == weekStart)
+          e.value,
+    ],
+  );
+
+  @override
+  Future<void> setWeekSummary({
+    required String pairId,
+    required WeekSummary summary,
+  }) async {
+    _weekSummaries[_k(pairId, summary.uid, summary.weekStart)] = summary;
+    _notify();
+  }
+
   // -------------------------------------------------------------- Photos
   final Map<String, List<GoalPhoto>> _photos = {}; // by pairId
   final Map<String, Uint8List> _photoData = {}; // by photoId
@@ -611,6 +635,15 @@ class MemoryBackend
             minutes: 40,
           ),
     ];
+    // What the group sees of Noa's week: statuses only.
+    final week = weekDayKeys(now);
+    _weekSummaries[_k('demo-pair', partner.uid, week.first)] = summarizeWeek(
+      uid: partner.uid,
+      weekStart: week.first,
+      weeklyGoals: challenge.weeklyGoals,
+      workouts: _workouts['demo-pair']!,
+      totals: const {},
+    );
     _seedPhotos(partner.uid, now);
   }
 

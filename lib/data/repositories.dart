@@ -13,7 +13,8 @@ import '../domain/models.dart';
 ///   pairs/{pairId}/challenges/{challengeId}         Challenge
 ///   pairs/{pairId}/logs/{uid}/days/{date}           DailyLog   (owner only)
 ///   pairs/{pairId}/summaries/{uid}_{date}           DaySummary (both members)
-///   pairs/{pairId}/workouts/{workoutId}             WorkoutEntry
+///   pairs/{pairId}/workouts/{workoutId}             WorkoutEntry (owner only)
+///   pairs/{pairId}/weekSummaries/{uid}_{weekStart}  WeekSummary (all members)
 ///   pairs/{pairId}/photos/{photoId}                GoalPhoto metadata + thumbnail (both members)
 ///   pairs/{pairId}/photoData/{photoId}             {uid, date, data: full JPEG bytes} (both members)
 ///   inviteCodes/{code}                              {pairId, open, createdBy}
@@ -172,6 +173,18 @@ abstract interface class LogRepository {
     required WorkoutEntry entry,
   });
   Future<void> deleteWorkout({required String pairId, required String id});
+
+  /// Every member's public summary of the week starting [weekStart].
+  Stream<List<WeekSummary>> watchWeekSummaries({
+    required String pairId,
+    required String weekStart,
+  });
+
+  /// Stores the caller's own week summary (computed with `summarizeWeek`).
+  Future<void> setWeekSummary({
+    required String pairId,
+    required WeekSummary summary,
+  });
 }
 
 /// Size limits for photos (Firestore documents are capped at 1 MiB).

@@ -287,6 +287,88 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statusUnlogged => 'Not logged';
 
   @override
+  String get weekTitle => 'This week';
+
+  @override
+  String weekPastTitle(String date) {
+    return 'Week of $date';
+  }
+
+  @override
+  String get weekPrev => 'Previous week';
+
+  @override
+  String get weekNext => 'Next week';
+
+  @override
+  String weekDone(int done, int total) {
+    return '$done/$total';
+  }
+
+  @override
+  String get workoutRun => 'Run';
+
+  @override
+  String get workoutStrength => 'Strength';
+
+  @override
+  String get workoutOther => 'Other';
+
+  @override
+  String get weekAddWorkout => 'Add workout';
+
+  @override
+  String weekMinutes(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String weekTooShort(int minutes) {
+    return 'Under $minutes min – doesn\'t count';
+  }
+
+  @override
+  String get weekNoWorkouts => 'No workouts logged this week';
+
+  @override
+  String get weekWorkoutType => 'Type';
+
+  @override
+  String get weekWorkoutDuration => 'Duration';
+
+  @override
+  String get weekWorkoutDay => 'Day';
+
+  @override
+  String get weekDeleteWorkout => 'Delete workout';
+
+  @override
+  String weekLimitTotal(int total, int limit) {
+    return '$total this week · max $limit';
+  }
+
+  @override
+  String weekOnDay(String day, int count) {
+    return 'On $day: $count';
+  }
+
+  @override
+  String get weekGroup => 'The group this week';
+
+  @override
+  String get weekSeeWeek => 'Open the week';
+
+  @override
+  String weekNeeds(String requirements) {
+    return 'Needs: $requirements';
+  }
+
+  @override
+  String weekMinMinutes(int minutes) {
+    return 'at least $minutes min each';
+  }
+
+  @override
   String get shortcutLogWater => '+1 glass of water';
 
   @override

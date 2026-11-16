@@ -327,18 +327,41 @@ describe('logs, summaries, workouts', () => {
       { uid: 'alice', date: DATE, statuses: {}, percent: 140 }));
   });
 
-  it('workouts: own entries only', async () => {
+  it('workouts: private to their owner', async () => {
     const ref = (f, id = 'w1') => doc(f, `pairs/${PAIR}/workouts/${id}`);
+    const mine = (who, uid) => query(collection(db(who), `pairs/${PAIR}/workouts`),
+      where('uid', '==', uid), where('date', '>=', DATE), where('date', '<=', DATE),
+      orderBy('date'));
     await assertSucceeds(setDoc(ref(db('alice')), workout('alice')));
-    await assertSucceeds(getDoc(ref(db('bob'))));
-    await assertSucceeds(getDocs(query(collection(db('bob'), `pairs/${PAIR}/workouts`),
-      where('uid', '==', 'alice'), where('date', '>=', DATE), where('date', '<=', DATE),
-      orderBy('date'))));
+    await assertSucceeds(getDoc(ref(db('alice'))));
+    await assertSucceeds(getDocs(mine('alice', 'alice')));
+    // Other members see only the week summary, not the workouts.
+    await assertFails(getDoc(ref(db('bob'))));
+    await assertFails(getDocs(mine('bob', 'alice')));
     await assertFails(setDoc(ref(db('bob')), workout('bob'))); // overwrite alice's
     await assertFails(setDoc(ref(db('bob'), 'w2'), workout('alice', 'w2')));
     await assertFails(deleteDoc(ref(db('bob'))));
     await assertSucceeds(deleteDoc(ref(db('alice'))));
     await assertFails(setDoc(ref(db('carol'), 'w3'), workout('carol', 'w3')));
+  });
+
+  it('week summaries: everyone reads, only the owner writes', async () => {
+    const WEEK = '2026-11-15';
+    const ref = (f, id = `alice_${WEEK}`) => doc(f, `pairs/${PAIR}/weekSummaries/${id}`);
+    const summary = (uid, extra = {}) => ({
+      uid, weekStart: WEEK, statuses: { workouts: 'met', junk_food: 'notMet' },
+      ...stamp(), ...extra,
+    });
+    await assertSucceeds(setDoc(ref(db('alice')), summary('alice')));
+    await assertSucceeds(getDoc(ref(db('bob'))));
+    await assertSucceeds(getDocs(query(collection(db('bob'), `pairs/${PAIR}/weekSummaries`),
+      where('weekStart', '==', WEEK))));
+    await assertFails(getDoc(ref(db('carol'))));
+    // Not for someone else, not under another id, no extra fields.
+    await assertFails(setDoc(ref(db('bob')), summary('bob')));
+    await assertFails(setDoc(ref(db('bob'), `bob_${WEEK}`), summary('alice')));
+    await assertFails(setDoc(ref(db('alice')), summary('alice', { workoutCount: 3 })));
+    await assertFails(setDoc(ref(db('alice')), summary('alice', { weekStart: 'monday' })));
   });
 });
 

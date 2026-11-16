@@ -348,6 +348,48 @@ class DaySummary {
   );
 }
 
+/// Public summary of one member's week: met / not met per WEEKLY goal.
+/// Like [DaySummary], it is all the other members can see — never the
+/// workouts or counts behind it.
+class WeekSummary {
+  const WeekSummary({
+    required this.uid,
+    required this.weekStart,
+    required this.statuses,
+  });
+
+  final String uid;
+
+  /// Day key of the week's Sunday.
+  final String weekStart;
+  final Map<String, GoalStatus> statuses;
+
+  Map<String, dynamic> toMap() => {
+    'uid': uid,
+    'weekStart': weekStart,
+    'statuses': statuses.map((k, v) => MapEntry(k, v.name)),
+  };
+
+  factory WeekSummary.fromMap(Map<String, dynamic> m) => WeekSummary(
+    uid: m['uid'] as String,
+    weekStart: m['weekStart'] as String,
+    statuses: ((m['statuses'] as Map?) ?? const {}).map(
+      (k, v) => MapEntry(k as String, GoalStatus.values.byName(v as String)),
+    ),
+  );
+
+  @override
+  bool operator ==(Object other) =>
+      other is WeekSummary &&
+      other.uid == uid &&
+      other.weekStart == weekStart &&
+      other.statuses.length == statuses.length &&
+      statuses.entries.every((e) => other.statuses[e.key] == e.value);
+
+  @override
+  int get hashCode => Object.hash(uid, weekStart, statuses.length);
+}
+
 /// One logged workout (used by the weekly workouts goal).
 class WorkoutEntry {
   const WorkoutEntry({

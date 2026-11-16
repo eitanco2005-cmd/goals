@@ -11,6 +11,7 @@ import 'package:goals_challenge/domain/default_goals.dart';
 import 'package:goals_challenge/domain/models.dart';
 import 'package:goals_challenge/features/pairing/invite_code_card.dart';
 import 'package:goals_challenge/features/photos/photo_thumbnails.dart';
+import 'package:goals_challenge/features/today/goal_card.dart';
 import 'package:goals_challenge/features/today/partner_strip.dart';
 import 'package:goals_challenge/features/today/today_header.dart';
 import 'package:goals_challenge/features/today/today_providers.dart';
@@ -181,7 +182,13 @@ void main() {
     expect(find.text('This week'), findsOneWidget);
     expect(find.text('3 workouts a week'), findsOneWidget);
     // Everything starts unlogged.
-    expect(find.text('Not logged'), findsNWidgets(9));
+    expect(
+      find.descendant(
+        of: find.byType(GoalCard),
+        matching: find.text('Not logged'),
+      ),
+      findsNWidgets(9),
+    );
   });
 
   testWidgets('tapping + on water updates value, summary and the ring', (

@@ -288,6 +288,88 @@ class AppLocalizationsHe extends AppLocalizations {
   String get statusUnlogged => 'לא עודכן';
 
   @override
+  String get weekTitle => 'השבוע';
+
+  @override
+  String weekPastTitle(String date) {
+    return 'השבוע של $date';
+  }
+
+  @override
+  String get weekPrev => 'השבוע הקודם';
+
+  @override
+  String get weekNext => 'השבוע הבא';
+
+  @override
+  String weekDone(int done, int total) {
+    return '$done/$total';
+  }
+
+  @override
+  String get workoutRun => 'ריצה';
+
+  @override
+  String get workoutStrength => 'כוח';
+
+  @override
+  String get workoutOther => 'אחר';
+
+  @override
+  String get weekAddWorkout => 'הוספת אימון';
+
+  @override
+  String weekMinutes(int minutes) {
+    return '$minutes דק׳';
+  }
+
+  @override
+  String weekTooShort(int minutes) {
+    return 'פחות מ־$minutes דק׳ – לא נספר';
+  }
+
+  @override
+  String get weekNoWorkouts => 'עוד לא נרשמו אימונים השבוע';
+
+  @override
+  String get weekWorkoutType => 'סוג';
+
+  @override
+  String get weekWorkoutDuration => 'משך';
+
+  @override
+  String get weekWorkoutDay => 'יום';
+
+  @override
+  String get weekDeleteWorkout => 'מחיקת אימון';
+
+  @override
+  String weekLimitTotal(int total, int limit) {
+    return '$total השבוע · עד $limit';
+  }
+
+  @override
+  String weekOnDay(String day, int count) {
+    return 'ב$day: $count';
+  }
+
+  @override
+  String get weekGroup => 'הקבוצה השבוע';
+
+  @override
+  String get weekSeeWeek => 'לשבוע המלא';
+
+  @override
+  String weekNeeds(String requirements) {
+    return 'צריך: $requirements';
+  }
+
+  @override
+  String weekMinMinutes(int minutes) {
+    return 'לפחות $minutes דק׳ כל אחד';
+  }
+
+  @override
   String get shortcutLogWater => '+1 כוס מים';
 
   @override

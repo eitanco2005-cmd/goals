@@ -203,10 +203,28 @@ service cloud.firestore {
         allow delete: if isMember(pairId) && resource.data.uid == request.auth.uid;
       }
 
-      // -------------------------------------------------------- workouts
-      // Both members read (may be narrowed later); only own entries written.
-      match /workouts/{workoutId} {
+      // --------------------------------------------------- week summaries
+      // Doc id `{uid}_{weekStart}`: met / not met per weekly goal. All
+      // members read; only the owner writes. The workouts and counts behind
+      // it stay private.
+      match /weekSummaries/{summaryId} {
         allow read: if isMember(pairId);
+        allow create, update: if isMember(pairId)
+          && request.resource.data.keys().hasOnly(['uid', 'weekStart', 'statuses', 'updatedAt'])
+          && request.resource.data.uid == request.auth.uid
+          && isDayKey(request.resource.data.weekStart)
+          && summaryId == request.auth.uid + '_' + request.resource.data.weekStart
+          && request.resource.data.statuses is map
+          && request.resource.data.statuses.size() <= 30
+          && stampOk(request.resource.data);
+        allow delete: if isMember(pairId) && resource.data.uid == request.auth.uid;
+      }
+
+      // -------------------------------------------------------- workouts
+      // Private: only the owner reads and writes (others see the week
+      // summary instead).
+      match /workouts/{workoutId} {
+        allow read: if isMember(pairId) && resource.data.uid == request.auth.uid;
         allow create, update: if isMember(pairId)
           && request.resource.data.uid == request.auth.uid
           && (resource == null || resource.data.uid == request.auth.uid)

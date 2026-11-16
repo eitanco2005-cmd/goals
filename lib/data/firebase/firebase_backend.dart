@@ -81,6 +81,8 @@ class FirebaseBackend
   ) => _summaries(pairId).doc('${uid}_$date');
   CollectionReference<_Json> _workouts(String pairId) =>
       _pairDoc(pairId).collection('workouts');
+  CollectionReference<_Json> _weekSummaries(String pairId) =>
+      _pairDoc(pairId).collection('weekSummaries');
   CollectionReference<_Json> _photos(String pairId) =>
       _pairDoc(pairId).collection('photos');
   CollectionReference<_Json> _photoData(String pairId) =>
@@ -565,6 +567,30 @@ class FirebaseBackend
   @override
   Future<void> deleteWorkout({required String pairId, required String id}) =>
       guard(() => _write(_workouts(pairId).doc(id).delete()));
+
+  /// All members' summaries of one week (single-field query on weekStart).
+  @override
+  Stream<List<WeekSummary>> watchWeekSummaries({
+    required String pairId,
+    required String weekStart,
+  }) =>
+      _weekSummaries(pairId)
+          .where('weekStart', isEqualTo: weekStart)
+          .snapshots()
+          .map((q) => [for (final d in q.docs) WeekSummary.fromMap(d.data())])
+          .guarded();
+
+  @override
+  Future<void> setWeekSummary({
+    required String pairId,
+    required WeekSummary summary,
+  }) => guard(
+    () => _write(
+      _weekSummaries(pairId)
+          .doc('${summary.uid}_${summary.weekStart}')
+          .set({...summary.toMap(), ..._stamp}),
+    ),
+  );
 
   // -------------------------------------------------------------- Photos
   //

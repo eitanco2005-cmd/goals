@@ -15,6 +15,7 @@ import '../../l10n/gen/app_localizations.dart';
 import '../home_access/home_access_ui.dart';
 import '../home_access/quick_actions.dart';
 import '../photos/photo_capture.dart';
+import '../week/week_glance.dart';
 import '../photos/photo_providers.dart';
 import '../photos/photo_thumbnails.dart';
 import '../photos/photo_viewer.dart';
@@ -367,7 +368,7 @@ class _TodayContent extends ConsumerWidget {
                   ),
               if (weeklyGoals.isNotEmpty) ...[
                 const SizedBox(height: 12),
-                WeeklyTeaserCard(goals: weeklyGoals),
+                WeekGlanceCard(goals: weeklyGoals),
               ],
             ],
           ),
