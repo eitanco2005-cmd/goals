@@ -57,7 +57,7 @@ jobs:
             echo "::warning::ANDROID_KEYSTORE_* secrets missing - the APK is signed with a throwaway key and can't update an installed app."
           fi
 
-      - name: Build Android APKs (one per CPU type: smaller downloads)
+      - name: Build Android APKs (one per CPU type, for smaller downloads)
         run: flutter build apk --release --split-per-abi $FIREBASE_DEFINE $VERSION_FLAGS
 
       - name: Build web
