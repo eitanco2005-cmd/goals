@@ -288,6 +288,154 @@ class AppLocalizationsHe extends AppLocalizations {
   String get statusUnlogged => 'לא עודכן';
 
   @override
+  String get goalsTitle => 'יעדים';
+
+  @override
+  String get goalsInfo =>
+      'השינויים חלים על כל הקבוצה מהיום והלאה. ימים קודמים שומרים על התוצאות שלהם.';
+
+  @override
+  String get goalsDaily => 'יומיים';
+
+  @override
+  String get goalsWeekly => 'שבועיים';
+
+  @override
+  String get goalsAdd => 'הוספת יעד';
+
+  @override
+  String get goalsSave => 'שמירה';
+
+  @override
+  String get goalsSaved => 'היעדים עודכנו לכל הקבוצה';
+
+  @override
+  String get goalsDiscardTitle => 'לבטל את השינויים?';
+
+  @override
+  String get goalsDiscard => 'ביטול השינויים';
+
+  @override
+  String get goalsKeepEditing => 'להמשיך לערוך';
+
+  @override
+  String get goalsEditTitle => 'עריכת יעד';
+
+  @override
+  String get goalsNewTitle => 'יעד חדש';
+
+  @override
+  String get goalsIcon => 'אייקון';
+
+  @override
+  String get goalsName => 'שם';
+
+  @override
+  String get goalsNameRequired => 'תנו שם ליעד';
+
+  @override
+  String get goalsKind => 'סוג';
+
+  @override
+  String get goalsKindYesNo => 'כן / לא';
+
+  @override
+  String get goalsKindCount => 'ספירה';
+
+  @override
+  String get goalsKindMinutes => 'דקות';
+
+  @override
+  String get goalsKindNumber => 'מספר';
+
+  @override
+  String get goalsPeriod => 'באיזו תדירות';
+
+  @override
+  String get goalsRule => 'כלל';
+
+  @override
+  String get goalsAtLeast => 'לפחות';
+
+  @override
+  String get goalsAtMost => 'לכל היותר';
+
+  @override
+  String get goalsExactly => 'בדיוק';
+
+  @override
+  String get goalsTarget => 'יעד';
+
+  @override
+  String get goalsTargetInvalid => 'הזינו מספר שלם גדול מ־0';
+
+  @override
+  String get goalsDelete => 'מחיקת יעד';
+
+  @override
+  String goalsDeleteConfirm(String goal) {
+    return 'למחוק את \"$goal\"? תוצאות קודמות נשמרות.';
+  }
+
+  @override
+  String get goalsWorkoutsTotal => 'אימונים בשבוע';
+
+  @override
+  String get goalsWorkoutsRuns => 'מתוכם ריצות';
+
+  @override
+  String get goalsWorkoutsStrength => 'מתוכם כוח';
+
+  @override
+  String get goalsWorkoutsMinutes => 'מינימום דקות לכל אימון';
+
+  @override
+  String get goalsNeedOneDaily => 'צריך לפחות יעד יומי אחד';
+
+  @override
+  String goalsTooMany(int max) {
+    return 'עד $max יעדים';
+  }
+
+  @override
+  String get goalsSummaryYesNo => 'כן / לא';
+
+  @override
+  String goalsSummaryAtLeast(String target) {
+    return 'לפחות $target';
+  }
+
+  @override
+  String goalsSummaryAtMost(String target) {
+    return 'לכל היותר $target';
+  }
+
+  @override
+  String goalsSummaryExactly(String target) {
+    return 'בדיוק $target';
+  }
+
+  @override
+  String goalsSummaryPerWeek(String summary) {
+    return '$summary בשבוע';
+  }
+
+  @override
+  String get roundTitle => 'פתיחת סבב חדש';
+
+  @override
+  String get roundSubtitle => 'תאריכים חדשים לאותה קבוצה ואותם יעדים';
+
+  @override
+  String get roundStart => 'פתיחת הסבב';
+
+  @override
+  String get roundStarted => 'סבב חדש התחיל';
+
+  @override
+  String get roundInfo => 'הלוח והרצפים מתחילים מחדש עם הסבב החדש.';
+
+  @override
   String get boardYou => 'אני';
 
   @override

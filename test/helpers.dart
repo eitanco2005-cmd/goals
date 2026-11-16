@@ -79,3 +79,15 @@ Future<MemoryBackend> signedInSoloBackend({String languageCode = 'en'}) async {
   );
   return b;
 }
+
+/// Scrolls [finder] into the middle of its scrollable (so taps don't land
+/// under the bottom navigation), building lazily-built list items first.
+Future<void> scrollToCenter(WidgetTester tester, Finder finder) async {
+  await tester.scrollUntilVisible(
+    finder,
+    200,
+    scrollable: find.byType(Scrollable).first,
+  );
+  await Scrollable.ensureVisible(tester.element(finder.first), alignment: 0.5);
+  await tester.pumpAndSettle();
+}

@@ -104,8 +104,20 @@ abstract interface class PairRepository {
   Stream<Pair?> watchPair(String pairId);
 }
 
+/// Most goals a challenge can have (mirrors `validChallenge` in the rules).
+const maxGoals = 30;
+
 abstract interface class ChallengeRepository {
   Stream<Challenge?> watchActiveChallenge(String pairId);
+
+  /// Replaces the goals of challenge [challengeId] (any member may edit;
+  /// the change applies to the whole group from now on).
+  Future<void> updateGoals({
+    required String pairId,
+    required String challengeId,
+    required List<GoalDef> goals,
+  });
+
   Future<Challenge> createChallenge({
     required String pairId,
     required String startDate,

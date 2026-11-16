@@ -51,7 +51,9 @@ Map<String, int> goalSuccessRates(
   return {
     for (final g in dailyGoals)
       g.id:
-          (days.where((d) => byDay[d]?.statuses[g.id] == GoalStatus.met).length *
+          (days
+                      .where((d) => byDay[d]?.statuses[g.id] == GoalStatus.met)
+                      .length *
                   100 /
                   days.length)
               .round(),

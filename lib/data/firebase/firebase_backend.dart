@@ -445,6 +445,20 @@ class FirebaseBackend
     return challenge;
   });
 
+  @override
+  Future<void> updateGoals({
+    required String pairId,
+    required String challengeId,
+    required List<GoalDef> goals,
+  }) => guard(
+    () => _write(
+      _challenges(pairId).doc(challengeId).update({
+        'goals': [for (final g in goals) g.toMap()],
+        ..._stamp,
+      }),
+    ),
+  );
+
   // ---------------------------------------------------------------- Logs
   @override
   Stream<DailyLog> watchDailyLog({

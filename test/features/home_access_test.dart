@@ -191,11 +191,7 @@ void main() {
       await pump(tester, await signedInPairedBackend(), store: store);
       await tester.tap(find.byIcon(Icons.settings_outlined));
       await tester.pumpAndSettle();
-      await tester.scrollUntilVisible(
-        find.text('Add the widget'),
-        200,
-        scrollable: find.byType(Scrollable).first,
-      );
+      await scrollToCenter(tester, find.text('Add the widget'));
       await tester.tap(find.text('Add the widget'));
       await tester.pumpAndSettle();
       expect(store.pinRequests, 1);
@@ -207,11 +203,7 @@ void main() {
       await pump(tester, await signedInPairedBackend(), store: store);
       await tester.tap(find.byIcon(Icons.settings_outlined));
       await tester.pumpAndSettle();
-      await tester.scrollUntilVisible(
-        find.text('Add the widget'),
-        200,
-        scrollable: find.byType(Scrollable).first,
-      );
+      await scrollToCenter(tester, find.text('Add the widget'));
       await tester.tap(find.text('Add the widget'));
       await tester.pumpAndSettle();
       expect(find.textContaining('Long-press an empty spot'), findsOneWidget);
@@ -256,10 +248,9 @@ void main() {
       await pump(tester, await signedInPairedBackend(), inBrowser: true);
       await tester.tap(find.byIcon(Icons.settings_outlined));
       await tester.pumpAndSettle();
-      await tester.scrollUntilVisible(
+      await scrollToCenter(
+        tester,
         find.text('Add the app to your home screen'),
-        200,
-        scrollable: find.byType(Scrollable).first,
       );
       await tester.tap(find.text('Add the app to your home screen'));
       await tester.pumpAndSettle();

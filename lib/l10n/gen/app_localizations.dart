@@ -596,6 +596,276 @@ abstract class AppLocalizations {
   /// **'Not logged'**
   String get statusUnlogged;
 
+  /// No description provided for @goalsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Goals'**
+  String get goalsTitle;
+
+  /// No description provided for @goalsInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Changes apply to everyone in the group from today on. Past days keep their results.'**
+  String get goalsInfo;
+
+  /// No description provided for @goalsDaily.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily'**
+  String get goalsDaily;
+
+  /// No description provided for @goalsWeekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly'**
+  String get goalsWeekly;
+
+  /// No description provided for @goalsAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add goal'**
+  String get goalsAdd;
+
+  /// No description provided for @goalsSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get goalsSave;
+
+  /// No description provided for @goalsSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Goals updated for the group'**
+  String get goalsSaved;
+
+  /// No description provided for @goalsDiscardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard your changes?'**
+  String get goalsDiscardTitle;
+
+  /// No description provided for @goalsDiscard.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get goalsDiscard;
+
+  /// No description provided for @goalsKeepEditing.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep editing'**
+  String get goalsKeepEditing;
+
+  /// No description provided for @goalsEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit goal'**
+  String get goalsEditTitle;
+
+  /// No description provided for @goalsNewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New goal'**
+  String get goalsNewTitle;
+
+  /// No description provided for @goalsIcon.
+  ///
+  /// In en, this message translates to:
+  /// **'Icon'**
+  String get goalsIcon;
+
+  /// No description provided for @goalsName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get goalsName;
+
+  /// No description provided for @goalsNameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Give the goal a name'**
+  String get goalsNameRequired;
+
+  /// No description provided for @goalsKind.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get goalsKind;
+
+  /// No description provided for @goalsKindYesNo.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes / no'**
+  String get goalsKindYesNo;
+
+  /// No description provided for @goalsKindCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Count'**
+  String get goalsKindCount;
+
+  /// No description provided for @goalsKindMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Minutes'**
+  String get goalsKindMinutes;
+
+  /// No description provided for @goalsKindNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Number'**
+  String get goalsKindNumber;
+
+  /// No description provided for @goalsPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'How often'**
+  String get goalsPeriod;
+
+  /// No description provided for @goalsRule.
+  ///
+  /// In en, this message translates to:
+  /// **'Rule'**
+  String get goalsRule;
+
+  /// No description provided for @goalsAtLeast.
+  ///
+  /// In en, this message translates to:
+  /// **'At least'**
+  String get goalsAtLeast;
+
+  /// No description provided for @goalsAtMost.
+  ///
+  /// In en, this message translates to:
+  /// **'At most'**
+  String get goalsAtMost;
+
+  /// No description provided for @goalsExactly.
+  ///
+  /// In en, this message translates to:
+  /// **'Exactly'**
+  String get goalsExactly;
+
+  /// No description provided for @goalsTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'Target'**
+  String get goalsTarget;
+
+  /// No description provided for @goalsTargetInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a whole number above 0'**
+  String get goalsTargetInvalid;
+
+  /// No description provided for @goalsDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete goal'**
+  String get goalsDelete;
+
+  /// No description provided for @goalsDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete “{goal}”? Past results stay.'**
+  String goalsDeleteConfirm(String goal);
+
+  /// No description provided for @goalsWorkoutsTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Workouts per week'**
+  String get goalsWorkoutsTotal;
+
+  /// No description provided for @goalsWorkoutsRuns.
+  ///
+  /// In en, this message translates to:
+  /// **'Of them, runs'**
+  String get goalsWorkoutsRuns;
+
+  /// No description provided for @goalsWorkoutsStrength.
+  ///
+  /// In en, this message translates to:
+  /// **'Of them, strength'**
+  String get goalsWorkoutsStrength;
+
+  /// No description provided for @goalsWorkoutsMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum minutes each'**
+  String get goalsWorkoutsMinutes;
+
+  /// No description provided for @goalsNeedOneDaily.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep at least one daily goal'**
+  String get goalsNeedOneDaily;
+
+  /// No description provided for @goalsTooMany.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to {max} goals'**
+  String goalsTooMany(int max);
+
+  /// No description provided for @goalsSummaryYesNo.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes / no'**
+  String get goalsSummaryYesNo;
+
+  /// No description provided for @goalsSummaryAtLeast.
+  ///
+  /// In en, this message translates to:
+  /// **'at least {target}'**
+  String goalsSummaryAtLeast(String target);
+
+  /// No description provided for @goalsSummaryAtMost.
+  ///
+  /// In en, this message translates to:
+  /// **'at most {target}'**
+  String goalsSummaryAtMost(String target);
+
+  /// No description provided for @goalsSummaryExactly.
+  ///
+  /// In en, this message translates to:
+  /// **'exactly {target}'**
+  String goalsSummaryExactly(String target);
+
+  /// No description provided for @goalsSummaryPerWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'{summary} a week'**
+  String goalsSummaryPerWeek(String summary);
+
+  /// No description provided for @roundTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Start a new round'**
+  String get roundTitle;
+
+  /// No description provided for @roundSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New dates for the same group and goals'**
+  String get roundSubtitle;
+
+  /// No description provided for @roundStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Start the round'**
+  String get roundStart;
+
+  /// No description provided for @roundStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'A new round started'**
+  String get roundStarted;
+
+  /// No description provided for @roundInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'The board and streaks start fresh with the new round.'**
+  String get roundInfo;
+
   /// No description provided for @boardYou.
   ///
   /// In en, this message translates to:

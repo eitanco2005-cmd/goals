@@ -8,6 +8,7 @@ import '../../core/providers.dart';
 import '../../domain/models.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../auth/language_switch.dart';
+import '../goals/goals_editor_screen.dart';
 import '../home_access/home_access_ui.dart';
 import '../pairing/invite_code_card.dart';
 import 'edit_name_dialog.dart';
@@ -176,12 +177,34 @@ class _ChallengeTiles extends ConsumerWidget {
             child: InviteCodeCard(code: pair.inviteCode),
           ),
         if (challenge != null) _DatesTile(challenge: challenge),
-        ListTile(
-          enabled: false,
-          leading: const Icon(Icons.checklist_rtl),
-          title: Text(l.settingsEditGoals),
-          subtitle: Text(l.comingSoon),
-        ),
+        if (challenge != null) ...[
+          ListTile(
+            leading: const Icon(Icons.checklist_rtl),
+            title: Text(l.settingsEditGoals),
+            subtitle: Text(
+              l.goalsInfo,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => GoalsEditorScreen(challenge: challenge),
+              ),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.restart_alt),
+            title: Text(l.roundTitle),
+            subtitle: Text(l.roundSubtitle),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => NewRoundScreen(challenge: challenge),
+              ),
+            ),
+          ),
+        ],
       ],
     );
   }

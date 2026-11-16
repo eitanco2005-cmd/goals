@@ -15,8 +15,30 @@ const challengeLengthPresets = [30, 66, 90];
 
 /// Start date + length picker, a preview of the default goals and the
 /// "create" button.
+/// Dates + goal preview for a challenge. Without [onSubmit] it starts a new
+/// group (pairing screen); with it, the caller decides what to create (e.g.
+/// a new round of an existing group's challenge).
 class CreateChallengeForm extends ConsumerStatefulWidget {
-  const CreateChallengeForm({super.key});
+  const CreateChallengeForm({
+    super.key,
+    this.goals = defaultGoals,
+    this.initialStart,
+    this.submitLabel,
+    this.onSubmit,
+  });
+
+  /// Goals the new challenge will have (shown as a preview).
+  final List<GoalDef> goals;
+
+  /// First day; defaults to today.
+  final DateTime? initialStart;
+
+  /// Button label; defaults to "Create challenge".
+  final String? submitLabel;
+
+  /// Creates the challenge for the chosen inclusive day keys. Throws an
+  /// AppException on failure (shown under the form).
+  final Future<void> Function(String startDate, String endDate)? onSubmit;
 
   @override
   ConsumerState<CreateChallengeForm> createState() =>
@@ -24,7 +46,8 @@ class CreateChallengeForm extends ConsumerStatefulWidget {
 }
 
 class _CreateChallengeFormState extends ConsumerState<CreateChallengeForm> {
-  late DateTime _start = parseDayKey(ref.read(todayKeyProvider));
+  late DateTime _start =
+      widget.initialStart ?? parseDayKey(ref.read(todayKeyProvider));
 
   /// A preset length, or null when [_customEnd] is used.
   int? _presetDays = challengeLengthPresets.first;
@@ -82,6 +105,10 @@ class _CreateChallengeFormState extends ConsumerState<CreateChallengeForm> {
       _error = null;
     });
     try {
+      if (widget.onSubmit case final submit?) {
+        await submit(dayKey(_start), dayKey(_end));
+        return;
+      }
       await ref
           .read(pairRepositoryProvider)
           .createPair(
@@ -146,14 +173,14 @@ class _CreateChallengeFormState extends ConsumerState<CreateChallengeForm> {
           onTap: _pickCustomEnd,
         ),
         const SizedBox(height: 20),
-        _GoalsPreview(languageCode: locale.languageCode),
+        _GoalsPreview(languageCode: locale.languageCode, goals: widget.goals),
         const SizedBox(height: 20),
         if (_error != null) ...[
           FormErrorText(_error!),
           const SizedBox(height: 12),
         ],
         LoadingButton(
-          label: l.pairCreateButton,
+          label: widget.submitLabel ?? l.pairCreateButton,
           loading: _loading,
           onPressed: _create,
         ),
@@ -195,19 +222,16 @@ class _DateRow extends StatelessWidget {
 }
 
 class _GoalsPreview extends StatelessWidget {
-  const _GoalsPreview({required this.languageCode});
+  const _GoalsPreview({required this.languageCode, required this.goals});
   final String languageCode;
+  final List<GoalDef> goals;
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final daily = defaultGoals
-        .where((g) => g.period == GoalPeriod.daily)
-        .toList();
-    final weekly = defaultGoals
-        .where((g) => g.period == GoalPeriod.weekly)
-        .toList();
+    final daily = goals.where((g) => g.period == GoalPeriod.daily).toList();
+    final weekly = goals.where((g) => g.period == GoalPeriod.weekly).toList();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [

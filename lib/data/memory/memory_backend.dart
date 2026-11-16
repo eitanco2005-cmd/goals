@@ -306,6 +306,24 @@ class MemoryBackend
     return c;
   }
 
+  @override
+  Future<void> updateGoals({
+    required String pairId,
+    required String challengeId,
+    required List<GoalDef> goals,
+  }) async {
+    final c = _challenges[pairId];
+    if (c == null || c.id != challengeId) return;
+    _challenges[pairId] = Challenge(
+      id: c.id,
+      pairId: c.pairId,
+      startDate: c.startDate,
+      endDate: c.endDate,
+      goals: goals,
+    );
+    _notify();
+  }
+
   // ---------------------------------------------------------------- Logs
   String _k(String pairId, String uid, String date) => '$pairId|$uid|$date';
 

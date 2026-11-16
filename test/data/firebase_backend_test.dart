@@ -192,6 +192,25 @@ void main() {
     expect(doc.data()!['statuses'], {GoalIds.workouts: 'met'});
   });
 
+  test('updateGoals replaces the active challenge goals', () async {
+    final a = await signUp('A');
+    final pair = await createPair(a);
+    final edited = [
+      for (final g in defaultGoals)
+        if (g.id != GoalIds.socialMedia)
+          g.id == GoalIds.water ? g.copyWith(target: 10) : g,
+    ];
+    await b.updateGoals(
+      pairId: pair.id,
+      challengeId: pair.activeChallengeId!,
+      goals: edited,
+    );
+    await pumpEventQueue();
+    final c = (await b.watchActiveChallenge(pair.id).first)!;
+    expect(c.goals, hasLength(defaultGoals.length - 1));
+    expect(c.goals.firstWhere((g) => g.id == GoalIds.water).target, 10);
+  });
+
   test('setGoalValue writes the log and the summary', () async {
     final a = await signUp('A');
     final pair = await createPair(a);

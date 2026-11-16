@@ -287,6 +287,155 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statusUnlogged => 'Not logged';
 
   @override
+  String get goalsTitle => 'Goals';
+
+  @override
+  String get goalsInfo =>
+      'Changes apply to everyone in the group from today on. Past days keep their results.';
+
+  @override
+  String get goalsDaily => 'Daily';
+
+  @override
+  String get goalsWeekly => 'Weekly';
+
+  @override
+  String get goalsAdd => 'Add goal';
+
+  @override
+  String get goalsSave => 'Save';
+
+  @override
+  String get goalsSaved => 'Goals updated for the group';
+
+  @override
+  String get goalsDiscardTitle => 'Discard your changes?';
+
+  @override
+  String get goalsDiscard => 'Discard';
+
+  @override
+  String get goalsKeepEditing => 'Keep editing';
+
+  @override
+  String get goalsEditTitle => 'Edit goal';
+
+  @override
+  String get goalsNewTitle => 'New goal';
+
+  @override
+  String get goalsIcon => 'Icon';
+
+  @override
+  String get goalsName => 'Name';
+
+  @override
+  String get goalsNameRequired => 'Give the goal a name';
+
+  @override
+  String get goalsKind => 'Type';
+
+  @override
+  String get goalsKindYesNo => 'Yes / no';
+
+  @override
+  String get goalsKindCount => 'Count';
+
+  @override
+  String get goalsKindMinutes => 'Minutes';
+
+  @override
+  String get goalsKindNumber => 'Number';
+
+  @override
+  String get goalsPeriod => 'How often';
+
+  @override
+  String get goalsRule => 'Rule';
+
+  @override
+  String get goalsAtLeast => 'At least';
+
+  @override
+  String get goalsAtMost => 'At most';
+
+  @override
+  String get goalsExactly => 'Exactly';
+
+  @override
+  String get goalsTarget => 'Target';
+
+  @override
+  String get goalsTargetInvalid => 'Enter a whole number above 0';
+
+  @override
+  String get goalsDelete => 'Delete goal';
+
+  @override
+  String goalsDeleteConfirm(String goal) {
+    return 'Delete “$goal”? Past results stay.';
+  }
+
+  @override
+  String get goalsWorkoutsTotal => 'Workouts per week';
+
+  @override
+  String get goalsWorkoutsRuns => 'Of them, runs';
+
+  @override
+  String get goalsWorkoutsStrength => 'Of them, strength';
+
+  @override
+  String get goalsWorkoutsMinutes => 'Minimum minutes each';
+
+  @override
+  String get goalsNeedOneDaily => 'Keep at least one daily goal';
+
+  @override
+  String goalsTooMany(int max) {
+    return 'Up to $max goals';
+  }
+
+  @override
+  String get goalsSummaryYesNo => 'Yes / no';
+
+  @override
+  String goalsSummaryAtLeast(String target) {
+    return 'at least $target';
+  }
+
+  @override
+  String goalsSummaryAtMost(String target) {
+    return 'at most $target';
+  }
+
+  @override
+  String goalsSummaryExactly(String target) {
+    return 'exactly $target';
+  }
+
+  @override
+  String goalsSummaryPerWeek(String summary) {
+    return '$summary a week';
+  }
+
+  @override
+  String get roundTitle => 'Start a new round';
+
+  @override
+  String get roundSubtitle => 'New dates for the same group and goals';
+
+  @override
+  String get roundStart => 'Start the round';
+
+  @override
+  String get roundStarted => 'A new round started';
+
+  @override
+  String get roundInfo =>
+      'The board and streaks start fresh with the new round.';
+
+  @override
   String get boardYou => 'You';
 
   @override
