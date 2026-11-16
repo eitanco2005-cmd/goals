@@ -23,10 +23,11 @@ Future<FirebaseBackend> initFirebaseBackend() async {
   final firestore = FirebaseFirestore.instance;
   // Must be set before the first Firestore call.
   firestore.settings = Settings(
-    persistenceEnabled: true,
+    // Offline storage on Android. Not on the web: iOS Safari's IndexedDB
+    // (used by the installed iPhone web app) can stall Firestore's live
+    // updates, which matters more than offline use there.
+    persistenceEnabled: !kIsWeb,
     cacheSizeBytes: firestoreCacheSizeBytes,
-    // Keep the cache usable when the web app is open in several tabs.
-    webPersistentTabManager: kIsWeb ? WebPersistentMultipleTabManager() : null,
   );
 
   return FirebaseBackend(auth: FirebaseAuth.instance, firestore: firestore);

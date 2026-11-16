@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../core/dates.dart';
 import '../../core/errors.dart';
 import '../../core/providers.dart';
+import '../../data/repositories.dart';
 import '../../domain/default_goals.dart';
 import '../../domain/models.dart';
 import '../../l10n/gen/app_localizations.dart';
@@ -118,8 +119,15 @@ class _CreateChallengeFormState extends ConsumerState<CreateChallengeForm> {
             endDate: dayKey(_end),
             goals: defaultGoals,
           );
+      refreshSession(ref);
     } catch (e) {
-      if (mounted) setState(() => _error = errorMessage(l, e));
+      if (e is AppException && e.code == 'already-paired') {
+        // Usually an earlier attempt went through but its update didn't
+        // arrive: reload the profile and continue instead of failing.
+        refreshSession(ref);
+      } else if (mounted) {
+        setState(() => _error = errorMessage(l, e));
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }

@@ -119,3 +119,13 @@ final localeProvider = Provider<Locale>((ref) {
   );
   return Locale(profileLang ?? ref.watch(preLoginLanguageProvider));
 });
+
+/// Re-subscribes to the profile, group and challenge. Used after creating or
+/// joining a group, so the app moves on even if a live update was missed
+/// (seen with the iPhone web app).
+void refreshSession(WidgetRef ref) {
+  ref
+    ..invalidate(profileProvider)
+    ..invalidate(pairProvider)
+    ..invalidate(challengeProvider);
+}

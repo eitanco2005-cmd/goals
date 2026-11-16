@@ -4,6 +4,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../core/errors.dart';
 import '../../core/providers.dart';
+import '../../data/repositories.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../auth/auth_widgets.dart';
 
@@ -44,8 +45,15 @@ class _JoinChallengeFormState extends ConsumerState<JoinChallengeForm> {
       await ref
           .read(pairRepositoryProvider)
           .joinPair(uid: user.uid, displayName: name, code: _code.text);
+      refreshSession(ref);
     } catch (e) {
-      if (mounted) setState(() => _error = errorMessage(l, e));
+      if (e is AppException && e.code == 'already-paired') {
+        // Usually an earlier attempt went through but its update didn't
+        // arrive: reload the profile and continue instead of failing.
+        refreshSession(ref);
+      } else if (mounted) {
+        setState(() => _error = errorMessage(l, e));
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
