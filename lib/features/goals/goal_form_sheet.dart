@@ -309,6 +309,22 @@ class _GoalFormState extends State<_GoalForm> {
                       showCheckmark: false,
                       onSelected: (_) => setState(() => _icon = icon),
                     ),
+                  // An emoji picked with "Other…" that isn't in the list.
+                  if (!goalIcons.contains(_icon))
+                    ChoiceChip(
+                      label: Text(_icon, style: const TextStyle(fontSize: 18)),
+                      selected: true,
+                      showCheckmark: false,
+                      onSelected: (_) {},
+                    ),
+                  ActionChip(
+                    key: const ValueKey('goal-icon-other'),
+                    label: Text(l.goalsIconOther),
+                    onPressed: () async {
+                      final picked = await _pickEmoji(context);
+                      if (picked != null) setState(() => _icon = picked);
+                    },
+                  ),
                 ],
               ),
               label(l.goalsName),
@@ -528,4 +544,61 @@ String describeGoal(AppLocalizations l, GoalDef g) {
       ? l.goalsSummaryPerWeek(rule)
       : rule;
   return g.requiresPhoto ? '$text · ${l.goalsSummaryPhoto}' : text;
+}
+
+/// Asks for any emoji from the phone's emoji keyboard; returns the first
+/// one typed, or null.
+Future<String?> _pickEmoji(BuildContext context) {
+  final l = AppLocalizations.of(context);
+  return showDialog<String>(
+    context: context,
+    builder: (context) {
+      String? error;
+      return StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Text(l.goalsIconOtherTitle),
+          content: TextField(
+            key: const ValueKey('goal-icon-input'),
+            autofocus: true,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 32),
+            decoration: InputDecoration(
+              hintText: '🙂',
+              helperText: l.goalsIconOtherHint,
+              errorText: error,
+            ),
+            onChanged: (text) {
+              final emoji = firstEmoji(text);
+              if (emoji != null) {
+                Navigator.of(context).pop(emoji);
+              } else if (text.trim().isNotEmpty) {
+                setState(() => error = l.goalsIconOtherInvalid);
+              }
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(MaterialLocalizations.of(context).cancelButtonLabel),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
+
+/// The first character of [text] if it's an emoji (not a plain letter,
+/// digit, space, punctuation or keyboard symbol), else null.
+String? firstEmoji(String text) {
+  final trimmed = text.trim();
+  if (trimmed.isEmpty) return null;
+  final first = trimmed.characters.first;
+  // Emoji are "other symbols" (☕ ⚽) or built from several code points
+  // (flags, keycaps, skin tones); plain text characters are rejected.
+  final plain = RegExp(
+    r'^(?:[\p{L}\p{N}\p{P}\p{Z}]|[\p{Sm}\p{Sc}\p{Sk}])$',
+    unicode: true,
+  );
+  return plain.hasMatch(first) ? null : first;
 }

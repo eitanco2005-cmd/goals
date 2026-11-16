@@ -321,6 +321,19 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get goalsIconOther => 'Other…';
+
+  @override
+  String get goalsIconOtherTitle => 'Pick any emoji';
+
+  @override
+  String get goalsIconOtherHint => 'Open the emoji keyboard and choose one';
+
+  @override
+  String get goalsIconOtherInvalid =>
+      'That\'s not an emoji – try the emoji keyboard';
+
+  @override
   String get statusUnlogged => 'Not logged';
 
   @override

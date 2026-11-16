@@ -656,6 +656,30 @@ abstract class AppLocalizations {
   /// **'Let\'s do a challenge together on Goals! Download the app: {link}'**
   String pairInviteText(String link);
 
+  /// No description provided for @goalsIconOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other…'**
+  String get goalsIconOther;
+
+  /// No description provided for @goalsIconOtherTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick any emoji'**
+  String get goalsIconOtherTitle;
+
+  /// No description provided for @goalsIconOtherHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the emoji keyboard and choose one'**
+  String get goalsIconOtherHint;
+
+  /// No description provided for @goalsIconOtherInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'That\'s not an emoji – try the emoji keyboard'**
+  String get goalsIconOtherInvalid;
+
   /// No description provided for @statusUnlogged.
   ///
   /// In en, this message translates to:

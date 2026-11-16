@@ -71,6 +71,8 @@ void main() {
     expect(find.text('Give the goal a name'), findsOneWidget);
 
     await tester.enterText(find.byKey(const ValueKey('goal-name')), 'Meditate');
+    await tester.ensureVisible(find.text('🧘'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('🧘'));
     await saveSheet(tester);
     expect(find.text('Meditate'), findsOneWidget);
@@ -162,6 +164,39 @@ void main() {
       find.descendant(of: card, matching: find.text('0:30 / 2 h')),
       findsOneWidget,
     );
+  });
+
+  test('"Other" accepts emoji only', () {
+    expect(firstEmoji('🎻'), '🎻');
+    expect(firstEmoji(' ☕ '), '☕');
+    expect(firstEmoji('🇮🇱'), '🇮🇱');
+    expect(firstEmoji('👍🏽ok'), '👍🏽');
+    expect(firstEmoji('a'), isNull);
+    expect(firstEmoji('ש'), isNull);
+    expect(firstEmoji('7'), isNull);
+    expect(firstEmoji('+'), isNull);
+    expect(firstEmoji(''), isNull);
+  });
+
+  testWidgets('pick any emoji with "Other…"', (tester) async {
+    final b = await signedInPairedBackend();
+    await pumpApp(tester, b);
+    await openEditor(tester);
+    await tester.tap(find.text('Add goal'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const ValueKey('goal-name')), 'Violin');
+    await tester.tap(find.byKey(const ValueKey('goal-icon-other')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const ValueKey('goal-icon-input')), 'x');
+    await tester.pump();
+    expect(find.textContaining("That's not an emoji"), findsOneWidget);
+    await tester.enterText(find.byKey(const ValueKey('goal-icon-input')), '🎻');
+    await tester.pumpAndSettle();
+    expect(find.text('🎻'), findsOneWidget); // selected, next to the list
+    await saveSheet(tester);
+    await tester.tap(find.text('Save').first);
+    await tester.pumpAndSettle();
+    expect((await active(b)).goals.last.icon, '🎻');
   });
 
   test('big number targets get typing and bigger steps', () {

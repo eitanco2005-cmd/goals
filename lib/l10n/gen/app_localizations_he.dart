@@ -322,6 +322,18 @@ class AppLocalizationsHe extends AppLocalizations {
   }
 
   @override
+  String get goalsIconOther => 'אחר…';
+
+  @override
+  String get goalsIconOtherTitle => 'בחירת אימוג׳י';
+
+  @override
+  String get goalsIconOtherHint => 'פתחו את מקלדת האימוג׳י ובחרו אחד';
+
+  @override
+  String get goalsIconOtherInvalid => 'זה לא אימוג׳י – נסו את מקלדת האימוג׳י';
+
+  @override
   String get statusUnlogged => 'לא עודכן';
 
   @override
