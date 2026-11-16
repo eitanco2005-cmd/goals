@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Goals – download</title>
+  <meta name="description" content="Join a Goals challenge: download the Android app or add the web app to your iPhone home screen.">
+  <meta name="theme-color" content="#E07A5F">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="apple-touch-icon" href="/icons/Icon-192.png">
+  <style>
+    :root {
+      --bg: #F3E3D9; --card: #FFF8F4; --ink: #2B1F1A; --muted: #6E5A50;
+      --accent: #E07A5F; --accent-ink: #FFFFFF; --soft: #FBE9E1; --line: #E8D3C6;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1B1412; --card: #261D1A; --ink: #F5E9E3; --muted: #BFA9A0;
+        --accent: #E9876C; --accent-ink: #1B1412; --soft: #33241F; --line: #3D2D28;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--bg); color: var(--ink);
+      font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+    main { max-width: 520px; margin: 0 auto; padding: 24px 16px 48px; }
+    header { text-align: center; margin: 8px 0 20px; }
+    header img { width: 84px; height: 84px; border-radius: 20px; }
+    h1 { margin: 10px 0 4px; font-size: 30px; }
+    .tagline { color: var(--muted); margin: 0; }
+    .lang { position: absolute; inset-inline-end: 16px; top: 14px; }
+    .lang button {
+      background: var(--card); color: var(--ink); border: 1px solid var(--line);
+      border-radius: 999px; padding: 6px 14px; font: inherit; cursor: pointer;
+    }
+    .card {
+      background: var(--card); border-radius: 20px; padding: 18px;
+      margin: 14px 0; border: 1px solid var(--line);
+    }
+    .card h2 { margin: 0 0 10px; font-size: 19px; }
+    .invite { background: var(--soft); text-align: center; }
+    .code {
+      direction: ltr; font: 700 34px/1.2 ui-monospace, "SF Mono", Menlo, monospace;
+      letter-spacing: 6px; margin: 6px 0 10px;
+    }
+    .btn {
+      display: block; width: 100%; text-align: center; text-decoration: none;
+      background: var(--accent); color: var(--accent-ink); font-weight: 700;
+      border: 0; border-radius: 14px; padding: 15px; font-size: 17px; cursor: pointer;
+    }
+    .btn.secondary { background: transparent; color: var(--ink); border: 1px solid var(--line); font-weight: 600; }
+    .btn + .btn { margin-top: 10px; }
+    ol { margin: 14px 0 0; padding-inline-start: 22px; }
+    li { margin: 6px 0; }
+    .small { color: var(--muted); font-size: 14px; margin: 10px 0 0; }
+    .small a { color: inherit; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div class="lang"><button id="lang" type="button">English</button></div>
+  <main>
+    <header>
+      <img src="/icons/Icon-192.png" alt="">
+      <h1>Goals</h1>
+      <p class="tagline" data-t="tagline"></p>
+    </header>
+
+    <section class="card invite hidden" id="invite">
+      <h2 data-t="invited"></h2>
+      <div class="code" id="code"></div>
+      <button class="btn secondary" id="copy" type="button" data-t="copy"></button>
+    </section>
+
+    <section class="card" id="android">
+      <h2 data-t="androidTitle"></h2>
+      <a class="btn" href="/download/goals.apk" download="Goals.apk" data-t="download"></a>
+      <a class="btn secondary hidden" id="openApp" href="#" data-t="openInstalled"></a>
+      <ol>
+        <li data-t="a1"></li>
+        <li data-t="a2"></li>
+        <li data-t="a3"></li>
+        <li data-t="a4"></li>
+      </ol>
+      <p class="small"><span data-t="older"></span> <a href="/download/goals-arm32.apk" download="Goals.apk" data-t="olderLink"></a></p>
+    </section>
+
+    <section class="card" id="iphone">
+      <h2 data-t="iphoneTitle"></h2>
+      <a class="btn" id="openWeb" href="/" data-t="openWeb"></a>
+      <ol>
+        <li data-t="i1"></li>
+        <li data-t="i2"></li>
+        <li data-t="i3"></li>
+        <li data-t="i4"></li>
+      </ol>
+    </section>
+  </main>
+
+  <script>
+    const T = {
+      he: {
+        tagline: 'אתגר הרגלים קבוצתי – כל אחד עוקב אחרי היעדים שלו ורואה איך האחרים מתקדמים.',
+        invited: 'הוזמנתם לאתגר! קוד ההצטרפות:',
+        copy: 'העתקת הקוד', copied: 'הקוד הועתק ✓',
+        androidTitle: 'אנדרואיד',
+        download: 'הורדת האפליקציה',
+        openInstalled: 'כבר מותקנת? פתיחה והצטרפות',
+        a1: 'פתחו את הקובץ שירד (Goals.apk).',
+        a2: 'אם הטלפון מבקש – אשרו התקנה מהדפדפן ("מקורות לא ידועים").',
+        a3: 'אם Play Protect מזהיר: "פרטים נוספים" ← "התקנה בכל זאת". האפליקציה לא מגיעה מחנות Play, ולכן האזהרה.',
+        a4: 'פתחו את Goals, צרו חשבון ובחרו "הצטרפות עם קוד".',
+        older: 'טלפון ישן (32-ביט)?', olderLink: 'הגרסה הזו',
+        iphoneTitle: 'אייפון',
+        openWeb: 'פתיחת Goals',
+        i1: 'פתחו את העמוד הזה ב-Safari.',
+        i2: 'הקישו על "שיתוף" (הריבוע עם החץ).',
+        i3: 'בחרו "הוסף למסך הבית".',
+        i4: 'פתחו את Goals ממסך הבית, צרו חשבון ובחרו "הצטרפות עם קוד".',
+        other: 'English',
+      },
+      en: {
+        tagline: 'A group habit challenge: everyone tracks their own goals and sees how the others are doing.',
+        invited: "You're invited to a challenge! Your code:",
+        copy: 'Copy the code', copied: 'Code copied ✓',
+        androidTitle: 'Android',
+        download: 'Download the app',
+        openInstalled: 'Already installed? Open and join',
+        a1: 'Open the downloaded file (Goals.apk).',
+        a2: 'If your phone asks, allow installing from your browser ("unknown sources").',
+        a3: 'If Play Protect warns: "More details" → "Install anyway". It warns because the app is not from the Play Store.',
+        a4: 'Open Goals, create an account and choose "Join with a code".',
+        older: 'Older (32-bit) phone?', olderLink: 'Use this version',
+        iphoneTitle: 'iPhone',
+        openWeb: 'Open Goals',
+        i1: 'Open this page in Safari.',
+        i2: 'Tap Share (the square with the arrow).',
+        i3: 'Choose "Add to Home Screen".',
+        i4: 'Open Goals from your home screen, create an account and choose "Join with a code".',
+        other: 'עברית',
+      },
+    };
+
+    // Invite code from /join/ABC123 or ?code=ABC123.
+    const fromPath = location.pathname.match(/^\/join\/([A-Za-z0-9]{1,32})/);
+    const code = (fromPath ? fromPath[1] : new URLSearchParams(location.search).get('code') || '')
+      .toUpperCase().replace(/[^A-Z0-9]/g, '');
+
+    let lang = (navigator.language || 'he').toLowerCase().startsWith('he') ? 'he' : 'en';
+    try { lang = localStorage.getItem('goals.lang') || lang; } catch (_) {}
+
+    function render() {
+      const t = T[lang];
+      document.documentElement.lang = lang;
+      document.documentElement.dir = lang === 'he' ? 'rtl' : 'ltr';
+      document.querySelectorAll('[data-t]').forEach((el) => { el.textContent = t[el.dataset.t]; });
+      document.getElementById('lang').textContent = t.other;
+    }
+
+    document.getElementById('lang').addEventListener('click', () => {
+      lang = lang === 'he' ? 'en' : 'he';
+      try { localStorage.setItem('goals.lang', lang); } catch (_) {}
+      render();
+    });
+
+    if (code) {
+      document.getElementById('invite').classList.remove('hidden');
+      document.getElementById('code').textContent = code;
+      document.getElementById('openWeb').href = '/?join=' + encodeURIComponent(code);
+      const open = document.getElementById('openApp');
+      open.href = 'goals://join/' + encodeURIComponent(code);
+      open.classList.remove('hidden');
+      document.getElementById('copy').addEventListener('click', async (e) => {
+        try {
+          await navigator.clipboard.writeText(code);
+          e.target.textContent = T[lang].copied;
+        } catch (_) {}
+      });
+    }
+
+    // Show the visitor's own platform first (both stay visible).
+    const ua = navigator.userAgent;
+    const ios = /iPhone|iPad|iPod/.test(ua) || (ua.includes('Macintosh') && navigator.maxTouchPoints > 1);
+    if (ios) {
+      const main = document.querySelector('main');
+      main.insertBefore(document.getElementById('iphone'), document.getElementById('android'));
+    }
+    render();
+  </script>
+</body>
+</html>

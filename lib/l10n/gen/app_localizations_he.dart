@@ -288,6 +288,23 @@ class AppLocalizationsHe extends AppLocalizations {
   String get statusUnlogged => 'לא עודכן';
 
   @override
+  String get inviteShare => 'שיתוף קישור הזמנה';
+
+  @override
+  String inviteShareText(String link, String code) {
+    return 'הצטרפו לאתגר שלי ב-Goals! $link\nקוד הצטרפות: $code';
+  }
+
+  @override
+  String get inviteCopied => 'ההזמנה הועתקה – הדביקו אותה בהודעה';
+
+  @override
+  String get updateAvailable => 'גרסה חדשה של Goals מוכנה';
+
+  @override
+  String get updateInstall => 'עדכון';
+
+  @override
   String get remindersSection => 'תזכורות';
 
   @override

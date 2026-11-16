@@ -1,12 +1,14 @@
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../l10n/gen/app_localizations.dart';
+import '../invite/invite.dart';
 
 /// Shows the pair's invite code with a copy action.
 /// Used on the pairing screen, the Today screen (while waiting for the
 /// partner) and in Settings.
-class InviteCodeCard extends StatelessWidget {
+class InviteCodeCard extends ConsumerWidget {
   const InviteCodeCard({super.key, required this.code});
   final String code;
 
@@ -22,7 +24,7 @@ class InviteCodeCard extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
@@ -94,6 +96,20 @@ class InviteCodeCard extends StatelessWidget {
                   ),
                 ],
               ),
+            ),
+            const SizedBox(height: 12),
+            // A link to the download/join page: the easiest way to invite
+            // (it has the Android app and the iPhone steps).
+            FilledButton.icon(
+              key: const ValueKey('share-invite'),
+              onPressed: () => shareOrCopy(
+                ref,
+                ScaffoldMessenger.of(context),
+                l.inviteShareText(inviteLink(code), code),
+                copiedMessage: l.inviteCopied,
+              ),
+              icon: const Icon(Icons.share_outlined),
+              label: Text(l.inviteShare),
             ),
           ],
         ),

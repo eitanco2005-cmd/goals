@@ -4,6 +4,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../core/providers.dart';
 import '../../l10n/gen/app_localizations.dart';
 import 'create_challenge_form.dart';
+import '../invite/invite.dart';
 import 'join_challenge_form.dart';
 
 enum _PairMode { create, join }
@@ -19,7 +20,10 @@ class PairingScreen extends ConsumerStatefulWidget {
 }
 
 class _PairingScreenState extends ConsumerState<PairingScreen> {
-  _PairMode? _mode;
+  // Opened from an invite link: go straight to "Join with a code".
+  late _PairMode? _mode = ref.read(pendingInviteCodeProvider) != null
+      ? _PairMode.join
+      : null;
 
   void _setMode(_PairMode? mode) => setState(() => _mode = mode);
 
@@ -36,6 +40,10 @@ class _PairingScreenState extends ConsumerState<PairingScreen> {
     final l = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final name = ref.watch(profileProvider.select((p) => p.value?.displayName));
+    // An invite link that arrives while this screen is open.
+    ref.listen(pendingInviteCodeProvider, (_, code) {
+      if (code != null) _setMode(_PairMode.join);
+    });
 
     final Widget body = switch (_mode) {
       null => _ModeChoice(onSelected: _setMode),
@@ -49,7 +57,9 @@ class _PairingScreenState extends ConsumerState<PairingScreen> {
         key: const ValueKey(_PairMode.join),
         title: l.pairJoinTitle,
         onBack: () => _setMode(null),
-        child: const JoinChallengeForm(),
+        child: JoinChallengeForm(
+          key: ValueKey(ref.watch(pendingInviteCodeProvider)),
+        ),
       ),
     };
 

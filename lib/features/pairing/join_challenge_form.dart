@@ -6,6 +6,7 @@ import '../../core/errors.dart';
 import '../../core/providers.dart';
 import '../../data/repositories.dart';
 import '../../l10n/gen/app_localizations.dart';
+import '../invite/invite.dart';
 import '../auth/auth_widgets.dart';
 
 /// Length of a pair invite code.
@@ -21,7 +22,10 @@ class JoinChallengeForm extends ConsumerStatefulWidget {
 
 class _JoinChallengeFormState extends ConsumerState<JoinChallengeForm> {
   final _formKey = GlobalKey<FormState>();
-  final _code = TextEditingController();
+  // Pre-filled when the app was opened from an invite link.
+  late final _code = TextEditingController(
+    text: ref.read(pendingInviteCodeProvider) ?? '',
+  );
   bool _loading = false;
   String? _error;
 
@@ -45,6 +49,7 @@ class _JoinChallengeFormState extends ConsumerState<JoinChallengeForm> {
       await ref
           .read(pairRepositoryProvider)
           .joinPair(uid: user.uid, displayName: name, code: _code.text);
+      ref.read(pendingInviteCodeProvider.notifier).set(null);
       refreshSession(ref);
     } catch (e) {
       if (e is AppException && e.code == 'already-paired') {

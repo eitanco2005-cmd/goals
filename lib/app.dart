@@ -7,6 +7,7 @@ import 'core/providers.dart';
 import 'core/router.dart';
 import 'core/theme.dart';
 import 'features/home_access/quick_actions.dart';
+import 'features/invite/invite.dart';
 import 'l10n/gen/app_localizations.dart';
 
 class GoalsApp extends ConsumerWidget {
@@ -29,8 +30,9 @@ class GoalsApp extends ConsumerWidget {
         GlobalWidgetsLocalizations.delegate,
       ],
       routerConfig: router,
-      builder: (context, child) =>
-          QuickActionsBinding(child: child ?? const SizedBox.shrink()),
+      builder: (context, child) => InviteLinkBinding(
+        child: QuickActionsBinding(child: child ?? const SizedBox.shrink()),
+      ),
     );
   }
 }

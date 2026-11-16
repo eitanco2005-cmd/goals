@@ -596,6 +596,36 @@ abstract class AppLocalizations {
   /// **'Not logged'**
   String get statusUnlogged;
 
+  /// No description provided for @inviteShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share invite link'**
+  String get inviteShare;
+
+  /// No description provided for @inviteShareText.
+  ///
+  /// In en, this message translates to:
+  /// **'Join my challenge on Goals! {link}\nInvite code: {code}'**
+  String inviteShareText(String link, String code);
+
+  /// No description provided for @inviteCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite copied – paste it into a message'**
+  String get inviteCopied;
+
+  /// No description provided for @updateAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'A new version of Goals is ready'**
+  String get updateAvailable;
+
+  /// No description provided for @updateInstall.
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get updateInstall;
+
   /// No description provided for @remindersSection.
   ///
   /// In en, this message translates to:

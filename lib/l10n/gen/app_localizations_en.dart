@@ -287,6 +287,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statusUnlogged => 'Not logged';
 
   @override
+  String get inviteShare => 'Share invite link';
+
+  @override
+  String inviteShareText(String link, String code) {
+    return 'Join my challenge on Goals! $link\nInvite code: $code';
+  }
+
+  @override
+  String get inviteCopied => 'Invite copied – paste it into a message';
+
+  @override
+  String get updateAvailable => 'A new version of Goals is ready';
+
+  @override
+  String get updateInstall => 'Update';
+
+  @override
   String get remindersSection => 'Reminders';
 
   @override

@@ -15,6 +15,7 @@ import '../../l10n/gen/app_localizations.dart';
 import '../home_access/home_access_ui.dart';
 import '../home_access/quick_actions.dart';
 import '../photos/photo_capture.dart';
+import '../update/update_check.dart';
 import '../week/week_glance.dart';
 import '../photos/photo_providers.dart';
 import '../photos/photo_thumbnails.dart';
@@ -309,6 +310,7 @@ class _TodayContent extends ConsumerWidget {
           padding: const EdgeInsetsDirectional.fromSTEB(16, 12, 16, 32),
           sliver: SliverList.list(
             children: [
+              const UpdateBanner(),
               const InstallAppCard(),
               if (showDemo) ...[
                 DemoModeBanner(
