@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../core/config.dart';
 import '../../core/providers.dart';
 import '../../l10n/gen/app_localizations.dart';
 import 'create_challenge_form.dart';
@@ -131,12 +132,12 @@ class _PairingScreenState extends ConsumerState<PairingScreen> {
   }
 }
 
-class _ModeChoice extends StatelessWidget {
+class _ModeChoice extends ConsumerWidget {
   const _ModeChoice({required this.onSelected});
   final ValueChanged<_PairMode> onSelected;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -154,6 +155,20 @@ class _ModeChoice extends StatelessWidget {
           subtitle: l.pairJoinSubtitle,
           onTap: () => onSelected(_PairMode.join),
         ),
+        const SizedBox(height: 12),
+        // Before there's a challenge: send friends the download link.
+        _ChoiceCard(
+          key: const ValueKey('invite-download'),
+          emoji: '📲',
+          title: l.pairInviteTitle,
+          subtitle: l.pairInviteSubtitle,
+          onTap: () => shareOrCopy(
+            ref,
+            ScaffoldMessenger.of(context),
+            l.pairInviteText('$siteUrl/download'),
+            copiedMessage: l.inviteCopied,
+          ),
+        ),
       ],
     );
   }
@@ -161,6 +176,7 @@ class _ModeChoice extends StatelessWidget {
 
 class _ChoiceCard extends StatelessWidget {
   const _ChoiceCard({
+    super.key,
     required this.emoji,
     required this.title,
     required this.subtitle,

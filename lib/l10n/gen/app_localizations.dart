@@ -371,7 +371,7 @@ abstract class AppLocalizations {
   /// No description provided for @pairInviteTitle.
   ///
   /// In en, this message translates to:
-  /// **'Your invite code'**
+  /// **'Invite friends'**
   String get pairInviteTitle;
 
   /// No description provided for @pairInviteExplain.
@@ -643,6 +643,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Hours'**
   String get goalsTimeHours;
+
+  /// No description provided for @pairInviteSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a link to download the app'**
+  String get pairInviteSubtitle;
+
+  /// No description provided for @pairInviteText.
+  ///
+  /// In en, this message translates to:
+  /// **'Let\'s do a challenge together on Goals! Download the app: {link}'**
+  String pairInviteText(String link);
 
   /// No description provided for @statusUnlogged.
   ///

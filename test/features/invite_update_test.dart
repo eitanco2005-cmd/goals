@@ -115,6 +115,24 @@ void main() {
     expect(sharer.shared.single, contains('Invite code:'));
   });
 
+  testWidgets('before a challenge: invite friends to download the app', (
+    tester,
+  ) async {
+    final sharer = FakeSharer();
+    final b = MemoryBackend();
+    await b.signUp(
+      email: 'me@x.com',
+      password: 'secret1',
+      displayName: 'Me',
+      languageCode: 'en',
+    );
+    await pump(tester, b, extra: [sharerProvider.overrideWithValue(sharer)]);
+    expect(find.text('Invite friends'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('invite-download')));
+    await tester.pumpAndSettle();
+    expect(sharer.shared.single, contains('/download'));
+  });
+
   testWidgets('without a share sheet the invite is copied instead', (
     tester,
   ) async {

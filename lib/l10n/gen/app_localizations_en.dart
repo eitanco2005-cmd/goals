@@ -163,7 +163,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pairJoinButton => 'Join challenge';
 
   @override
-  String get pairInviteTitle => 'Your invite code';
+  String get pairInviteTitle => 'Invite friends';
 
   @override
   String get pairInviteExplain =>
@@ -311,6 +311,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get goalsTimeHours => 'Hours';
+
+  @override
+  String get pairInviteSubtitle => 'Send a link to download the app';
+
+  @override
+  String pairInviteText(String link) {
+    return 'Let\'s do a challenge together on Goals! Download the app: $link';
+  }
 
   @override
   String get statusUnlogged => 'Not logged';
