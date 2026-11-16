@@ -146,7 +146,7 @@
   "roundSubtitle": "New dates for the same group and goals",
   "roundStart": "Start the round",
   "roundStarted": "A new round started",
-  "roundInfo": "The board and streaks start fresh with the new round.",
+  "roundInfo": "The new round replaces the current one right away. The board and streaks start fresh; past days keep their results.",
   "boardYou": "You",
   "boardStreak": "Streak",
   "boardBestStreak": "Best",

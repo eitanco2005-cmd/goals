@@ -433,7 +433,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get roundInfo =>
-      'The board and streaks start fresh with the new round.';
+      'The new round replaces the current one right away. The board and streaks start fresh; past days keep their results.';
 
   @override
   String get boardYou => 'You';

@@ -433,7 +433,8 @@ class AppLocalizationsHe extends AppLocalizations {
   String get roundStarted => 'סבב חדש התחיל';
 
   @override
-  String get roundInfo => 'הלוח והרצפים מתחילים מחדש עם הסבב החדש.';
+  String get roundInfo =>
+      'הסבב החדש מחליף את הנוכחי מיד. הלוח והרצפים מתחילים מחדש; ימים קודמים שומרים על התוצאות שלהם.';
 
   @override
   String get boardYou => 'אני';

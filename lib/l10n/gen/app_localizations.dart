@@ -863,7 +863,7 @@ abstract class AppLocalizations {
   /// No description provided for @roundInfo.
   ///
   /// In en, this message translates to:
-  /// **'The board and streaks start fresh with the new round.'**
+  /// **'The new round replaces the current one right away. The board and streaks start fresh; past days keep their results.'**
   String get roundInfo;
 
   /// No description provided for @boardYou.

@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:goals_challenge/core/dates.dart';
 import 'package:goals_challenge/data/memory/memory_backend.dart';
 import 'package:goals_challenge/domain/default_goals.dart';
 import 'package:goals_challenge/domain/models.dart';
@@ -171,7 +172,7 @@ void main() {
     final after = await active(b);
     expect(after.id, isNot(before.id));
     expect(after.goals.map((g) => g.id), before.goals.map((g) => g.id));
-    // The current round is still running, so the new one starts after it.
-    expect(after.startDate.compareTo(before.endDate), greaterThan(0));
+    // It replaces the current round from today.
+    expect(after.startDate, todayKey());
   });
 }

@@ -239,11 +239,9 @@ class NewRoundScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final today = parseDayKey(ref.watch(todayKeyProvider));
-    final end = parseDayKey(challenge.endDate);
-    // Right after the current round, or today if it already ended.
-    final dayAfter = DateTime(end.year, end.month, end.day + 1);
-    final start = dayAfter.isAfter(today) ? dayAfter : today;
+    // The new round replaces the current one right away, so it starts
+    // today by default (a later date leaves a gap with nothing to log).
+    final start = parseDayKey(ref.watch(todayKeyProvider));
 
     return Scaffold(
       appBar: AppBar(title: Text(l.roundTitle)),
