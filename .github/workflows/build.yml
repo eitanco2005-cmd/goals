@@ -63,19 +63,23 @@ jobs:
       - name: Build web
         run: flutter build web --release $FIREBASE_DEFINE $VERSION_FLAGS
 
-      - name: Add the APKs and version info to the website
+      - name: Collect the APKs and version info
         run: |
           OUT=build/app/outputs/flutter-apk
-          mkdir -p build/web/download
-          cp "$OUT/app-arm64-v8a-release.apk" build/web/download/goals.apk
-          cp "$OUT/app-armeabi-v7a-release.apk" build/web/download/goals-arm32.apk
-          printf '{"build": %s, "apk": "/download/goals.apk"}\n' "${{ github.run_number }}" \
+          mkdir -p build/apk build/web/download
+          cp "$OUT/app-arm64-v8a-release.apk" build/apk/goals.apk
+          cp "$OUT/app-armeabi-v7a-release.apk" build/apk/goals-arm32.apk
+          # Firebase Hosting (free plan) doesn't allow APK files, so the APKs
+          # are published as a GitHub release; the website only says which
+          # build is the latest (for the in-app update notice).
+          printf '{"build": %s, "apk": "%s"}\n' "${{ github.run_number }}" \
+            "https://github.com/${{ github.repository }}/releases/download/android/goals.apk" \
             > build/web/download/version.json
 
       - uses: actions/upload-artifact@v4
         with:
           name: android-apk
-          path: build/web/download/goals.apk
+          path: build/apk
 
       - uses: actions/upload-artifact@v4
         with:
@@ -88,6 +92,8 @@ jobs:
     if: ${{ !inputs.demo && github.ref == 'refs/heads/claude/lucid-heisenberg-65a7wv' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: write # publish the APKs as the 'android' GitHub release
     env:
       SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
     steps:
@@ -122,3 +128,22 @@ jobs:
           npx --yes firebase-tools@latest deploy \
             --only firestore:rules,firestore:indexes,hosting \
             --project our-challenge-e8f25 --non-interactive --force
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: android-apk
+          path: build/apk
+
+      - name: Publish the APKs (GitHub release 'android')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! gh release view android --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release create android --repo "$GITHUB_REPOSITORY" \
+              --target "$GITHUB_SHA" --title "Goals for Android" \
+              --notes "Latest Android app. Install page: https://our-challenge-e8f25.web.app/download"
+          fi
+          gh release upload android build/apk/goals.apk build/apk/goals-arm32.apk \
+            --repo "$GITHUB_REPOSITORY" --clobber
+          gh release edit android --repo "$GITHUB_REPOSITORY" \
+            --notes "Latest Android app (build ${{ github.run_number }}). Install page: https://our-challenge-e8f25.web.app/download"

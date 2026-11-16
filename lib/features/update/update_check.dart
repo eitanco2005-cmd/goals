@@ -7,9 +7,14 @@ import '../../core/config.dart';
 import '../../l10n/gen/app_localizations.dart';
 import 'version_fetch_stub.dart' if (dart.library.io) 'version_fetch_io.dart';
 
-/// Where CI publishes the latest Android build number and APK.
+/// Where CI publishes the latest Android build number.
 final latestVersionUrl = Uri.parse('$siteUrl/download/version.json');
-final latestApkUrl = Uri.parse('$siteUrl/download/goals.apk');
+
+/// APKs are published as the 'android' GitHub release (Firebase Hosting's
+/// free plan doesn't allow APK files).
+final latestApkUrl = Uri.parse(
+  'https://github.com/eitanco2005-cmd/goals/releases/download/android/goals.apk',
+);
 
 /// The newest published build number, or null when unknown. Overridden in
 /// tests.
