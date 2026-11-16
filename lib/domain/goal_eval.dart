@@ -78,6 +78,20 @@ GoalStatus evaluateWorkouts(GoalDef goal, List<WorkoutEntry> weekEntries) {
   return ok ? GoalStatus.met : GoalStatus.notMet;
 }
 
+/// Whether a workouts goal is on pace mid-week: at least as many valid
+/// workouts as a steady pace would have by now (for 3 a week: 0 until
+/// Tuesday, 1 by Wednesday, 2 by Friday). [daysPassed] = whole days of the
+/// week already over (0 on its first day).
+bool workoutsOnPace(
+  GoalDef goal,
+  List<WorkoutEntry> weekEntries,
+  int daysPassed,
+) {
+  final minMinutes = goal.requirements['minMinutes'] ?? 0;
+  final valid = weekEntries.where((e) => e.minutes >= minMinutes).length;
+  return valid >= (goal.target * daysPassed / 7).floor();
+}
+
 /// Builds the public [WeekSummary] for [weeklyGoals].
 ///
 /// Workout goals are scored from [workouts] (this week's entries). Counter

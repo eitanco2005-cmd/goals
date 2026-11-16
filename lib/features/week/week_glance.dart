@@ -2,8 +2,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../core/dates.dart';
+import '../../core/providers.dart';
 import '../../core/router.dart';
 import '../../core/status_ui.dart';
+import '../../domain/goal_eval.dart';
 import '../../domain/models.dart';
 import '../../l10n/gen/app_localizations.dart';
 import 'week_providers.dart';
@@ -21,7 +24,13 @@ class WeekGlanceCard extends ConsumerWidget {
     final l = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final lang = Localizations.localeOf(context).languageCode;
-    final summary = ref.watch(myWeekSummaryProvider(currentWeekStart()));
+    final week = currentWeekStart();
+    final summary = ref.watch(myWeekSummaryProvider(week));
+    final workouts =
+        ref.watch(myWeekWorkoutsProvider(week)).value ?? const <WorkoutEntry>[];
+    final daysPassed = parseDayKey(ref.watch(todayKeyProvider))
+        .difference(parseDayKey(week))
+        .inDays;
     return Card(
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
@@ -58,6 +67,14 @@ class WeekGlanceCard extends ConsumerWidget {
                     builder: (context) {
                       final status =
                           summary?.statuses[g.id] ?? GoalStatus.unlogged;
+                      final outcome = goalOutcome(
+                        g,
+                        status,
+                        periodOpen: true,
+                        onPace:
+                            g.type == GoalType.workouts &&
+                            workoutsOnPace(g, workouts, daysPassed),
+                      );
                       return Row(
                         children: [
                           Text(
@@ -73,13 +90,9 @@ class WeekGlanceCard extends ConsumerWidget {
                             ),
                           ),
                           Text(
-                            goalOutcome(g, status, periodOpen: true).label(l),
+                            outcome.label(l),
                             style: theme.textTheme.labelLarge?.copyWith(
-                              color: goalOutcome(
-                                g,
-                                status,
-                                periodOpen: true,
-                              ).color,
+                              color: outcome.color,
                               fontWeight: FontWeight.w700,
                             ),
                           ),

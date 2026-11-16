@@ -28,12 +28,14 @@ enum GoalOutcome { met, onTrack, failed, notYet, unlogged }
 
 /// The [GoalOutcome] of [goal] with [status]; [value] when known.
 /// [periodOpen]: the goal's week is still running (weekly limits then read
-/// "on track" rather than "done").
+/// "on track" rather than "done"). [onPace]: a workouts goal not done yet
+/// is keeping pace (see `workoutsOnPace`), which also reads "on track".
 GoalOutcome goalOutcome(
   GoalDef goal,
   GoalStatus status, {
   num? value,
   bool periodOpen = false,
+  bool onPace = false,
 }) => switch (status) {
   GoalStatus.met =>
     periodOpen &&
@@ -41,6 +43,9 @@ GoalOutcome goalOutcome(
             goal.comparison == Comparison.atMost
         ? GoalOutcome.onTrack
         : GoalOutcome.met,
+  // Workouts not done yet but keeping pace while the week runs.
+  _ when periodOpen && onPace && goal.type == GoalType.workouts =>
+    GoalOutcome.onTrack,
   GoalStatus.unlogged => GoalOutcome.unlogged,
   GoalStatus.notMet =>
     isFailure(goal, value) ? GoalOutcome.failed : GoalOutcome.notYet,

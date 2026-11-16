@@ -218,6 +218,7 @@ class _GoalHeader extends StatelessWidget {
     required this.status,
     required this.subtitle,
     this.open = false,
+    this.onPace = false,
   });
 
   final GoalDef goal;
@@ -226,6 +227,9 @@ class _GoalHeader extends StatelessWidget {
 
   /// The week shown is still running.
   final bool open;
+
+  /// A workouts goal keeping pace (see `workoutsOnPace`).
+  final bool onPace;
 
   @override
   Widget build(BuildContext context) {
@@ -254,14 +258,21 @@ class _GoalHeader extends StatelessWidget {
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: status == GoalStatus.unlogged
                       ? theme.colorScheme.onSurfaceVariant
-                      : goalOutcome(goal, status, periodOpen: open).color,
+                      : goalOutcome(
+                          goal,
+                          status,
+                          periodOpen: open,
+                          onPace: onPace,
+                        ).color,
                   fontWeight: FontWeight.w600,
                 ),
               ),
             ],
           ),
         ),
-        _StatusChip(outcome: goalOutcome(goal, status, periodOpen: open)),
+        _StatusChip(
+          outcome: goalOutcome(goal, status, periodOpen: open, onPace: onPace),
+        ),
       ],
     );
   }
@@ -303,6 +314,11 @@ class _WorkoutsCard extends ConsumerWidget {
     final minMinutes = (goal.requirements['minMinutes'] ?? 0).toInt();
     final counted = entries.where((e) => e.minutes >= minMinutes).toList();
     final status = evaluateWorkouts(goal, entries);
+    final today = ref.watch(todayKeyProvider);
+    final open = selected.week == currentWeekStart();
+    final daysPassed = parseDayKey(today)
+        .difference(parseDayKey(selected.week))
+        .inDays;
 
     final parts = <String>[
       l.weekDone(counted.length, goal.target.toInt()),
@@ -321,6 +337,8 @@ class _WorkoutsCard extends ConsumerWidget {
               goal: goal,
               status: status,
               subtitle: parts.join(' · '),
+              open: open,
+              onPace: workoutsOnPace(goal, entries, daysPassed),
             ),
             if (minMinutes > 0)
               Padding(

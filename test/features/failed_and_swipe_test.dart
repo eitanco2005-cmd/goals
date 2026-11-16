@@ -49,6 +49,34 @@ void main() {
         GoalOutcome.met,
       );
     });
+    test('workouts: on pace mid-week reads "on track"', () {
+      final w = goal(GoalIds.workouts);
+      WorkoutEntry e(int min) => WorkoutEntry(
+        id: 'e$min',
+        uid: 'u',
+        date: '2026-11-16',
+        type: WorkoutType.run,
+        minutes: min,
+      );
+      // 3 a week: none needed through Tuesday, 1 by Wednesday, 2 by Friday.
+      expect(workoutsOnPace(w, const [], 2), isTrue);
+      expect(workoutsOnPace(w, const [], 3), isFalse);
+      expect(workoutsOnPace(w, [e(40)], 3), isTrue);
+      expect(workoutsOnPace(w, [e(40)], 5), isFalse);
+      expect(workoutsOnPace(w, [e(10)], 3), isFalse); // too short to count
+      expect(
+        goalOutcome(w, GoalStatus.notMet, periodOpen: true, onPace: true),
+        GoalOutcome.onTrack,
+      );
+      expect(
+        goalOutcome(w, GoalStatus.notMet, periodOpen: true),
+        GoalOutcome.notYet,
+      );
+      expect(
+        goalOutcome(w, GoalStatus.notMet, onPace: true),
+        GoalOutcome.notYet,
+      );
+    });
     test('board stats start at the first logged day', () {
       const days = ['2026-11-13', '2026-11-14', '2026-11-15', '2026-11-16'];
       final s = [
