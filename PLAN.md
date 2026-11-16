@@ -62,8 +62,8 @@ Daily score = met daily goals ÷ total daily goals. Weekly goals are shown separ
 1. ✅ Project setup, Firebase, login and partner pairing, Today screen with sync, Hebrew/English
 2. ✅ Photos: attach a photo to a goal, compress and store it, group photo strips and viewer, reactions
 3. ✅ Android home-screen widget: rotates through the group's photos from today, with everyone's %; launcher shortcuts; iPhone install guide
-4. ✅ Week screen and Board (heatmap, stats and photo diary). Still to do: goal editing and challenge rounds
-5. Notifications: end-of-day check, reminders, partner nudges, reactions
+4. ✅ Week screen, Board (heatmap, stats and photo diary), goal editing, challenge rounds, leaving a group and replacing the invite code
+5. Notifications: ✅ end-of-day check and midday reminder on Android (on-device). Still to do: nudges and reaction pushes between members, which need a server (Cloud Functions)
 6. Health Connect steps (Android)
 7. Later: native iPhone app and widget
 

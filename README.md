@@ -16,7 +16,10 @@ See [PLAN.md](PLAN.md) for the product plan and milestones.
 - ✅ **Board:** heatmap of the whole challenge per member, streaks, goal success rates, and a photo diary for each day
 - ✅ **Android home screen:** a widget that rotates through the group's photos from today; long-press shortcuts (+1 glass of water, add a photo)
 - ✅ **iPhone:** web app with a guide for adding it to the home screen
-- ⏭️ **Next:** editing goals and new challenge rounds, notifications, automatic steps on Android
+- ✅ **Goals:** edit goals for the group, add custom ones, start a new round
+- ✅ **Group management:** leave a challenge; replace a shared invite code
+- ✅ **Reminders (Android):** end-of-day check that lists what's still open, plus a midday nudge
+- ⏭️ **Next:** automatic steps on Android; push notifications between members (nudges, reactions), which need Firebase Cloud Functions
 
 ## Run it
 ```bash
