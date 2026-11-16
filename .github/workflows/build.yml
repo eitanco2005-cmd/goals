@@ -61,7 +61,7 @@ jobs:
         run: flutter build apk --release --split-per-abi $FIREBASE_DEFINE $VERSION_FLAGS
 
       - name: Build web
-        run: flutter build web --release $FIREBASE_DEFINE $VERSION_FLAGS
+        run: flutter build web --release --web-content-hash $FIREBASE_DEFINE $VERSION_FLAGS
 
       - name: Collect the APKs and version info
         run: |
