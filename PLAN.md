@@ -5,7 +5,7 @@ A two-person habit challenge app for tracking your own daily and weekly goals an
 ## Platforms
 | Who | How | Widget |
 |-----|-----|--------|
-| Android | Native Flutter app (APK, installed directly; no Play Store needed) | Yes, a home-screen widget with the partner's daily summary |
+| Android | Native Flutter app (APK, installed directly; no Play Store needed) | Yes, a home-screen widget that rotates through the partner's photos from today, plus their % for the day |
 | iPhone | The same Flutter code built for the web, installed as a PWA ("Add to Home Screen", iOS 16.4+ for push notifications) | Not for now. Can become a native app later with the $99/yr Apple account and Codemagic cloud builds |
 
 ## Stack
@@ -43,6 +43,13 @@ A two-person habit challenge app for tracking your own daily and weekly goals an
 ## Partner visibility
 **Summary only**: you see your partner's ✔/✘ for each goal and their daily %, not their exact numbers.
 
+## Photos
+- **Optional:** every goal card has a 📷 button (camera or gallery) to attach a photo for that goal, like a meal, a workout, a book page or the last glass of water.
+- **Storage is free (no credit card):** photos are resized to about 1080px (roughly 100 KB) and stored in Firestore, one document per photo. They are visible to both partners; the detailed numbers stay private.
+- **Partner view:** today's photos appear in the partner card, and tapping one opens it full-screen.
+- **Reactions:** ❤️ 💪 🔥 on your partner's photos, shown in the app live. Push notifications for reactions come with the Notifications step.
+- **Photo diary:** tap a day on the board to see both partners' photos from that day.
+
 ## Notifications
 - **End-of-day check (וידוא)**: at a time you choose, a summary of the day. Any goals not logged yet are listed with a button to fill them in
 - **Scheduled reminders**: e.g. water and reading
@@ -52,12 +59,13 @@ A two-person habit challenge app for tracking your own daily and weekly goals an
 Daily score = met daily goals ÷ total daily goals. Weekly goals are shown separately on the week view and the board.
 
 ## Milestones
-1. Project setup, Firebase, login and partner pairing, Today screen with sync, Hebrew/English
-2. Week screen, Board (heatmap and stats), goal editing and challenge rounds
-3. Notifications: end-of-day check, reminders, partner nudges
-4. Health Connect steps (Android)
-5. Android home-screen widget
-6. Later: native iPhone app and widget
+1. ✅ Project setup, Firebase, login and partner pairing, Today screen with sync, Hebrew/English
+2. Photos: attach a photo to a goal, compress and store it, partner photo strip and viewer, reactions
+3. Android home-screen widget: rotates through the partner's photos from today, with their % and goal checkmarks
+4. Week screen, Board (heatmap, stats and photo diary), goal editing and challenge rounds
+5. Notifications: end-of-day check, reminders, partner nudges, reactions
+6. Health Connect steps (Android)
+7. Later: native iPhone app and widget
 
 ## What you'll need to provide
 - A Google account to create the Firebase project (I'll walk you through it and give you the config to paste in)
