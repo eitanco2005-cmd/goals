@@ -596,6 +596,78 @@ abstract class AppLocalizations {
   /// **'Not logged'**
   String get statusUnlogged;
 
+  /// No description provided for @boardYou.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get boardYou;
+
+  /// No description provided for @boardStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Streak'**
+  String get boardStreak;
+
+  /// No description provided for @boardBestStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Best'**
+  String get boardBestStreak;
+
+  /// No description provided for @boardAverage.
+  ///
+  /// In en, this message translates to:
+  /// **'Average'**
+  String get boardAverage;
+
+  /// No description provided for @boardDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 day} other{{count} days}}'**
+  String boardDays(int count);
+
+  /// No description provided for @boardStreakHint.
+  ///
+  /// In en, this message translates to:
+  /// **'A streak counts days in a row with {percent}%+ of the daily goals.'**
+  String boardStreakHint(int percent);
+
+  /// No description provided for @boardLegend.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily goals met'**
+  String get boardLegend;
+
+  /// No description provided for @boardNoData.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing logged'**
+  String get boardNoData;
+
+  /// No description provided for @boardCellLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{date}: {value}'**
+  String boardCellLabel(String date, String value);
+
+  /// No description provided for @boardGoalRates.
+  ///
+  /// In en, this message translates to:
+  /// **'How often you met each goal'**
+  String get boardGoalRates;
+
+  /// No description provided for @boardNoPhotos.
+  ///
+  /// In en, this message translates to:
+  /// **'No photos that day'**
+  String get boardNoPhotos;
+
+  /// No description provided for @boardNotStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'The challenge starts on {date}'**
+  String boardNotStarted(String date);
+
   /// No description provided for @weekTitle.
   ///
   /// In en, this message translates to:

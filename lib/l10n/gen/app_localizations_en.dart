@@ -287,6 +287,56 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statusUnlogged => 'Not logged';
 
   @override
+  String get boardYou => 'You';
+
+  @override
+  String get boardStreak => 'Streak';
+
+  @override
+  String get boardBestStreak => 'Best';
+
+  @override
+  String get boardAverage => 'Average';
+
+  @override
+  String boardDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days',
+      one: '1 day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String boardStreakHint(int percent) {
+    return 'A streak counts days in a row with $percent%+ of the daily goals.';
+  }
+
+  @override
+  String get boardLegend => 'Daily goals met';
+
+  @override
+  String get boardNoData => 'Nothing logged';
+
+  @override
+  String boardCellLabel(String date, String value) {
+    return '$date: $value';
+  }
+
+  @override
+  String get boardGoalRates => 'How often you met each goal';
+
+  @override
+  String get boardNoPhotos => 'No photos that day';
+
+  @override
+  String boardNotStarted(String date) {
+    return 'The challenge starts on $date';
+  }
+
+  @override
   String get weekTitle => 'This week';
 
   @override

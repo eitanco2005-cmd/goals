@@ -288,6 +288,56 @@ class AppLocalizationsHe extends AppLocalizations {
   String get statusUnlogged => 'לא עודכן';
 
   @override
+  String get boardYou => 'אני';
+
+  @override
+  String get boardStreak => 'רצף';
+
+  @override
+  String get boardBestStreak => 'שיא';
+
+  @override
+  String get boardAverage => 'ממוצע';
+
+  @override
+  String boardDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ימים',
+      one: 'יום אחד',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String boardStreakHint(int percent) {
+    return 'רצף סופר ימים ברצף עם $percent% ומעלה מהיעדים היומיים.';
+  }
+
+  @override
+  String get boardLegend => 'יעדים יומיים שהושלמו';
+
+  @override
+  String get boardNoData => 'לא עודכן';
+
+  @override
+  String boardCellLabel(String date, String value) {
+    return '$date: $value';
+  }
+
+  @override
+  String get boardGoalRates => 'כמה פעמים עמדת בכל יעד';
+
+  @override
+  String get boardNoPhotos => 'אין תמונות מהיום הזה';
+
+  @override
+  String boardNotStarted(String date) {
+    return 'האתגר מתחיל ב־$date';
+  }
+
+  @override
   String get weekTitle => 'השבוע';
 
   @override
