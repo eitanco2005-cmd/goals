@@ -1,9 +1,14 @@
+import 'package:flutter/foundation.dart' show debugPrint;
+
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/providers.dart';
 import '../../data/repositories.dart';
 import '../../domain/goal_eval.dart';
 import '../../domain/models.dart';
+import '../photos/photo_providers.dart';
 
 /// Who/where/when today's logging applies to. Null until signed in and paired.
 typedef TodayScope = ({String pairId, String uid, String date});
@@ -84,6 +89,7 @@ class TodayLogController extends Notifier<Map<String, num?>> {
             goalId: goalId,
             value: value,
             dailyGoals: dailyGoals,
+            photoGoalIds: ref.read(myTodayPhotoGoalIdsProvider),
           );
       if (ref.mounted && _latestWrite[goalId] == write) _saved.add(goalId);
     } catch (_) {
@@ -119,7 +125,11 @@ final myTodaySummaryProvider = Provider<DaySummary?>((ref) {
   final log = ref.watch(todayLogProvider).value;
   final challenge = ref.watch(challengeProvider).value;
   if (log == null || challenge == null) return null;
-  return summarizeDay(log, challenge.dailyGoals);
+  return summarizeDay(
+    log,
+    challenge.dailyGoals,
+    photoGoalIds: ref.watch(myTodayPhotoGoalIdsProvider),
+  );
 });
 
 /// A group member's PUBLIC summary for today (summary-only visibility: other
@@ -145,3 +155,35 @@ class DemoBannerDismissed extends Notifier<bool> {
   bool build() => false;
   void dismiss() => state = true;
 }
+
+/// Keeps my published summary of today in step with my photos: adding or
+/// deleting the photo of a goal that requires one changes whether it counts
+/// (logging values already writes the summary itself). Watched by the home
+/// shell.
+final mySummarySyncProvider = Provider<void>((ref) {
+  final scope = ref.watch(todayScopeProvider);
+  final mine = ref.watch(myTodaySummaryProvider);
+  final hasLog = ref.watch(todayLogProvider).hasValue;
+  if (scope == null || mine == null || !hasLog) return;
+  final stored = ref.watch(memberTodaySummaryProvider(scope.uid));
+  if (!stored.hasValue) return;
+  final current = stored.value;
+  // Nothing logged and nothing published: nothing to correct.
+  if (current == null &&
+      mine.statuses.values.every((s) => s == GoalStatus.unlogged)) {
+    return;
+  }
+  if (current != null && _sameSummary(current, mine)) return;
+  final repo = ref.watch(logRepositoryProvider);
+  final timer = Timer(const Duration(milliseconds: 800), () {
+    repo
+        .writeDaySummary(pairId: scope.pairId, summary: mine)
+        .catchError((Object e) => debugPrint('summary not saved: $e'));
+  });
+  ref.onDispose(timer.cancel);
+});
+
+bool _sameSummary(DaySummary a, DaySummary b) =>
+    a.percent == b.percent &&
+    a.statuses.length == b.statuses.length &&
+    a.statuses.entries.every((e) => b.statuses[e.key] == e.value);

@@ -596,6 +596,42 @@ abstract class AppLocalizations {
   /// **'Not logged'**
   String get statusUnlogged;
 
+  /// No description provided for @todayNeedsPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a photo to complete this goal'**
+  String get todayNeedsPhoto;
+
+  /// No description provided for @todayNeedsPhotoShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs a photo'**
+  String get todayNeedsPhotoShort;
+
+  /// No description provided for @todayPhotoRequiredNote.
+  ///
+  /// In en, this message translates to:
+  /// **'📷 Counts only with a photo'**
+  String get todayPhotoRequiredNote;
+
+  /// No description provided for @goalsPhotoRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo required'**
+  String get goalsPhotoRequired;
+
+  /// No description provided for @goalsPhotoRequiredSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Counts as done only with a photo of it that day'**
+  String get goalsPhotoRequiredSub;
+
+  /// No description provided for @goalsSummaryPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'📷 photo required'**
+  String get goalsSummaryPhoto;
+
   /// No description provided for @inviteShare.
   ///
   /// In en, this message translates to:

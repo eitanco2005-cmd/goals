@@ -56,6 +56,7 @@ class GoalDef {
     required this.icon,
     this.step = 1,
     this.requirements = const {},
+    this.requiresPhoto = false,
   });
 
   final String id;
@@ -78,6 +79,10 @@ class GoalDef {
   /// `{'run': 1, 'strength': 2, 'minMinutes': 30}`.
   final Map<String, num> requirements;
 
+  /// The goal counts as met only when its owner also attached a photo of
+  /// it that day (daily goals).
+  final bool requiresPhoto;
+
   String title(String languageCode) => languageCode == 'he' ? titleHe : titleEn;
 
   GoalDef copyWith({
@@ -87,6 +92,7 @@ class GoalDef {
     num? target,
     num? step,
     Map<String, num>? requirements,
+    bool? requiresPhoto,
   }) => GoalDef(
     id: id,
     titleHe: titleHe ?? this.titleHe,
@@ -98,6 +104,7 @@ class GoalDef {
     icon: icon,
     step: step ?? this.step,
     requirements: requirements ?? this.requirements,
+    requiresPhoto: requiresPhoto ?? this.requiresPhoto,
   );
 
   Map<String, dynamic> toMap() => {
@@ -111,6 +118,7 @@ class GoalDef {
     'icon': icon,
     'step': step,
     'requirements': requirements,
+    if (requiresPhoto) 'requiresPhoto': true,
   };
 
   factory GoalDef.fromMap(Map<String, dynamic> m) => GoalDef(
@@ -126,6 +134,7 @@ class GoalDef {
     requirements: Map<String, num>.from(
       (m['requirements'] as Map?)?.cast<String, num>() ?? const {},
     ),
+    requiresPhoto: m['requiresPhoto'] == true,
   );
 }
 

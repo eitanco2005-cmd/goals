@@ -393,6 +393,7 @@ class MemoryBackend
     required String goalId,
     required num? value,
     required List<GoalDef> dailyGoals,
+    Set<String> photoGoalIds = const {},
   }) async {
     final key = _k(pairId, uid, date);
     if (value == null && !_logs.containsKey(key)) return;
@@ -401,7 +402,16 @@ class MemoryBackend
       value,
     );
     _logs[key] = log;
-    _summaries[key] = summarizeDay(log, dailyGoals);
+    _summaries[key] = summarizeDay(log, dailyGoals, photoGoalIds: photoGoalIds);
+    _notify();
+  }
+
+  @override
+  Future<void> writeDaySummary({
+    required String pairId,
+    required DaySummary summary,
+  }) async {
+    _summaries[_k(pairId, summary.uid, summary.date)] = summary;
     _notify();
   }
 

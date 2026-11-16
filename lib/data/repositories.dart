@@ -166,6 +166,14 @@ abstract interface class LogRepository {
     required String goalId,
     required num? value,
     required List<GoalDef> dailyGoals,
+    Set<String> photoGoalIds = const {},
+  });
+
+  /// Replaces the caller's public [DaySummary] (e.g. after a photo was
+  /// added or removed for a goal that requires one).
+  Future<void> writeDaySummary({
+    required String pairId,
+    required DaySummary summary,
   });
 
   /// Summary of one user's day (null when nothing logged).

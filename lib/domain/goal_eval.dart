@@ -13,10 +13,39 @@ GoalStatus evaluateGoal(GoalDef goal, num? value) {
   return ok ? GoalStatus.met : GoalStatus.notMet;
 }
 
+/// Status of one daily goal, given which goals have a photo that day.
+/// A goal that requires a photo is not met until it has one.
+GoalStatus dayGoalStatus(
+  GoalDef goal,
+  DailyLog log, {
+  Set<String> photoGoalIds = const {},
+}) {
+  final status = evaluateGoal(goal, log.valueOf(goal.id));
+  if (status == GoalStatus.met &&
+      goal.requiresPhoto &&
+      !photoGoalIds.contains(goal.id)) {
+    return GoalStatus.notMet;
+  }
+  return status;
+}
+
+/// Whether [goal]'s logged value reaches its target but its required photo
+/// is still missing ("add a photo to complete").
+bool waitingForPhoto(GoalDef goal, num? value, Set<String> photoGoalIds) =>
+    goal.requiresPhoto &&
+    !photoGoalIds.contains(goal.id) &&
+    evaluateGoal(goal, value) == GoalStatus.met;
+
 /// Builds the public [DaySummary] for a day from the private [DailyLog].
-DaySummary summarizeDay(DailyLog log, List<GoalDef> dailyGoals) {
+/// [photoGoalIds]: goals the person attached a photo to that day.
+DaySummary summarizeDay(
+  DailyLog log,
+  List<GoalDef> dailyGoals, {
+  Set<String> photoGoalIds = const {},
+}) {
   final statuses = <String, GoalStatus>{
-    for (final g in dailyGoals) g.id: evaluateGoal(g, log.valueOf(g.id)),
+    for (final g in dailyGoals)
+      g.id: dayGoalStatus(g, log, photoGoalIds: photoGoalIds),
   };
   final met = statuses.values.where((s) => s == GoalStatus.met).length;
   final percent = dailyGoals.isEmpty

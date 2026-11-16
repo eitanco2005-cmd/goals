@@ -287,6 +287,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statusUnlogged => 'Not logged';
 
   @override
+  String get todayNeedsPhoto => 'Add a photo to complete this goal';
+
+  @override
+  String get todayNeedsPhotoShort => 'Needs a photo';
+
+  @override
+  String get todayPhotoRequiredNote => '📷 Counts only with a photo';
+
+  @override
+  String get goalsPhotoRequired => 'Photo required';
+
+  @override
+  String get goalsPhotoRequiredSub =>
+      'Counts as done only with a photo of it that day';
+
+  @override
+  String get goalsSummaryPhoto => '📷 photo required';
+
+  @override
   String get inviteShare => 'Share invite link';
 
   @override

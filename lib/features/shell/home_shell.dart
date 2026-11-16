@@ -4,6 +4,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../l10n/gen/app_localizations.dart';
 import '../reminders/reminders.dart';
+import '../today/today_providers.dart';
 import '../week/week_providers.dart';
 import '../widget/widget_sync.dart';
 
@@ -19,6 +20,8 @@ class HomeShell extends ConsumerWidget {
     ref.watch(groupWidgetSyncProvider);
     // Keeps on-device reminders (Android) in step with today's log.
     ref.watch(reminderSyncProvider);
+    // Photos can complete goals that require one: republish my summary.
+    ref.watch(mySummarySyncProvider);
     // Keeps my weekly summary (what the group sees) up to date.
     ref.watch(weekSummaryPublisherProvider(currentWeekStart()));
     return Scaffold(

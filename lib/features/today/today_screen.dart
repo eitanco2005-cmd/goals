@@ -366,6 +366,9 @@ class _TodayContent extends ConsumerWidget {
                         goal: goal,
                         title: goal.title(lang),
                       ),
+                      hasPhoto: ref
+                          .watch(myTodayPhotoGoalIdsProvider)
+                          .contains(goal.id),
                     ),
                   ),
               if (weeklyGoals.isNotEmpty) ...[

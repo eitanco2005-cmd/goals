@@ -21,6 +21,7 @@ class GoalCard extends StatefulWidget {
     this.enabled = true,
     this.photoAction,
     this.photos,
+    this.hasPhoto = false,
   });
 
   final GoalDef goal;
@@ -33,6 +34,19 @@ class GoalCard extends StatefulWidget {
 
   /// Shown under the controls (today's photos for this goal).
   final Widget? photos;
+
+  /// Whether I attached a photo to this goal today (for goals that require
+  /// one: they only count with a photo).
+  final bool hasPhoto;
+
+  GoalStatus get status => dayGoalStatus(
+    goal,
+    DailyLog(uid: '', date: '', values: {goal.id: ?value}),
+    photoGoalIds: hasPhoto ? {goal.id} : const {},
+  );
+
+  bool get needsPhoto =>
+      waitingForPhoto(goal, value, hasPhoto ? {goal.id} : const {});
 
   @override
   State<GoalCard> createState() => _GoalCardState();
@@ -48,8 +62,8 @@ class _GoalCardState extends State<GoalCard>
   @override
   void didUpdateWidget(GoalCard oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final was = evaluateGoal(oldWidget.goal, oldWidget.value);
-    final now = evaluateGoal(widget.goal, widget.value);
+    final was = oldWidget.status;
+    final now = widget.status;
     if (now == GoalStatus.met && was != GoalStatus.met) {
       HapticFeedback.lightImpact();
       _pop.forward(from: 0);
@@ -69,7 +83,8 @@ class _GoalCardState extends State<GoalCard>
     final scheme = theme.colorScheme;
     final goal = widget.goal;
     final title = goal.title(Localizations.localeOf(context).languageCode);
-    final status = evaluateGoal(goal, widget.value);
+    final status = widget.status;
+    final needsPhoto = widget.needsPhoto;
     final unlogged = status == GoalStatus.unlogged;
     final target = GoalFormatter(
       l,
@@ -131,7 +146,10 @@ class _GoalCardState extends State<GoalCard>
                 ),
               ),
               const SizedBox(width: 8),
-              _StatusPill(status: status, label: status.label(l)),
+              _StatusPill(
+                status: status,
+                label: needsPhoto ? l.todayNeedsPhotoShort : status.label(l),
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -152,6 +170,40 @@ class _GoalCardState extends State<GoalCard>
               ],
             ],
           ),
+          if (needsPhoto)
+            Padding(
+              key: const ValueKey('needs-photo'),
+              padding: const EdgeInsetsDirectional.only(top: 8),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.photo_camera_outlined,
+                    size: 18,
+                    color: GoalStatus.notMet.color,
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      l.todayNeedsPhoto,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: GoalStatus.notMet.color,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else if (goal.requiresPhoto && !widget.hasPhoto)
+            Padding(
+              padding: const EdgeInsetsDirectional.only(top: 8),
+              child: Text(
+                l.todayPhotoRequiredNote,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
+            ),
           ?widget.photos,
         ],
       ),

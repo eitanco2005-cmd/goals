@@ -288,6 +288,24 @@ class AppLocalizationsHe extends AppLocalizations {
   String get statusUnlogged => 'לא עודכן';
 
   @override
+  String get todayNeedsPhoto => 'הוסיפו תמונה כדי להשלים את היעד';
+
+  @override
+  String get todayNeedsPhotoShort => 'חסרה תמונה';
+
+  @override
+  String get todayPhotoRequiredNote => '📷 נספר רק עם תמונה';
+
+  @override
+  String get goalsPhotoRequired => 'חובת תמונה';
+
+  @override
+  String get goalsPhotoRequiredSub => 'נחשב כבוצע רק עם תמונה שלו באותו יום';
+
+  @override
+  String get goalsSummaryPhoto => '📷 חובת תמונה';
+
+  @override
   String get inviteShare => 'שיתוף קישור הזמנה';
 
   @override

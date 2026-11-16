@@ -64,6 +64,7 @@ class _NoEchoLogs implements LogRepository {
     required String goalId,
     required num? value,
     required List<GoalDef> dailyGoals,
+    Set<String> photoGoalIds = const {},
   }) {
     final c = Completer<void>();
     writes.add(c);

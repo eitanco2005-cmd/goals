@@ -40,6 +40,13 @@ final myGoalPhotosProvider = Provider.family<List<GoalPhoto>, String>((
   ];
 });
 
+/// Goals I attached a photo to today (for goals that require one).
+final myTodayPhotoGoalIdsProvider = Provider<Set<String>>((ref) {
+  final uid = ref.watch(authStateProvider.select((a) => a.value?.uid));
+  if (uid == null) return const {};
+  return {for (final p in ref.watch(userTodayPhotosProvider(uid))) p.goalId};
+});
+
 /// A member's photos today, newest first.
 final memberTodayPhotosNewestFirstProvider =
     Provider.family<List<GoalPhoto>, String>(

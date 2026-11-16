@@ -546,6 +546,7 @@ class FirebaseBackend
     required String goalId,
     required num? value,
     required List<GoalDef> dailyGoals,
+    Set<String> photoGoalIds = const {},
   }) => guard(() async {
     final key = '$pairId/$uid/$date';
     final logRef = _logDoc(pairId, uid, date);
@@ -564,7 +565,11 @@ class FirebaseBackend
               if (before == null && value == null) return null;
               final after = (before ?? DailyLog(uid: uid, date: date))
                   .withValue(goalId, value);
-              final summary = summarizeDay(after, dailyGoals);
+              final summary = summarizeDay(
+                after,
+                dailyGoals,
+                photoGoalIds: photoGoalIds,
+              );
               commit =
                   (_firestore.batch()
                         ..set(logRef, {
@@ -588,6 +593,20 @@ class FirebaseBackend
       if (identical(_pendingLogs[key], step)) _pendingLogs.remove(key);
     }
   });
+
+  @override
+  Future<void> writeDaySummary({
+    required String pairId,
+    required DaySummary summary,
+  }) => guard(
+    () => _write(
+      _summaryDoc(
+        pairId,
+        summary.uid,
+        summary.date,
+      ).set({...summary.toMap(), ..._stamp}),
+    ),
+  );
 
   @override
   Stream<AppException> get writeErrors => _writeErrors.stream;

@@ -100,6 +100,7 @@ class _GoalFormState extends State<_GoalForm> {
   late GoalKind _kind;
   late GoalPeriod _period;
   late Comparison _comparison;
+  late bool _requiresPhoto;
   bool _initialized = false;
 
   GoalDef? get _goal => widget.goal;
@@ -116,6 +117,7 @@ class _GoalFormState extends State<_GoalForm> {
     _kind = g == null ? GoalKind.yesNo : kindOf(g);
     _period = g?.period ?? GoalPeriod.daily;
     _comparison = g?.comparison ?? Comparison.atLeast;
+    _requiresPhoto = g?.requiresPhoto ?? false;
     _name.text = g?.title(lang) ?? '';
     _target.text = g == null ? '' : '${g.target.toInt()}';
     _runs.text = '${(g?.requirements['run'] ?? 0).toInt()}';
@@ -184,6 +186,9 @@ class _GoalFormState extends State<_GoalForm> {
               'minMinutes': int.parse(_minMinutes.text),
             }
           : const {},
+      // Photos are attached per day, so only daily goals can require one.
+      requiresPhoto:
+          !_isWorkouts && _period == GoalPeriod.daily && _requiresPhoto,
     );
     Navigator.of(context).pop(GoalSaved(result));
   }
@@ -357,6 +362,18 @@ class _GoalFormState extends State<_GoalForm> {
                   validator: (v) => _positive(l, v),
                 ),
               ],
+              if (!_isWorkouts && _period == GoalPeriod.daily) ...[
+                const SizedBox(height: 8),
+                SwitchListTile(
+                  key: const ValueKey('goal-photo-required'),
+                  contentPadding: EdgeInsets.zero,
+                  secondary: const Icon(Icons.photo_camera_outlined),
+                  title: Text(l.goalsPhotoRequired),
+                  subtitle: Text(l.goalsPhotoRequiredSub),
+                  value: _requiresPhoto,
+                  onChanged: (v) => setState(() => _requiresPhoto = v),
+                ),
+              ],
               const SizedBox(height: 24),
               FilledButton(onPressed: _save, child: Text(l.goalsSave)),
               if (!isNew && widget.canDelete) ...[
@@ -404,12 +421,19 @@ class _NumberField extends StatelessWidget {
 
 /// Short rule text: "at least 8", "at most 60 min a week", "Yes / no".
 String describeGoal(AppLocalizations l, GoalDef g) {
-  if (g.type == GoalType.boolean) return l.goalsSummaryYesNo;
+  if (g.type == GoalType.boolean) {
+    return g.requiresPhoto
+        ? '${l.goalsSummaryYesNo} · ${l.goalsSummaryPhoto}'
+        : l.goalsSummaryYesNo;
+  }
   final value = '${g.target.toInt()}';
   final rule = switch (g.comparison) {
     Comparison.atLeast => l.goalsSummaryAtLeast(value),
     Comparison.atMost => l.goalsSummaryAtMost(value),
     Comparison.exactly => l.goalsSummaryExactly(value),
   };
-  return g.period == GoalPeriod.weekly ? l.goalsSummaryPerWeek(rule) : rule;
+  final text = g.period == GoalPeriod.weekly
+      ? l.goalsSummaryPerWeek(rule)
+      : rule;
+  return g.requiresPhoto ? '$text · ${l.goalsSummaryPhoto}' : text;
 }
