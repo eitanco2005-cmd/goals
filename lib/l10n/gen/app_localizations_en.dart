@@ -287,6 +287,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statusUnlogged => 'Not logged';
 
   @override
+  String get pairEditGoals => 'Edit goals';
+
+  @override
   String get todayNeedsPhoto => 'Add a photo to complete this goal';
 
   @override

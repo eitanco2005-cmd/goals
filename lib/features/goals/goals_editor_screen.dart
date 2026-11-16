@@ -12,17 +12,49 @@ import 'goal_form_sheet.dart';
 
 /// Edits the active challenge's goals for the whole group. Changes stay
 /// local until "Save"; leaving with unsaved changes asks first.
+/// Edits a list of goals. Used for the active challenge (Settings) and for
+/// a challenge being created or a new round, before anything is saved.
 class GoalsEditorScreen extends ConsumerStatefulWidget {
-  const GoalsEditorScreen({super.key, required this.challenge});
+  const GoalsEditorScreen({
+    super.key,
+    required this.goals,
+    required this.onSave,
+    this.groupNote = true,
+    this.savedMessage,
+  });
 
-  final Challenge challenge;
+  /// Edits the active challenge's goals for the whole group.
+  factory GoalsEditorScreen.forChallenge({
+    Key? key,
+    required Challenge challenge,
+    required ChallengeRepository repository,
+  }) => GoalsEditorScreen(
+    key: key,
+    goals: challenge.goals,
+    onSave: (goals) => repository.updateGoals(
+      pairId: challenge.pairId,
+      challengeId: challenge.id,
+      goals: goals,
+    ),
+  );
+
+  final List<GoalDef> goals;
+
+  /// Stores the result; throws to keep the editor open with an error.
+  final Future<void> Function(List<GoalDef> goals) onSave;
+
+  /// Shows "changes apply to everyone in the group" (an existing challenge).
+  final bool groupNote;
+
+  /// Snackbar after saving; null for none (the default is the group text).
+  final String? savedMessage;
 
   @override
   ConsumerState<GoalsEditorScreen> createState() => _GoalsEditorScreenState();
 }
 
 class _GoalsEditorScreenState extends ConsumerState<GoalsEditorScreen> {
-  late final List<GoalDef> _goals = [...widget.challenge.goals];
+  late final List<GoalDef> _goals = [...widget.goals];
   bool _dirty = false;
   bool _saving = false;
 
@@ -70,15 +102,14 @@ class _GoalsEditorScreenState extends ConsumerState<GoalsEditorScreen> {
     }
     setState(() => _saving = true);
     try {
-      await ref
-          .read(challengeRepositoryProvider)
-          .updateGoals(
-            pairId: widget.challenge.pairId,
-            challengeId: widget.challenge.id,
-            goals: _goals,
-          );
+      await widget.onSave(List.unmodifiable(_goals));
       _dirty = false;
-      messenger.showSnackBar(SnackBar(content: Text(l.goalsSaved)));
+      final message = widget.groupNote
+          ? (widget.savedMessage ?? l.goalsSaved)
+          : widget.savedMessage;
+      if (message != null) {
+        messenger.showSnackBar(SnackBar(content: Text(message)));
+      }
       navigator.pop();
     } catch (e) {
       messenger.showSnackBar(SnackBar(content: Text(errorMessage(l, e))));
@@ -194,29 +225,30 @@ class _GoalsEditorScreenState extends ConsumerState<GoalsEditorScreen> {
               child: ListView(
                 padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 16, 96),
                 children: [
-                  Card(
-                    color: theme.colorScheme.secondaryContainer,
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.group_outlined,
-                            color: theme.colorScheme.onSecondaryContainer,
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              l.goalsInfo,
-                              style: TextStyle(
-                                color: theme.colorScheme.onSecondaryContainer,
+                  if (widget.groupNote)
+                    Card(
+                      color: theme.colorScheme.secondaryContainer,
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.group_outlined,
+                              color: theme.colorScheme.onSecondaryContainer,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                l.goalsInfo,
+                                style: TextStyle(
+                                  color: theme.colorScheme.onSecondaryContainer,
+                                ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
-                  ),
                   section(l.goalsDaily, GoalPeriod.daily),
                   section(l.goalsWeekly, GoalPeriod.weekly),
                 ],
@@ -264,7 +296,7 @@ class NewRoundScreen extends ConsumerWidget {
                   goals: challenge.goals,
                   initialStart: start,
                   submitLabel: l.roundStart,
-                  onSubmit: (startDate, endDate) async {
+                  onSubmit: (startDate, endDate, goals) async {
                     final messenger = ScaffoldMessenger.of(context);
                     final navigator = Navigator.of(context);
                     await ref
@@ -273,7 +305,7 @@ class NewRoundScreen extends ConsumerWidget {
                           pairId: challenge.pairId,
                           startDate: startDate,
                           endDate: endDate,
-                          goals: challenge.goals,
+                          goals: goals,
                         );
                     messenger.showSnackBar(
                       SnackBar(content: Text(l.roundStarted)),

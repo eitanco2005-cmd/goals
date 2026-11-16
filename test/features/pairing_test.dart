@@ -31,7 +31,8 @@ void main() {
     await tester.tap(find.text('Start a new challenge'));
     await tester.pumpAndSettle();
     expect(find.text('💧 8 glasses of water'), findsOneWidget);
-    expect(find.text('You can edit the goals later.'), findsOneWidget);
+    expect(find.text('Edit goals'), findsOneWidget);
+    expect(find.text('60 days'), findsOneWidget);
 
     await tester.tap(find.text('90 days'));
     await tester.pumpAndSettle();
@@ -150,5 +151,58 @@ void main() {
     await tester.pump();
     expect(copied, 'AB12CD');
     expect(find.text('Code copied'), findsOneWidget);
+  });
+
+  testWidgets('goals can be edited before the challenge is created', (
+    tester,
+  ) async {
+    final backend = await _unpairedBackend();
+    await pumpApp(tester, backend);
+    await tester.tap(find.text('Start a new challenge'));
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.text('Edit goals'));
+    await tester.tap(find.text('Edit goals'));
+    await tester.pumpAndSettle();
+    // A new challenge: no "applies to the whole group" note.
+    expect(find.textContaining('Changes apply to everyone'), findsNothing);
+
+    // Drop social media and raise water to 10.
+    await scrollToCenter(
+      tester,
+      find.byKey(const ValueKey('edit-social_media')),
+    );
+    await tester.tap(find.byKey(const ValueKey('edit-social_media')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Delete goal'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Delete goal'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Delete goal').last);
+    await tester.pumpAndSettle();
+    await scrollToCenter(tester, find.byKey(const ValueKey('edit-water')));
+    await tester.tap(find.byKey(const ValueKey('edit-water')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const ValueKey('goal-target')), '10');
+    final sheetSave = find.text('Save').last;
+    await tester.ensureVisible(sheetSave);
+    await tester.pumpAndSettle();
+    await tester.tap(sheetSave);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Save').first);
+    await tester.pumpAndSettle();
+
+    // Back on the form: the preview shows the edited list.
+    expect(find.text('📱 Social media max 1 hour'), findsNothing);
+    await tester.ensureVisible(find.text('Create challenge'));
+    await tester.tap(find.text('Create challenge'));
+    await tester.pumpAndSettle();
+
+    final profile = await backend.watchProfile(backend.currentUser!.uid).first;
+    final challenge = (await backend
+        .watchActiveChallenge(profile!.pairId!)
+        .first)!;
+    expect(challenge.goals.any((g) => g.id == 'social_media'), isFalse);
+    expect(challenge.goals.firstWhere((g) => g.id == 'water').target, 10);
   });
 }

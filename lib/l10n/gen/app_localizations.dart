@@ -596,6 +596,12 @@ abstract class AppLocalizations {
   /// **'Not logged'**
   String get statusUnlogged;
 
+  /// No description provided for @pairEditGoals.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit goals'**
+  String get pairEditGoals;
+
   /// No description provided for @todayNeedsPhoto.
   ///
   /// In en, this message translates to:

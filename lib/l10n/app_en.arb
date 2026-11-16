@@ -96,6 +96,7 @@
   "statusMet": "Done",
   "statusNotMet": "Not yet",
   "statusUnlogged": "Not logged",
+  "pairEditGoals": "Edit goals",
   "todayNeedsPhoto": "Add a photo to complete this goal",
   "todayNeedsPhotoShort": "Needs a photo",
   "todayPhotoRequiredNote": "📷 Counts only with a photo",

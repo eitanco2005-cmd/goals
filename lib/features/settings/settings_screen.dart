@@ -196,7 +196,10 @@ class _ChallengeTiles extends ConsumerWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute<void>(
-                builder: (_) => GoalsEditorScreen(challenge: challenge),
+                builder: (_) => GoalsEditorScreen.forChallenge(
+                  challenge: challenge,
+                  repository: ref.read(challengeRepositoryProvider),
+                ),
               ),
             ),
           ),

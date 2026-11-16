@@ -88,6 +88,7 @@
   "statusMet": "בוצע",
   "statusNotMet": "עוד לא",
   "statusUnlogged": "לא עודכן",
+  "pairEditGoals": "עריכת היעדים",
   "todayNeedsPhoto": "הוסיפו תמונה כדי להשלים את היעד",
   "todayNeedsPhotoShort": "חסרה תמונה",
   "todayPhotoRequiredNote": "📷 נספר רק עם תמונה",

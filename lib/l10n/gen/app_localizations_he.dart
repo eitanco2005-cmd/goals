@@ -288,6 +288,9 @@ class AppLocalizationsHe extends AppLocalizations {
   String get statusUnlogged => 'לא עודכן';
 
   @override
+  String get pairEditGoals => 'עריכת היעדים';
+
+  @override
   String get todayNeedsPhoto => 'הוסיפו תמונה כדי להשלים את היעד';
 
   @override

@@ -9,10 +9,11 @@ import '../../data/repositories.dart';
 import '../../domain/default_goals.dart';
 import '../../domain/models.dart';
 import '../../l10n/gen/app_localizations.dart';
+import '../goals/goals_editor_screen.dart';
 import '../auth/auth_widgets.dart';
 
 /// Preset challenge lengths, in days.
-const challengeLengthPresets = [30, 66, 90];
+const challengeLengthPresets = [30, 60, 90];
 
 /// Start date + length picker, a preview of the default goals and the
 /// "create" button.
@@ -37,9 +38,15 @@ class CreateChallengeForm extends ConsumerStatefulWidget {
   /// Button label; defaults to "Create challenge".
   final String? submitLabel;
 
-  /// Creates the challenge for the chosen inclusive day keys. Throws an
-  /// AppException on failure (shown under the form).
-  final Future<void> Function(String startDate, String endDate)? onSubmit;
+  /// Creates the challenge for the chosen inclusive day keys and the goals
+  /// as edited in the form. Throws an AppException on failure (shown under
+  /// the form).
+  final Future<void> Function(
+    String startDate,
+    String endDate,
+    List<GoalDef> goals,
+  )?
+  onSubmit;
 
   @override
   ConsumerState<CreateChallengeForm> createState() =>
@@ -53,6 +60,9 @@ class _CreateChallengeFormState extends ConsumerState<CreateChallengeForm> {
   /// A preset length, or null when [_customEnd] is used.
   int? _presetDays = challengeLengthPresets.first;
   DateTime? _customEnd;
+
+  /// The goals the challenge will start with (editable before creating).
+  late List<GoalDef> _goals = widget.goals;
   bool _loading = false;
   String? _error;
 
@@ -94,6 +104,18 @@ class _CreateChallengeFormState extends ConsumerState<CreateChallengeForm> {
     });
   }
 
+  Future<void> _editGoals() => Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      builder: (_) => GoalsEditorScreen(
+        goals: _goals,
+        groupNote: false,
+        onSave: (goals) async {
+          if (mounted) setState(() => _goals = goals);
+        },
+      ),
+    ),
+  );
+
   Future<void> _create() async {
     if (_loading) return;
     final l = AppLocalizations.of(context);
@@ -107,7 +129,7 @@ class _CreateChallengeFormState extends ConsumerState<CreateChallengeForm> {
     });
     try {
       if (widget.onSubmit case final submit?) {
-        await submit(dayKey(_start), dayKey(_end));
+        await submit(dayKey(_start), dayKey(_end), _goals);
         return;
       }
       await ref
@@ -117,7 +139,7 @@ class _CreateChallengeFormState extends ConsumerState<CreateChallengeForm> {
             displayName: name,
             startDate: dayKey(_start),
             endDate: dayKey(_end),
-            goals: defaultGoals,
+            goals: _goals,
           );
       refreshSession(ref);
     } catch (e) {
@@ -181,7 +203,11 @@ class _CreateChallengeFormState extends ConsumerState<CreateChallengeForm> {
           onTap: _pickCustomEnd,
         ),
         const SizedBox(height: 20),
-        _GoalsPreview(languageCode: locale.languageCode, goals: widget.goals),
+        _GoalsPreview(
+          languageCode: locale.languageCode,
+          goals: _goals,
+          onEdit: _editGoals,
+        ),
         const SizedBox(height: 20),
         if (_error != null) ...[
           FormErrorText(_error!),
@@ -230,9 +256,14 @@ class _DateRow extends StatelessWidget {
 }
 
 class _GoalsPreview extends StatelessWidget {
-  const _GoalsPreview({required this.languageCode, required this.goals});
+  const _GoalsPreview({
+    required this.languageCode,
+    required this.goals,
+    required this.onEdit,
+  });
   final String languageCode;
   final List<GoalDef> goals;
+  final VoidCallback onEdit;
 
   @override
   Widget build(BuildContext context) {
@@ -254,23 +285,14 @@ class _GoalsPreview extends StatelessWidget {
         const SizedBox(height: 8),
         _GoalGroup(title: l.pairWeeklyGoals, goals: weekly, lang: languageCode),
         const SizedBox(height: 8),
-        Row(
-          children: [
-            Icon(
-              Icons.edit_note,
-              size: 18,
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-            const SizedBox(width: 6),
-            Expanded(
-              child: Text(
-                l.pairGoalsEditLater,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-          ],
+        OutlinedButton.icon(
+          key: const ValueKey('edit-new-goals'),
+          style: OutlinedButton.styleFrom(
+            minimumSize: const Size.fromHeight(48),
+          ),
+          onPressed: onEdit,
+          icon: const Icon(Icons.edit_note),
+          label: Text(l.pairEditGoals),
         ),
       ],
     );
