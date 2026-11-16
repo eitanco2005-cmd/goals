@@ -608,6 +608,13 @@ class AppLocalizationsHe extends AppLocalizations {
   String get boardGoalRates => 'כמה פעמים עמדת בכל יעד';
 
   @override
+  String get boardEmptyHint =>
+      'כל יום נצבע כשמעדכנים יעדים: ככל שהושלמו יותר יעדים יומיים, הירוק כהה יותר. לחיצה על יום מציגה את התמונות שלו.';
+
+  @override
+  String get boardGoalRatesSoon => 'יופיע אחרי היום המלא הראשון.';
+
+  @override
   String get boardNoPhotos => 'אין תמונות מהיום הזה';
 
   @override

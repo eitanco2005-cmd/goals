@@ -202,6 +202,8 @@
   "boardCellLabel": "{date}: {value}",
   "@boardCellLabel": {"placeholders": {"date": {"type": "String"}, "value": {"type": "String"}}},
   "boardGoalRates": "How often you met each goal",
+  "boardEmptyHint": "Each day gets a color once you log goals: the more daily goals met, the darker the green. Tap a day to see its photos.",
+  "boardGoalRatesSoon": "Shows up after your first full day.",
   "boardNoPhotos": "No photos that day",
   "boardNotStarted": "The challenge starts on {date}",
   "@boardNotStarted": {"placeholders": {"date": {"type": "String"}}},

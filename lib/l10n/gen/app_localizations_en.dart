@@ -609,6 +609,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get boardGoalRates => 'How often you met each goal';
 
   @override
+  String get boardEmptyHint =>
+      'Each day gets a color once you log goals: the more daily goals met, the darker the green. Tap a day to see its photos.';
+
+  @override
+  String get boardGoalRatesSoon => 'Shows up after your first full day.';
+
+  @override
   String get boardNoPhotos => 'No photos that day';
 
   @override

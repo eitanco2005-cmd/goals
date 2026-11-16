@@ -25,13 +25,17 @@ ThemeData buildTheme(Brightness brightness) {
     surface: brightness == Brightness.light ? const Color(0xFFFFF8F4) : null,
   );
   final base = ThemeData(colorScheme: scheme, useMaterial3: true);
+  final dark = brightness == Brightness.dark;
+  // In dark mode the page is `surface`, so cards and fields sit one step
+  // lighter to stand out from it.
+  final raised = dark ? scheme.surfaceContainerHigh : scheme.surface;
   return base.copyWith(
     scaffoldBackgroundColor: brightness == Brightness.light
         ? AppColors.peach
         : scheme.surface,
     cardTheme: CardThemeData(
       elevation: 0,
-      color: scheme.surface,
+      color: raised,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       margin: EdgeInsets.zero,
     ),
@@ -46,7 +50,7 @@ ThemeData buildTheme(Brightness brightness) {
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: scheme.surface,
+      fillColor: raised,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
         borderSide: BorderSide.none,

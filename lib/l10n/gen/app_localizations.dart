@@ -1136,6 +1136,18 @@ abstract class AppLocalizations {
   /// **'How often you met each goal'**
   String get boardGoalRates;
 
+  /// No description provided for @boardEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Each day gets a color once you log goals: the more daily goals met, the darker the green. Tap a day to see its photos.'**
+  String get boardEmptyHint;
+
+  /// No description provided for @boardGoalRatesSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Shows up after your first full day.'**
+  String get boardGoalRatesSoon;
+
   /// No description provided for @boardNoPhotos.
   ///
   /// In en, this message translates to:

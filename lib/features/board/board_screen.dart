@@ -144,12 +144,16 @@ class _Cell extends StatelessWidget {
     required this.percent,
     required this.isFuture,
     this.isToday = false,
+    this.label,
   });
 
   final double size;
   final int? percent;
   final bool isFuture;
   final bool isToday;
+
+  /// Day of the month, drawn inside bigger cells.
+  final String? label;
 
   @override
   Widget build(BuildContext context) {
@@ -173,6 +177,25 @@ class _Cell extends StatelessWidget {
                     )
                   : null),
       ),
+      alignment: Alignment.center,
+      child: label == null
+          ? null
+          : Text(
+              label!,
+              textDirection: TextDirection.ltr,
+              style: TextStyle(
+                fontSize: size * 0.36,
+                fontWeight: isToday ? FontWeight.w800 : FontWeight.w600,
+                color: fill != null
+                    ? (ThemeData.estimateBrightnessForColor(fill) ==
+                              Brightness.dark
+                          ? Colors.white
+                          : Colors.black87)
+                    : scheme.onSurfaceVariant.withValues(
+                        alpha: isFuture ? 0.45 : 0.9,
+                      ),
+              ),
+            ),
     );
   }
 }
@@ -237,6 +260,15 @@ class _MemberCard extends ConsumerWidget {
               percentByDay: percentByDay,
               today: today,
             ),
+            if (finished.isEmpty) ...[
+              const SizedBox(height: 12),
+              Text(
+                l.boardEmptyHint,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -287,9 +319,14 @@ class _Heatmap extends StatelessWidget {
   final Map<String, int> percentByDay;
   final String today;
 
-  static const gap = 3.0;
+  static const gap = 4.0;
   static const minCell = 14.0;
-  static const maxCell = 26.0;
+  static const maxCell = 44.0;
+
+  /// Cells at least this big show the day of the month.
+  static const labelCell = 22.0;
+  static const dayLabelWidth = 22.0;
+  static const monthHeader = 18.0;
 
   @override
   Widget build(BuildContext context) {
@@ -306,11 +343,73 @@ class _Heatmap extends StatelessWidget {
         w,
     ];
 
+    final theme = Theme.of(context);
+    final muted = theme.textTheme.labelSmall?.copyWith(
+      color: theme.colorScheme.onSurfaceVariant,
+    );
+    final weekdayFormat = DateFormat('EEEEE', locale);
+    final monthFormat = DateFormat.MMM(locale);
+
+    // Month name above the first week and above each week where one starts.
+    String? monthLabel(int i, DateTime week) {
+      final first = i == 0 ? parseDayKey(challenge.startDate) : null;
+      if (first != null) return monthFormat.format(first);
+      for (var d = 0; d < 7; d++) {
+        final date = DateTime(week.year, week.month, week.day + d);
+        if (date.day == 1 && dayKey(date).compareTo(challenge.endDate) <= 0) {
+          return monthFormat.format(date);
+        }
+      }
+      return null;
+    }
+
     return LayoutBuilder(
       builder: (context, constraints) {
-        final fit =
-            (constraints.maxWidth - gap * (weeks.length - 1)) / weeks.length;
+        final available = constraints.maxWidth - dayLabelWidth - gap;
+        final fit = (available - gap * (weeks.length - 1)) / weeks.length;
         final cell = fit.clamp(minCell, maxCell).toDouble();
+        final showNumbers = cell >= labelCell;
+        // A month name needs ~3 narrow columns: when two would collide, keep
+        // the later one (where the month actually starts).
+        final monthLabels = [
+          for (final (i, w) in weeks.indexed) monthLabel(i, w),
+        ];
+        final span = (36 / (cell + gap)).ceil();
+        for (var i = 0; i < monthLabels.length; i++) {
+          if (monthLabels[i] == null) continue;
+          for (var j = i + 1; j < i + span && j < monthLabels.length; j++) {
+            if (monthLabels[j] != null) {
+              monthLabels[i] = null;
+              break;
+            }
+          }
+        }
+
+        final dayLabels = Column(
+          children: [
+            const SizedBox(height: monthHeader),
+            for (var d = 0; d < 7; d++) ...[
+              if (d > 0) const SizedBox(height: gap),
+              SizedBox(
+                width: dayLabelWidth,
+                height: cell,
+                child: Center(
+                  child: Text(
+                    weekdayFormat.format(
+                      DateTime(
+                        firstWeek.year,
+                        firstWeek.month,
+                        firstWeek.day + d,
+                      ),
+                    ),
+                    style: muted,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        );
+
         final grid = Row(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -319,6 +418,19 @@ class _Heatmap extends StatelessWidget {
               if (i > 0) const SizedBox(width: gap),
               Column(
                 children: [
+                  SizedBox(
+                    width: cell,
+                    height: monthHeader,
+                    child: OverflowBox(
+                      maxWidth: cell * 3,
+                      alignment: AlignmentDirectional.topStart,
+                      child: Text(
+                        monthLabels[i] ?? '',
+                        style: muted,
+                        maxLines: 1,
+                      ),
+                    ),
+                  ),
                   for (var d = 0; d < 7; d++) ...[
                     if (d > 0) const SizedBox(height: gap),
                     Builder(
@@ -344,6 +456,7 @@ class _Heatmap extends StatelessWidget {
                           percent: percent,
                           isFuture: future,
                           isToday: key == today,
+                          label: showNumbers ? '${date.day}' : null,
                         );
                         if (future) return square;
                         return Tooltip(
@@ -368,16 +481,22 @@ class _Heatmap extends StatelessWidget {
           ],
         );
         final width = weeks.length * cell + (weeks.length - 1) * gap;
-        if (width <= constraints.maxWidth) {
-          return Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: grid,
-          );
-        }
-        return SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          reverse: true,
-          child: grid,
+        final Widget weeksView = width <= available
+            ? grid
+            : Expanded(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  reverse: true,
+                  child: grid,
+                ),
+              );
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            dayLabels,
+            const SizedBox(width: gap),
+            weeksView,
+          ],
         );
       },
     );
@@ -398,7 +517,31 @@ class _GoalRatesCard extends ConsumerWidget {
     final lang = Localizations.localeOf(context).languageCode;
     final today = ref.watch(todayKeyProvider);
     final days = ref.watch(boardDaysProvider).where((d) => d != today).toList();
-    if (days.isEmpty) return const SizedBox.shrink();
+    if (days.isEmpty) {
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                l.boardGoalRates,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                l.boardGoalRatesSoon,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
     final summaries =
         ref.watch(memberSummariesProvider(uid)).value ?? const <DaySummary>[];
     final rates = goalSuccessRates(summaries, dailyGoals, days);

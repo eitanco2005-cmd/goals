@@ -178,6 +178,8 @@
   "boardNoData": "לא עודכן",
   "boardCellLabel": "{date}: {value}",
   "boardGoalRates": "כמה פעמים עמדת בכל יעד",
+  "boardEmptyHint": "כל יום נצבע כשמעדכנים יעדים: ככל שהושלמו יותר יעדים יומיים, הירוק כהה יותר. לחיצה על יום מציגה את התמונות שלו.",
+  "boardGoalRatesSoon": "יופיע אחרי היום המלא הראשון.",
   "boardNoPhotos": "אין תמונות מהיום הזה",
   "boardNotStarted": "האתגר מתחיל ב־{date}",
   "weekTitle": "השבוע",
