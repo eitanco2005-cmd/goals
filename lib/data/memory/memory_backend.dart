@@ -10,6 +10,7 @@ import '../../domain/default_goals.dart';
 import '../../domain/goal_eval.dart';
 import '../../domain/models.dart';
 import '../repositories.dart';
+import 'demo_photos.dart';
 
 /// In-memory implementation of every repository, used for:
 ///  * tests,
@@ -402,7 +403,11 @@ class MemoryBackend
               p.date.compareTo(from) >= 0 &&
               p.date.compareTo(to) <= 0)
           .toList()
-        ..sort((a, b) => a.createdAt.compareTo(b.createdAt)));
+        // Same order as the Firestore query: date, then createdAt.
+        ..sort((a, b) {
+          final byDate = a.date.compareTo(b.date);
+          return byDate != 0 ? byDate : a.createdAt.compareTo(b.createdAt);
+        }));
 
   @override
   Future<Uint8List> loadFullImage({
@@ -549,5 +554,61 @@ class MemoryBackend
             minutes: 40,
           ),
     ];
+    _seedPhotos(partner.uid, now);
+  }
+
+  /// Noa's photos: a few from today (for the partner card) and some from
+  /// earlier days (for the photo diary). The user has none: they have not
+  /// joined yet. Images come from [demoPhoto] (rendered once per motif).
+  void _seedPhotos(String uid, DateTime today) {
+    final clock = DateTime.now();
+    // (days ago, goal, minutes after midnight for past days).
+    const past = [
+      (1, GoalIds.veggies, 13 * 60 + 10),
+      (1, GoalIds.reading, 22 * 60 + 5),
+      (2, GoalIds.workouts, 7 * 60 + 40),
+      (3, GoalIds.water, 16 * 60 + 25),
+      (5, GoalIds.veggies, 19 * 60 + 50),
+      (5, GoalIds.workouts, 8 * 60 + 15),
+    ];
+    final photos = [
+      for (final (daysAgo, goalId, minutes) in past)
+        (
+          date: dayKey(today.subtract(Duration(days: daysAgo))),
+          goalId: goalId,
+          createdAt: today
+              .subtract(Duration(days: daysAgo))
+              .add(Duration(minutes: minutes)),
+        ),
+      // Today, oldest first, all in the recent past.
+      for (final (i, goalId) in const [
+        GoalIds.workouts,
+        GoalIds.water,
+        GoalIds.veggies,
+        GoalIds.reading,
+      ].indexed)
+        (
+          date: dayKey(today),
+          goalId: goalId,
+          createdAt: clock.subtract(Duration(minutes: 25 + 40 * (3 - i))),
+        ),
+    ]..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+
+    final list = _photos['demo-pair'] = [];
+    for (final (i, p) in photos.indexed) {
+      final image = demoPhoto(demoMotifForGoal(p.goalId));
+      final photo = GoalPhoto(
+        id: 'demo-photo-$i',
+        uid: uid,
+        date: p.date,
+        goalId: p.goalId,
+        createdAt: p.createdAt,
+        thumbnail: image.thumbnail,
+        width: image.width,
+        height: image.height,
+      );
+      list.add(photo);
+      _photoData[photo.id] = image.full;
+    }
   }
 }

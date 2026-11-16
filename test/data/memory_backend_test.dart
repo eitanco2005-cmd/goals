@@ -1,8 +1,14 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:goals_challenge/core/dates.dart';
+import 'package:goals_challenge/data/memory/demo_photos.dart';
 import 'package:goals_challenge/data/memory/memory_backend.dart';
 import 'package:goals_challenge/data/repositories.dart';
 import 'package:goals_challenge/domain/default_goals.dart';
 import 'package:goals_challenge/domain/models.dart';
+import 'package:image/image.dart' as img;
+
+import 'photo_contract.dart';
 
 void main() {
   test('sign up, create pair, partner joins, logs sync to summaries', () async {
@@ -123,5 +129,54 @@ void main() {
     final p = (await b.watchProfile(u.uid).first)!;
     expect(p.displayName, 'Dana');
     expect(p.languageCode, 'en');
+  });
+
+  group('photos', () {
+    photoRepositoryContract(MemoryBackend.new);
+  });
+
+  test('demo seed: Noa has photos today and on earlier days', () async {
+    final sw = Stopwatch()..start();
+    final b = MemoryBackend(seedDemo: true);
+    // Includes rendering the demo images (cached per motif afterwards).
+    debugPrint('demo seed took ${sw.elapsedMilliseconds} ms');
+
+    final today = todayKey();
+    final todays = await b
+        .watchPhotos(pairId: 'demo-pair', from: today, to: today)
+        .first;
+    expect(todays.length, inInclusiveRange(3, 4));
+    expect(todays.every((p) => p.uid == 'demo-partner'), isTrue);
+    expect(todays.map((p) => p.goalId).toSet(), hasLength(todays.length));
+    final sorted = [...todays]..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    expect(todays.map((p) => p.id), sorted.map((p) => p.id));
+
+    final all = await b
+        .watchPhotos(pairId: 'demo-pair', from: '2000-01-01', to: today)
+        .first;
+    expect(all.where((p) => p.date != today), isNotEmpty);
+    // Oldest first, and createdAt agrees with the day order.
+    for (var i = 1; i < all.length; i++) {
+      expect(all[i].date.compareTo(all[i - 1].date), greaterThanOrEqualTo(0));
+    }
+
+    for (final p in all) {
+      expect(p.thumbnail.length, inInclusiveRange(1, maxThumbnailBytes));
+      expect(p.thumbnail.sublist(0, 2), [0xFF, 0xD8]); // JPEG
+      final full = await b.loadFullImage(pairId: 'demo-pair', photoId: p.id);
+      expect(full.length, inInclusiveRange(1, maxFullPhotoBytes));
+      expect(full.sublist(0, 2), [0xFF, 0xD8]);
+    }
+  });
+
+  test('demo photos decode to the advertised size', () {
+    for (final motif in DemoMotif.values) {
+      final photo = demoPhoto(motif);
+      final full = img.decodeJpg(photo.full)!;
+      expect((full.width, full.height), (photo.width, photo.height));
+      final thumb = img.decodeJpg(photo.thumbnail)!;
+      expect((thumb.width, thumb.height), (demoThumbWidth, demoThumbHeight));
+      expect(identical(demoPhoto(motif), photo), isTrue); // cached
+    }
   });
 }

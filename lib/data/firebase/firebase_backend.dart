@@ -80,6 +80,10 @@ class FirebaseBackend
   ) => _summaries(pairId).doc('${uid}_$date');
   CollectionReference<_Json> _workouts(String pairId) =>
       _pairDoc(pairId).collection('workouts');
+  CollectionReference<_Json> _photos(String pairId) =>
+      _pairDoc(pairId).collection('photos');
+  CollectionReference<_Json> _photoData(String pairId) =>
+      _pairDoc(pairId).collection('photoData');
 
   /// Server timestamp added to every write (debugging aid; ignored by
   /// the models' `fromMap`).
@@ -561,21 +565,88 @@ class FirebaseBackend
       guard(() => _write(_workouts(pairId).doc(id).delete()));
 
   // -------------------------------------------------------------- Photos
-  // TODO(photos-agent): implement against pairs/{pairId}/photos and
-  // pairs/{pairId}/photoData (see repositories.dart).
+  //
+  // Each photo is two documents written in one batch: the metadata with the
+  // small thumbnail (`photos/{id}`, listed by the photo strips) and the
+  // full JPEG (`photoData/{id}`, fetched only when a photo is opened), so
+  // listing never downloads full images. Bytes are stored as `Blob`s.
+
+  /// Full images kept in memory by [loadFullImage], most recently used last.
+  final _fullImages = <String, Uint8List>{};
+
+  /// Size of the [_fullImages] cache (~100 KB each).
+  static const fullImageCacheSize = 30;
+
+  void _cacheFullImage(String photoId, Uint8List bytes) {
+    _fullImages
+      ..remove(photoId)
+      ..[photoId] = bytes;
+    if (_fullImages.length > fullImageCacheSize) {
+      _fullImages.remove(_fullImages.keys.first);
+    }
+  }
+
+  /// [GoalPhoto] from a `photos` document (converts the thumbnail `Blob`).
+  static GoalPhoto _photoFromMap(_Json m) =>
+      GoalPhoto.fromMap({...m, 'thumbnail': (m['thumbnail'] as Blob).bytes});
+
+  /// Photos in an inclusive date range, ordered by date then creation time.
+  /// Requires the composite indexes (date, createdAt) and
+  /// (uid, date, createdAt) in firestore.indexes.json.
   @override
   Stream<List<GoalPhoto>> watchPhotos({
     required String pairId,
     String? uid,
     required String from,
     required String to,
-  }) => throw UnimplementedError();
+  }) {
+    Query<_Json> q = _photos(pairId);
+    if (uid != null) q = q.where('uid', isEqualTo: uid);
+    return q
+        .where('date', isGreaterThanOrEqualTo: from)
+        .where('date', isLessThanOrEqualTo: to)
+        .orderBy('date')
+        .orderBy('createdAt')
+        .snapshots()
+        .map((q) => [for (final d in q.docs) _photoFromMap(d.data())])
+        .guarded();
+  }
 
+  /// Served from an in-memory LRU cache, then the Firestore cache, then the
+  /// server.
   @override
   Future<Uint8List> loadFullImage({
     required String pairId,
     required String photoId,
-  }) => throw UnimplementedError();
+  }) => guard(() async {
+    final cached = _fullImages[photoId];
+    if (cached != null) {
+      _cacheFullImage(photoId, cached); // mark as recently used
+      return cached;
+    }
+    final snap = await _getPreferCache(_photoData(pairId).doc(photoId));
+    final blob = snap.data()?['data'];
+    if (blob is! Blob) {
+      throw const AppException('unknown', 'photo not found');
+    }
+    _cacheFullImage(photoId, blob.bytes);
+    return blob.bytes;
+  });
+
+  /// Number of [uid]'s photos on [date]: from the server when reachable
+  /// within [serverAckWait], else from the local cache (so adding a photo
+  /// works offline). Only a soft limit: concurrent adds can exceed it.
+  Future<int> _countPhotos(String pairId, String uid, String date) async {
+    final q = _photos(pairId)
+        .where('uid', isEqualTo: uid)
+        .where('date', isEqualTo: date);
+    try {
+      final agg = await q.count().get().timeout(serverAckWait);
+      return agg.count ?? 0;
+    } on Object {
+      return (await q.get(const GetOptions(source: Source.cache))).size;
+    }
+  }
 
   @override
   Future<GoalPhoto> addPhoto({
@@ -587,17 +658,73 @@ class FirebaseBackend
     required Uint8List thumbnailJpeg,
     required int width,
     required int height,
-  }) => throw UnimplementedError();
+  }) => guard(() async {
+    if (fullJpeg.length > maxFullPhotoBytes ||
+        thumbnailJpeg.length > maxThumbnailBytes) {
+      throw const AppException('photo-too-large');
+    }
+    if (await _countPhotos(pairId, uid, date) >= maxPhotosPerDay) {
+      throw const AppException('photo-limit');
+    }
+    final ref = _photos(pairId).doc();
+    final photo = GoalPhoto(
+      id: ref.id,
+      uid: uid,
+      date: date,
+      goalId: goalId,
+      createdAt: DateTime.now(),
+      thumbnail: thumbnailJpeg,
+      width: width,
+      height: height,
+    );
+    final batch = _firestore.batch()
+      ..set(_photoData(pairId).doc(ref.id), {
+        'uid': uid,
+        'date': date,
+        'data': Blob(fullJpeg),
+        ..._stamp,
+      })
+      ..set(ref, {
+        ...photo.toMap(),
+        'thumbnail': Blob(thumbnailJpeg),
+        ..._stamp,
+      });
+    // Own photos open instantly, even offline before the upload finished.
+    _cacheFullImage(ref.id, fullJpeg);
+    await _write(batch.commit());
+    return photo;
+  });
 
   @override
   Future<void> deletePhoto({required String pairId, required String photoId}) =>
-      throw UnimplementedError();
+      guard(() {
+        _fullImages.remove(photoId);
+        final batch = _firestore.batch()
+          ..delete(_photos(pairId).doc(photoId))
+          ..delete(_photoData(pairId).doc(photoId));
+        return _write(batch.commit());
+      });
 
+  /// A missing photo (e.g. just deleted by its owner) is a no-op, like the
+  /// memory backend.
   @override
   Future<void> setReaction({
     required String pairId,
     required String photoId,
     required String uid,
     required String? emoji,
-  }) => throw UnimplementedError();
+  }) => guard(
+    () => _write(
+      _photos(pairId)
+          .doc(photoId)
+          .update({
+            FieldPath(['reactions', uid]): emoji ?? FieldValue.delete(),
+            ..._stamp,
+          })
+          .catchError(
+            (_) {},
+            test: (e) => e is FirebaseException && e.code == 'not-found',
+          ),
+    ),
+  );
 }

@@ -13,6 +13,7 @@ import {
   initializeTestEnvironment,
 } from '@firebase/rules-unit-testing';
 import {
+  Bytes,
   collection,
   deleteDoc,
   deleteField,
@@ -310,5 +311,145 @@ describe('logs, summaries, workouts', () => {
     await assertFails(deleteDoc(ref(db('bob'))));
     await assertSucceeds(deleteDoc(ref(db('alice'))));
     await assertFails(setDoc(ref(db('carol'), 'w3'), workout('carol', 'w3')));
+  });
+});
+
+// --- photos (mirrors FirebaseBackend.addPhoto / deletePhoto / setReaction) --
+const bytes = (n) => Bytes.fromUint8Array(new Uint8Array(n).fill(7));
+
+function photoMeta(uid, id, overrides = {}) {
+  return {
+    id, uid, date: DATE, goalId: 'veggies', createdAt: 1763200000000,
+    thumbnail: bytes(20 * 1024), width: 1080, height: 1350, reactions: {},
+    ...stamp(), ...overrides,
+  };
+}
+
+function addPhoto(uid, { id = 'ph1', owner = uid, meta = {}, data = {}, withData = true,
+  withMeta = true } = {}) {
+  const f = db(uid);
+  const batch = writeBatch(f);
+  if (withData) {
+    batch.set(doc(f, `pairs/${PAIR}/photoData/${id}`),
+      { uid: owner, date: DATE, data: bytes(100 * 1024), ...stamp(), ...data });
+  }
+  if (withMeta) batch.set(doc(f, `pairs/${PAIR}/photos/${id}`), photoMeta(owner, id, meta));
+  return batch.commit();
+}
+
+function deletePhoto(uid, id = 'ph1') {
+  const f = db(uid);
+  const batch = writeBatch(f);
+  batch.delete(doc(f, `pairs/${PAIR}/photos/${id}`));
+  batch.delete(doc(f, `pairs/${PAIR}/photoData/${id}`));
+  return batch.commit();
+}
+
+const react = (uid, emoji, { id = 'ph1', key = uid } = {}) =>
+  updateDoc(doc(db(uid), `pairs/${PAIR}/photos/${id}`),
+    { [`reactions.${key}`]: emoji ?? deleteField(), ...stamp() });
+
+describe('photos', () => {
+  beforeEach(pairedAliceBob);
+
+  it('owner adds a photo (metadata + data batch); both members read it', async () => {
+    await assertSucceeds(addPhoto('alice'));
+    for (const uid of ['alice', 'bob']) {
+      await assertSucceeds(getDoc(doc(db(uid), `pairs/${PAIR}/photos/ph1`)));
+      await assertSucceeds(getDoc(doc(db(uid), `pairs/${PAIR}/photoData/ph1`)));
+    }
+    // The app's watchPhotos queries (pair-wide and per user).
+    const col = collection(db('bob'), `pairs/${PAIR}/photos`);
+    await assertSucceeds(getDocs(query(col, where('date', '>=', DATE),
+      where('date', '<=', DATE), orderBy('date'), orderBy('createdAt'))));
+    await assertSucceeds(getDocs(query(col, where('uid', '==', 'alice'),
+      where('date', '>=', DATE), where('date', '<=', DATE), orderBy('date'),
+      orderBy('createdAt'))));
+  });
+
+  it('outsiders cannot read or add photos', async () => {
+    await addPhoto('alice');
+    await assertFails(getDoc(doc(db('carol'), `pairs/${PAIR}/photos/ph1`)));
+    await assertFails(getDoc(doc(db('carol'), `pairs/${PAIR}/photoData/ph1`)));
+    await assertFails(getDocs(collection(db('carol'), `pairs/${PAIR}/photos`)));
+    await assertFails(addPhoto('carol', { id: 'ph2' }));
+  });
+
+  it('cannot add a photo in the partner\'s name', async () => {
+    await assertFails(addPhoto('bob', { owner: 'alice' }));
+    await assertFails(addPhoto('bob', { data: { uid: 'alice' } }));
+    await assertFails(addPhoto('bob', { meta: { uid: 'alice' } }));
+  });
+
+  it('metadata and full image must be written together', async () => {
+    await assertFails(addPhoto('alice', { withData: false }));
+    await assertFails(addPhoto('alice', { withMeta: false }));
+  });
+
+  it('oversize thumbnail or full image is rejected', async () => {
+    await assertSucceeds(addPhoto('alice', {
+      id: 'max', meta: { thumbnail: bytes(60 * 1024) }, data: { data: bytes(800 * 1024) },
+    }));
+    await assertFails(addPhoto('alice', { id: 'big1', meta: { thumbnail: bytes(60 * 1024 + 1) } }));
+    await assertFails(addPhoto('alice', { id: 'big2', data: { data: bytes(800 * 1024 + 1) } }));
+  });
+
+  it('photo fields are validated', async () => {
+    const bad = [
+      { date: 20261115 },
+      { date: '15/11/2026' },
+      { goalId: 7 },
+      { thumbnail: 'not bytes' },
+      { width: 10.5 },
+      { height: '1350' },
+      { createdAt: '2026-11-15' },
+      { reactions: { bob: '❤️' } },
+      { id: 'other' },
+      { extra: true },
+    ];
+    for (const [i, meta] of bad.entries()) {
+      await assertFails(addPhoto('alice', { id: `bad${i}`, meta }));
+    }
+    await assertFails(addPhoto('alice', { id: 'bad-data', data: { data: 'not bytes' } }));
+  });
+
+  it('only the owner deletes; the full image cannot be changed', async () => {
+    await addPhoto('alice');
+    await assertFails(deletePhoto('bob'));
+    await assertFails(deleteDoc(doc(db('bob'), `pairs/${PAIR}/photoData/ph1`)));
+    await assertFails(updateDoc(doc(db('alice'), `pairs/${PAIR}/photoData/ph1`),
+      { data: bytes(10) }));
+    await assertSucceeds(deletePhoto('alice'));
+  });
+
+  it('partner reacts, changes and removes the reaction', async () => {
+    await addPhoto('alice');
+    await assertSucceeds(react('bob', '❤️'));
+    await assertSucceeds(react('bob', '🔥'));
+    await assertSucceeds(react('bob', '💪'));
+    const snap = await getDoc(doc(db('alice'), `pairs/${PAIR}/photos/ph1`));
+    if (snap.data().reactions.bob !== '💪') throw new Error('reaction not stored');
+    await assertSucceeds(react('bob', null));
+  });
+
+  it('reactions: no unknown emoji, not on own photo, not for someone else', async () => {
+    await addPhoto('alice');
+    await assertFails(react('bob', '👍'));
+    await assertFails(react('bob', 'x'.repeat(5000)));
+    await assertFails(react('alice', '❤️')); // owner on own photo
+    await assertFails(react('bob', '❤️', { key: 'alice' }));
+    await assertFails(react('carol', '❤️')); // outsider
+  });
+
+  it('partner cannot modify anything but their reaction', async () => {
+    await addPhoto('alice');
+    const ref = doc(db('bob'), `pairs/${PAIR}/photos/ph1`);
+    await assertFails(updateDoc(ref, { goalId: 'water', ...stamp() }));
+    await assertFails(updateDoc(ref, { thumbnail: bytes(10) }));
+    await assertFails(updateDoc(ref, { 'reactions.bob': '❤️', date: '2026-11-16' }));
+    await assertFails(updateDoc(ref, { reactions: deleteField() }));
+    // Neither can the owner (photos are immutable apart from reactions).
+    await assertFails(updateDoc(doc(db('alice'), `pairs/${PAIR}/photos/ph1`),
+      { goalId: 'water' }));
   });
 });

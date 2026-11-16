@@ -208,6 +208,65 @@ service cloud.firestore {
           && stampOk(request.resource.data);
         allow delete: if isMember(pairId) && resource.data.uid == request.auth.uid;
       }
+
+      // ---------------------------------------------------------- photos
+      // GoalPhoto metadata + thumbnail. Both members read; the owner creates
+      // and deletes; the PARTNER (only) sets or removes their own reaction.
+      // Created together with photoData/{photoId} in one batch.
+      match /photos/{photoId} {
+        allow read: if isMember(pairId);
+        allow create: if isMember(pairId) && validPhoto(request.resource.data);
+        allow update: if isMember(pairId)
+          && reactionOk(resource.data, request.resource.data);
+        allow delete: if isMember(pairId) && resource.data.uid == request.auth.uid;
+
+        function validPhoto(d) {
+          return d.keys().hasOnly(['id', 'uid', 'date', 'goalId', 'createdAt',
+              'thumbnail', 'width', 'height', 'reactions', 'updatedAt'])
+            && d.id == photoId
+            && d.uid == request.auth.uid
+            && isDayKey(d.date)
+            && d.goalId is string
+            && d.goalId.size() <= 100
+            && d.createdAt is int
+            && d.thumbnail is bytes
+            && d.thumbnail.size() <= 60 * 1024
+            && d.width is int && d.width > 0
+            && d.height is int && d.height > 0
+            && d.reactions == {}
+            && existsAfter(/databases/$(database)/documents/pairs/$(pairId)/photoData/$(photoId))
+            && stampOk(d);
+        }
+
+        // Only `reactions` changes, only the requester's own entry, and the
+        // requester is not the owner. The entry is removed or a known emoji
+        // (keep in sync with `photoReactions` in lib/domain/models.dart).
+        function reactionOk(before, after) {
+          return before.uid != request.auth.uid
+            && after.diff(before).affectedKeys().hasOnly(['reactions', 'updatedAt'])
+            && after.reactions.diff(before.reactions).affectedKeys().hasOnly([request.auth.uid])
+            && (!(request.auth.uid in after.reactions)
+                || after.reactions[request.auth.uid] in ['❤️', '💪', '🔥'])
+            && stampOk(after);
+        }
+      }
+
+      // ------------------------------------------------------- photoData
+      // {uid, date, data: full JPEG bytes}. Both members read; the owner
+      // creates it with its photos/{photoId} document and deletes it.
+      match /photoData/{photoId} {
+        allow read: if isMember(pairId);
+        allow create: if isMember(pairId)
+          && request.resource.data.keys().hasOnly(['uid', 'date', 'data', 'updatedAt'])
+          && request.resource.data.uid == request.auth.uid
+          && isDayKey(request.resource.data.date)
+          && request.resource.data.data is bytes
+          && request.resource.data.data.size() <= 800 * 1024
+          && getAfter(/databases/$(database)/documents/pairs/$(pairId)/photos/$(photoId)).data.uid == request.auth.uid
+          && stampOk(request.resource.data);
+        allow update: if false;
+        allow delete: if isMember(pairId) && resource.data.uid == request.auth.uid;
+      }
     }
   }
 }

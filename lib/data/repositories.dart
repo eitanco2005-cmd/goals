@@ -15,7 +15,7 @@ import '../domain/models.dart';
 ///   pairs/{pairId}/summaries/{uid}_{date}           DaySummary (both members)
 ///   pairs/{pairId}/workouts/{workoutId}             WorkoutEntry
 ///   pairs/{pairId}/photos/{photoId}                GoalPhoto metadata + thumbnail (both members)
-///   pairs/{pairId}/photoData/{photoId}             {uid, data: full JPEG bytes} (both members)
+///   pairs/{pairId}/photoData/{photoId}             {uid, date, data: full JPEG bytes} (both members)
 ///   inviteCodes/{code}                              {pairId, open, createdBy}
 ///     (`open` is cleared when the partner joins, so a full pair can be
 ///     reported as 'pair-full' without outsiders reading the pair doc)

@@ -1,3 +1,6 @@
+import 'dart:typed_data';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_auth_mocks/firebase_auth_mocks.dart';
@@ -7,6 +10,8 @@ import 'package:goals_challenge/data/firebase/firebase_errors.dart';
 import 'package:goals_challenge/data/repositories.dart';
 import 'package:goals_challenge/domain/default_goals.dart';
 import 'package:goals_challenge/domain/models.dart';
+
+import 'photo_contract.dart';
 
 /// Auth mock whose sign-in / sign-up fail with a given Firebase error code.
 class _FailingAuth extends MockFirebaseAuth {
@@ -468,5 +473,97 @@ void main() {
     expect(events, containsAllInOrder([u.uid, null]));
     expect(b.currentUser, isNull);
     await sub.cancel();
+  });
+  group('photos', () {
+    photoRepositoryContract(() => b);
+
+    Future<GoalPhoto> addPhoto() => b.addPhoto(
+      pairId: 'pair1',
+      uid: 'alice',
+      date: '2026-11-15',
+      goalId: 'water',
+      fullJpeg: Uint8List.fromList([1, 2, 3]),
+      thumbnailJpeg: Uint8List.fromList([4, 5]),
+      width: 1080,
+      height: 1350,
+    );
+
+    test('stores metadata + thumbnail and the full image as Blobs', () async {
+      final photo = await addPhoto();
+      final meta = (await db.doc('pairs/pair1/photos/${photo.id}').get())
+          .data()!;
+      expect(meta['id'], photo.id);
+      expect(meta['uid'], 'alice');
+      expect(meta['goalId'], 'water');
+      expect(meta['createdAt'], photo.createdAt.millisecondsSinceEpoch);
+      expect((meta['thumbnail'] as Blob).bytes, [4, 5]);
+      expect(meta['reactions'], isEmpty);
+      expect(meta, contains('updatedAt'));
+
+      final data = (await db.doc('pairs/pair1/photoData/${photo.id}').get())
+          .data()!;
+      expect(data['uid'], 'alice');
+      expect(data['date'], '2026-11-15');
+      expect((data['data'] as Blob).bytes, [1, 2, 3]);
+      expect(data, contains('updatedAt'));
+    });
+
+    test('loadFullImage reads Firestore once, then the memory cache', () async {
+      final photo = await addPhoto();
+      // A fresh backend (empty memory cache) reads the photoData doc.
+      final other = FirebaseBackend(auth: auth, firestore: db);
+      expect(await other.loadFullImage(pairId: 'pair1', photoId: photo.id), [
+        1,
+        2,
+        3,
+      ]);
+      // Served from memory afterwards, even if the document is gone.
+      await db.doc('pairs/pair1/photoData/${photo.id}').delete();
+      expect(await other.loadFullImage(pairId: 'pair1', photoId: photo.id), [
+        1,
+        2,
+        3,
+      ]);
+    });
+
+    test('the full-image cache keeps the most recently used photos', () async {
+      final other = FirebaseBackend(auth: auth, firestore: db);
+      final ids = <String>[];
+      for (var i = 0; i <= FirebaseBackend.fullImageCacheSize; i++) {
+        await db.doc('pairs/pair1/photoData/p$i').set({
+          'uid': 'alice',
+          'date': '2026-11-15',
+          'data': Blob(Uint8List.fromList([i])),
+        });
+        ids.add('p$i');
+      }
+      Future<Uint8List> load(String id) =>
+          other.loadFullImage(pairId: 'pair1', photoId: id);
+      await load('p0');
+      for (final id
+          in ids.skip(1).take(FirebaseBackend.fullImageCacheSize - 1)) {
+        await load(id);
+      }
+      await load('p0'); // p0 is now the most recent, p1 the least
+      await load('p${FirebaseBackend.fullImageCacheSize}'); // evicts p1
+      for (final id in ['p0', 'p1']) {
+        await db.doc('pairs/pair1/photoData/$id').delete();
+      }
+      expect(await load('p0'), [0]);
+      await expectLater(load('p1'), throwsAppException('unknown'));
+    });
+
+    test('reactions are written as a single map entry', () async {
+      final photo = await addPhoto();
+      await b.setReaction(
+        pairId: 'pair1',
+        photoId: photo.id,
+        uid: 'bob',
+        emoji: photoReactions.first,
+      );
+      final meta = (await db.doc('pairs/pair1/photos/${photo.id}').get())
+          .data()!;
+      expect(meta['reactions'], {'bob': photoReactions.first});
+    });
   });
 }
