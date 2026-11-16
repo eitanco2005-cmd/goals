@@ -93,6 +93,60 @@ void photoRepositoryContract(PhotoRepository Function() create) {
     expect(await watch(from: '2026-11-17', to: '2026-11-30'), isEmpty);
   });
 
+  test('fetchPhotos: same filter and order as watchPhotos', () async {
+    final a1 = await add(date: '2026-11-14');
+    final a2 = await add(date: '2026-11-15', goalId: 'water');
+    final b1 = await add(uid: 'bob', date: '2026-11-15');
+    await add(date: '2026-11-16');
+    await repo.setReaction(
+      pairId: pairId,
+      photoId: a2.id,
+      uid: 'bob',
+      emoji: photoReactions[1],
+    );
+
+    Future<List<GoalPhoto>> fetch({
+      String? uid,
+      String from = '2000-01-01',
+      String to = '2100-01-01',
+    }) => repo.fetchPhotos(pairId: pairId, uid: uid, from: from, to: to);
+
+    final fetched = await fetch(from: '2026-11-14', to: '2026-11-15');
+    expect(fetched.map((p) => p.id), [a1.id, a2.id, b1.id]);
+    expect(fetched[1].reactions, {'bob': photoReactions[1]});
+    expect(fetched[0].thumbnail, jpeg(100));
+    expect(
+      (await fetch(
+        uid: 'alice',
+        from: '2026-11-15',
+        to: '2026-11-16',
+      )).map((p) => p.date),
+      ['2026-11-15', '2026-11-16'],
+    );
+    expect(await fetch(uid: 'carol'), isEmpty);
+    for (final (uid, from, to) in [
+      (null, '2026-11-14', '2026-11-15'),
+      ('alice', '2026-11-15', '2026-11-16'),
+    ]) {
+      expect(
+        (await fetch(uid: uid, from: from, to: to)).map((p) => p.id),
+        (await watch(uid: uid, from: from, to: to)).map((p) => p.id),
+      );
+    }
+  });
+
+  test('setReaction on a photo deleted just before is a no-op', () async {
+    final p = await add();
+    await repo.deletePhoto(pairId: pairId, photoId: p.id);
+    await repo.setReaction(
+      pairId: pairId,
+      photoId: p.id,
+      uid: 'bob',
+      emoji: photoReactions[0],
+    );
+    expect(await watch(), isEmpty);
+  });
+
   test('watchPhotos emits again on changes', () async {
     final stream = repo.watchPhotos(
       pairId: pairId,

@@ -8,6 +8,12 @@ import 'package:goals_challenge/firebase_options.dart';
 import '../../core/providers.dart';
 import 'firebase_backend.dart';
 
+/// Firestore's on-disk cache budget. Bounded so that photos (up to ~1 MB
+/// each with their full image) are garbage-collected instead of piling up
+/// on the device forever; least recently used documents not needed by an
+/// active listener are evicted first.
+const firestoreCacheSizeBytes = 150 * 1024 * 1024;
+
 /// Initializes Firebase (with Firestore offline persistence on Android and
 /// web) and returns the provider overrides that plug [FirebaseBackend] into
 /// all repository providers. Called from `main()` when the app is built with
@@ -19,7 +25,7 @@ Future<List<Override>> firebaseOverrides() async {
   // Must be set before the first Firestore call.
   firestore.settings = Settings(
     persistenceEnabled: true,
-    cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+    cacheSizeBytes: firestoreCacheSizeBytes,
     // Keep the cache usable when the web app is open in several tabs.
     webPersistentTabManager: kIsWeb ? WebPersistentMultipleTabManager() : null,
   );

@@ -34,5 +34,10 @@
       ]
     }
   ],
-  "fieldOverrides": []
+  "fieldOverrides": [
+    { "collectionGroup": "photos", "fieldPath": "thumbnail", "ttl": false, "indexes": [] },
+    { "collectionGroup": "photoData", "fieldPath": "data", "ttl": false, "indexes": [] },
+    { "collectionGroup": "photoData", "fieldPath": "uid", "ttl": false, "indexes": [] },
+    { "collectionGroup": "photoData", "fieldPath": "date", "ttl": false, "indexes": [] }
+  ]
 }

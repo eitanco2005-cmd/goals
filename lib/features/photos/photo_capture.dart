@@ -1,11 +1,14 @@
-import 'dart:typed_data';
+import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/errors.dart';
+import '../../core/providers.dart';
 import '../../data/repositories.dart';
 import '../../domain/models.dart';
 import '../../l10n/gen/app_localizations.dart';
@@ -13,33 +16,97 @@ import 'photo_providers.dart';
 
 enum PhotoSource { camera, gallery }
 
-/// Picks one image and returns its bytes, or null when cancelled.
+/// The goal and day a photo is being taken for.
+typedef PhotoTarget = ({String goalId, String day});
+
+/// A photo recovered by [PhotoPicker.retrieveLost].
+typedef LostPhoto = ({PhotoTarget target, Uint8List bytes});
+
+/// Whether the system may kill the app while the camera or gallery is open,
+/// so the picked photo only comes back on the next start (Android).
+bool get pickerMayLoseData =>
+    !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+
 abstract interface class PhotoPicker {
-  Future<Uint8List?> pick(PhotoSource source);
+  /// Picks one image for [target] and returns its bytes, or null when
+  /// cancelled.
+  Future<Uint8List?> pick(PhotoSource source, PhotoTarget target);
+
+  /// The photo of a [pick] whose app was killed before it returned, with
+  /// the target it was picked for; null when there is none. Forgets it, so
+  /// it is returned only once. Only call when [pickerMayLoseData].
+  Future<LostPhoto?> retrieveLost();
 }
 
-/// [PhotoPicker] backed by image_picker. The plugin already resizes to
-/// [fullPhotoMaxSide] and re-compresses (natively on Android, with a canvas
-/// on the web), so the bytes are usually upload-ready.
+/// [PhotoPicker] backed by image_picker. The plugin resizes to
+/// [fullPhotoMaxSide] (natively on Android, with a canvas on the web); the
+/// high [imageQuality] keeps that step near-lossless, so our own re-encode
+/// (which also strips metadata) is the only lossy one.
 class ImagePickerPhotoPicker implements PhotoPicker {
   ImagePickerPhotoPicker([ImagePicker? picker])
     : _picker = picker ?? ImagePicker();
 
   final ImagePicker _picker;
 
+  static const imageQuality = 95;
+
+  /// SharedPreferences key of the [PhotoTarget] of the pick in progress.
+  @visibleForTesting
+  static const pendingTargetKey = 'photos.pendingTarget';
+
   @override
-  Future<Uint8List?> pick(PhotoSource source) async {
-    final file = await _picker.pickImage(
-      source: switch (source) {
-        PhotoSource.camera => ImageSource.camera,
-        PhotoSource.gallery => ImageSource.gallery,
-      },
-      maxWidth: fullPhotoMaxSide.toDouble(),
-      maxHeight: fullPhotoMaxSide.toDouble(),
-      imageQuality: 80,
-      requestFullMetadata: false,
+  Future<Uint8List?> pick(PhotoSource source, PhotoTarget target) async {
+    final prefs = pickerMayLoseData
+        ? await SharedPreferences.getInstance()
+        : null;
+    await prefs?.setString(
+      pendingTargetKey,
+      jsonEncode({'goalId': target.goalId, 'day': target.day}),
     );
-    return file?.readAsBytes();
+    try {
+      final file = await _picker.pickImage(
+        source: switch (source) {
+          PhotoSource.camera => ImageSource.camera,
+          PhotoSource.gallery => ImageSource.gallery,
+        },
+        maxWidth: fullPhotoMaxSide.toDouble(),
+        maxHeight: fullPhotoMaxSide.toDouble(),
+        imageQuality: imageQuality,
+        requestFullMetadata: false,
+      );
+      return await file?.readAsBytes();
+    } finally {
+      await prefs?.remove(pendingTargetKey);
+    }
+  }
+
+  @override
+  Future<LostPhoto?> retrieveLost() async {
+    final prefs = await SharedPreferences.getInstance();
+    try {
+      // Always asked, so the plugin's copy is consumed even without a target.
+      final file = (await _picker.retrieveLostData()).file;
+      final target = _parseTarget(prefs.getString(pendingTargetKey));
+      if (file == null || target == null) return null;
+      return (target: target, bytes: await file.readAsBytes());
+    } finally {
+      await prefs.remove(pendingTargetKey);
+    }
+  }
+
+  static PhotoTarget? _parseTarget(String? json) {
+    if (json == null) return null;
+    try {
+      return switch (jsonDecode(json)) {
+        {'goalId': final String goalId, 'day': final String day} => (
+          goalId: goalId,
+          day: day,
+        ),
+        _ => null,
+      };
+    } on FormatException {
+      return null;
+    }
   }
 }
 
@@ -149,34 +216,74 @@ Future<void> addGoalPhoto(
 ) async {
   final l = AppLocalizations.of(context);
   final messenger = ScaffoldMessenger.of(context);
-  void showError(Object e) => messenger
-    ..hideCurrentSnackBar()
-    ..showSnackBar(SnackBar(content: Text(errorMessage(l, e))));
 
   // Read everything up front: the card may be rebuilt away while waiting.
   final uploads = ref.read(photoUploadsProvider.notifier);
   final picker = ref.read(photoPickerProvider);
-  if (uploads.limitReached) return showError(const AppException('photo-limit'));
+  final target = (goalId: goal.id, day: ref.read(todayKeyProvider));
+  if (uploads.limitReached) {
+    return _showError(messenger, l, const AppException('photo-limit'));
+  }
 
   final source = await showPhotoSourceSheet(context, goal: goal);
   if (source == null) return;
 
   final Uint8List? bytes;
   try {
-    bytes = await picker.pick(source);
+    bytes = await picker.pick(source, target);
   } catch (_) {
     messenger.showSnackBar(SnackBar(content: Text(l.photoErrPicker)));
     return;
   }
   if (bytes == null) return;
+  await _upload(messenger, l, uploads, target.goalId, bytes);
+}
 
+/// Uploads a photo picked in a previous run of the app that the system
+/// killed while the camera was open (see [PhotoPicker.retrieveLost]), if it
+/// was taken today. Call once on startup, when [pickerMayLoseData].
+Future<void> recoverLostGoalPhoto(BuildContext context, WidgetRef ref) async {
+  final l = AppLocalizations.of(context);
+  final messenger = ScaffoldMessenger.of(context);
+  final uploads = ref.read(photoUploadsProvider.notifier);
+  final picker = ref.read(photoPickerProvider);
+  final today = ref.read(todayKeyProvider);
+
+  final LostPhoto? lost;
   try {
-    await uploads.upload(goal.id, bytes);
+    lost = await picker.retrieveLost();
+  } catch (_) {
+    return; // Nothing we can do; the photo is gone either way.
+  }
+  if (lost == null || lost.target.day != today) return;
+  if (uploads.limitReached) {
+    return _showError(messenger, l, const AppException('photo-limit'));
+  }
+  await _upload(messenger, l, uploads, lost.target.goalId, lost.bytes);
+}
+
+Future<void> _upload(
+  ScaffoldMessengerState messenger,
+  AppLocalizations l,
+  PhotoUploads uploads,
+  String goalId,
+  Uint8List bytes,
+) async {
+  try {
+    await uploads.upload(goalId, bytes);
     HapticFeedback.mediumImpact();
   } catch (e) {
-    showError(e);
+    _showError(messenger, l, e);
   }
 }
+
+void _showError(
+  ScaffoldMessengerState messenger,
+  AppLocalizations l,
+  Object e,
+) => messenger
+  ..hideCurrentSnackBar()
+  ..showSnackBar(SnackBar(content: Text(errorMessage(l, e))));
 
 /// 📷 button at the end of a goal card's controls; shows a spinner while a
 /// photo for this goal is uploading.

@@ -133,6 +133,26 @@ void main() {
 
   group('photos', () {
     photoRepositoryContract(MemoryBackend.new);
+
+    test('photos are never pending', () async {
+      final b = MemoryBackend();
+      await b.addPhoto(
+        pairId: 'pair1',
+        uid: 'alice',
+        date: '2026-11-15',
+        goalId: 'water',
+        fullJpeg: Uint8List(10),
+        thumbnailJpeg: Uint8List(10),
+        width: 1,
+        height: 1,
+      );
+      final watched = await b
+          .watchPhotos(pairId: 'pair1', from: '2026-11-15', to: '2026-11-15')
+          .first;
+      final fetched = await b.fetchPhotos(
+          pairId: 'pair1', from: '2026-11-15', to: '2026-11-15');
+      expect([...watched, ...fetched].map((p) => p.isPending), [false, false]);
+    });
   });
 
   test('demo seed: Noa has photos today and on earlier days', () async {

@@ -191,6 +191,17 @@ abstract interface class PhotoRepository {
     required String to,
   });
 
+  /// One-shot read with the same filter and order as [watchPhotos], for
+  /// callers without a UI listener (e.g. a background job feeding the home
+  /// screen widget). Reads from the server, falling back to the local cache
+  /// when the network is unreachable.
+  Future<List<GoalPhoto>> fetchPhotos({
+    required String pairId,
+    String? uid,
+    required String from,
+    required String to,
+  });
+
   /// Full-size JPEG bytes for a photo (cached after the first load).
   Future<Uint8List> loadFullImage({
     required String pairId,

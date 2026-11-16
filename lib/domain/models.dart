@@ -390,6 +390,7 @@ class GoalPhoto {
     required this.width,
     required this.height,
     this.reactions = const {},
+    this.isPending = false,
   });
 
   final String id;
@@ -412,6 +413,11 @@ class GoalPhoto {
   /// uid -> one of [photoReactions]. Only the partner reacts.
   final Map<String, String> reactions;
 
+  /// True while this photo's local write has not reached the server yet
+  /// (Firestore `hasPendingWrites`). Client-only: never serialized by
+  /// [toMap]. Always false in the memory backend.
+  final bool isPending;
+
   Map<String, dynamic> toMap() => {
         'id': id,
         'uid': uid,
@@ -425,8 +431,11 @@ class GoalPhoto {
       };
 
   /// [thumbnail] must already be converted to [Uint8List] by the caller
-  /// (Firestore returns a `Blob`).
-  factory GoalPhoto.fromMap(Map<String, dynamic> m) => GoalPhoto(
+  /// (Firestore returns a `Blob`). [isPending] comes from the snapshot
+  /// metadata, not from the map.
+  factory GoalPhoto.fromMap(Map<String, dynamic> m,
+          {bool isPending = false}) =>
+      GoalPhoto(
         id: m['id'] as String,
         uid: m['uid'] as String,
         date: m['date'] as String,
@@ -438,5 +447,6 @@ class GoalPhoto {
         height: (m['height'] as num).toInt(),
         reactions:
             Map<String, String>.from((m['reactions'] as Map?) ?? const {}),
+        isPending: isPending,
       );
 }

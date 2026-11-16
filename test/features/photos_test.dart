@@ -42,12 +42,22 @@ class _FakePicker implements PhotoPicker {
   _FakePicker(this.bytes);
 
   final Uint8List? bytes;
+  LostPhoto? lost;
   final sources = <PhotoSource>[];
+  final targets = <PhotoTarget>[];
 
   @override
-  Future<Uint8List?> pick(PhotoSource source) async {
+  Future<Uint8List?> pick(PhotoSource source, PhotoTarget target) async {
     sources.add(source);
+    targets.add(target);
     return bytes;
+  }
+
+  @override
+  Future<LostPhoto?> retrieveLost() async {
+    final l = lost;
+    lost = null;
+    return l;
   }
 }
 

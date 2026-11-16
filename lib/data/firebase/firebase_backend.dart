@@ -36,6 +36,7 @@ class FirebaseBackend
     required this._firestore,
     Random? random,
     this.serverAckWait = const Duration(seconds: 2),
+    this.fullImageCacheBytes = defaultFullImageCacheBytes,
   }) : _random = random ?? Random.secure();
 
   final FirebaseAuth _auth;
@@ -570,47 +571,109 @@ class FirebaseBackend
   // small thumbnail (`photos/{id}`, listed by the photo strips) and the
   // full JPEG (`photoData/{id}`, fetched only when a photo is opened), so
   // listing never downloads full images. Bytes are stored as `Blob`s.
+  // `photos.thumbnail` and the `photoData` fields are never queried, so
+  // firestore.indexes.json exempts them from single-field indexing.
 
   /// Full images kept in memory by [loadFullImage], most recently used last.
   final _fullImages = <String, Uint8List>{};
 
-  /// Size of the [_fullImages] cache (~100 KB each).
-  static const fullImageCacheSize = 30;
+  /// Total size of the images in [_fullImages].
+  int _fullImagesBytes = 0;
 
+  /// Byte budget of the [_fullImages] cache. Full images are 150–800 KB,
+  /// so the default holds roughly 25–130 of them.
+  final int fullImageCacheBytes;
+  static const defaultFullImageCacheBytes = 20 * 1024 * 1024;
+
+  /// Adds [bytes] as the most recently used image, then evicts the least
+  /// recently used ones while over [fullImageCacheBytes] (the newest image
+  /// is always kept, even if it alone exceeds the budget).
   void _cacheFullImage(String photoId, Uint8List bytes) {
-    _fullImages
-      ..remove(photoId)
-      ..[photoId] = bytes;
-    if (_fullImages.length > fullImageCacheSize) {
-      _fullImages.remove(_fullImages.keys.first);
+    _uncacheFullImage(photoId);
+    _fullImages[photoId] = bytes;
+    _fullImagesBytes += bytes.length;
+    while (_fullImagesBytes > fullImageCacheBytes && _fullImages.length > 1) {
+      _uncacheFullImage(_fullImages.keys.first);
     }
   }
 
+  void _uncacheFullImage(String photoId) {
+    _fullImagesBytes -= _fullImages.remove(photoId)?.length ?? 0;
+  }
+
   /// [GoalPhoto] from a `photos` document (converts the thumbnail `Blob`).
-  static GoalPhoto _photoFromMap(_Json m) =>
-      GoalPhoto.fromMap({...m, 'thumbnail': (m['thumbnail'] as Blob).bytes});
+  static GoalPhoto _photoFromDoc(DocumentSnapshot<_Json> d) {
+    final m = d.data()!;
+    return GoalPhoto.fromMap({
+      ...m,
+      'thumbnail': (m['thumbnail'] as Blob).bytes,
+    }, isPending: d.metadata.hasPendingWrites);
+  }
 
   /// Photos in an inclusive date range, ordered by date then creation time.
   /// Requires the composite indexes (date, createdAt) and
   /// (uid, date, createdAt) in firestore.indexes.json.
-  @override
-  Stream<List<GoalPhoto>> watchPhotos({
-    required String pairId,
+  Query<_Json> _photosQuery(
+    String pairId,
     String? uid,
-    required String from,
-    required String to,
-  }) {
+    String from,
+    String to,
+  ) {
     Query<_Json> q = _photos(pairId);
     if (uid != null) q = q.where('uid', isEqualTo: uid);
     return q
         .where('date', isGreaterThanOrEqualTo: from)
         .where('date', isLessThanOrEqualTo: to)
         .orderBy('date')
-        .orderBy('createdAt')
-        .snapshots()
-        .map((q) => [for (final d in q.docs) _photoFromMap(d.data())])
-        .guarded();
+        .orderBy('createdAt');
   }
+
+  /// Includes metadata changes so [GoalPhoto.isPending] flips to false once
+  /// an upload reaches the server; snapshots that change nothing a
+  /// [GoalPhoto] exposes (e.g. only `fromCache`) are dropped.
+  @override
+  Stream<List<GoalPhoto>> watchPhotos({
+    required String pairId,
+    String? uid,
+    required String from,
+    required String to,
+  }) => _photosQuery(pairId, uid, from, to)
+      .snapshots(includeMetadataChanges: true)
+      .map((q) => [for (final d in q.docs) _photoFromDoc(d)])
+      .distinct(_samePhotos)
+      .guarded();
+
+  /// Whether two lists of [watchPhotos] look the same: the other fields of
+  /// a photo never change after it is created.
+  static bool _samePhotos(List<GoalPhoto> a, List<GoalPhoto> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i].id != b[i].id ||
+          a[i].isPending != b[i].isPending ||
+          !mapEquals(a[i].reactions, b[i].reactions)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  @override
+  Future<List<GoalPhoto>> fetchPhotos({
+    required String pairId,
+    String? uid,
+    required String from,
+    required String to,
+  }) => guard(() async {
+    final q = _photosQuery(pairId, uid, from, to);
+    QuerySnapshot<_Json> snap;
+    try {
+      snap = await q.get(const GetOptions(source: Source.server));
+    } on FirebaseException catch (e) {
+      if (!isNetworkError(e)) rethrow;
+      snap = await q.get(const GetOptions(source: Source.cache));
+    }
+    return [for (final d in snap.docs) _photoFromDoc(d)];
+  });
 
   /// Served from an in-memory LRU cache, then the Firestore cache, then the
   /// server.
@@ -698,7 +761,7 @@ class FirebaseBackend
   @override
   Future<void> deletePhoto({required String pairId, required String photoId}) =>
       guard(() {
-        _fullImages.remove(photoId);
+        _uncacheFullImage(photoId);
         final batch = _firestore.batch()
           ..delete(_photos(pairId).doc(photoId))
           ..delete(_photoData(pairId).doc(photoId));
@@ -713,18 +776,46 @@ class FirebaseBackend
     required String photoId,
     required String uid,
     required String? emoji,
-  }) => guard(
-    () => _write(
-      _photos(pairId)
-          .doc(photoId)
-          .update({
-            FieldPath(['reactions', uid]): emoji ?? FieldValue.delete(),
-            ..._stamp,
-          })
-          .catchError(
-            (_) {},
-            test: (e) => e is FirebaseException && e.code == 'not-found',
-          ),
-    ),
-  );
+  }) => guard(() {
+    final ref = _photos(pairId).doc(photoId);
+    return _write(
+      _ignoreIfMissing(
+        ref,
+        ref.update({
+          FieldPath(['reactions', uid]): emoji ?? FieldValue.delete(),
+          ..._stamp,
+        }),
+      ),
+    );
+  });
+
+  /// Completes normally if [update] of [ref] failed because the document
+  /// does not exist. The server reports that as `permission-denied` (the
+  /// rules reject updates of missing documents) rather than `not-found`, so
+  /// that error is ignored only when a read confirms the document is gone:
+  /// from the server (quick, it just answered), else from the local cache.
+  Future<void> _ignoreIfMissing(
+    DocumentReference<_Json> ref,
+    Future<void> update,
+  ) async {
+    try {
+      await update;
+    } on FirebaseException catch (e) {
+      if (e.code == 'not-found') return;
+      if (e.code != 'permission-denied') rethrow;
+      DocumentSnapshot<_Json>? snap;
+      try {
+        snap = await ref
+            .get(const GetOptions(source: Source.server))
+            .timeout(serverAckWait);
+      } on Object {
+        try {
+          snap = await ref.get(const GetOptions(source: Source.cache));
+        } on FirebaseException {
+          // Not cached either: cannot tell, keep the original error.
+        }
+      }
+      if (snap == null || snap.exists) rethrow;
+    }
+  }
 }

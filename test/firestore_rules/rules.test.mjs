@@ -432,6 +432,16 @@ describe('photos', () => {
     await assertSucceeds(react('bob', null));
   });
 
+  it('reacting to a deleted photo is permission-denied; reading it shows it is gone', async () => {
+    // FirebaseBackend.setReaction relies on both to treat this as a no-op.
+    await addPhoto('alice');
+    await deletePhoto('alice');
+    const err = await assertFails(react('bob', '❤️'));
+    if (err.code !== 'permission-denied') throw new Error(`got ${err.code}`);
+    const snap = await assertSucceeds(getDoc(doc(db('bob'), `pairs/${PAIR}/photos/ph1`)));
+    if (snap.exists()) throw new Error('photo still exists');
+  });
+
   it('reactions: no unknown emoji, not on own photo, not for someone else', async () => {
     await addPhoto('alice');
     await assertFails(react('bob', '👍'));

@@ -10,6 +10,7 @@ import 'package:goals_challenge/data/firebase/firebase_errors.dart';
 import 'package:goals_challenge/data/repositories.dart';
 import 'package:goals_challenge/domain/default_goals.dart';
 import 'package:goals_challenge/domain/models.dart';
+import 'package:mock_exceptions/mock_exceptions.dart';
 
 import 'photo_contract.dart';
 
@@ -526,31 +527,45 @@ void main() {
       ]);
     });
 
-    test('the full-image cache keeps the most recently used photos', () async {
-      final other = FirebaseBackend(auth: auth, firestore: db);
-      final ids = <String>[];
-      for (var i = 0; i <= FirebaseBackend.fullImageCacheSize; i++) {
-        await db.doc('pairs/pair1/photoData/p$i').set({
-          'uid': 'alice',
-          'date': '2026-11-15',
-          'data': Blob(Uint8List.fromList([i])),
-        });
-        ids.add('p$i');
-      }
+    test('the full-image cache is bounded by bytes, evicting LRU', () async {
+      // Room for three 100-byte images.
+      final other = FirebaseBackend(
+        auth: auth,
+        firestore: db,
+        fullImageCacheBytes: 300,
+      );
+      Future<void> put(String id, int size) =>
+          db.doc('pairs/pair1/photoData/$id').set({
+            'uid': 'alice',
+            'date': '2026-11-15',
+            'data': Blob(Uint8List(size)),
+          });
       Future<Uint8List> load(String id) =>
           other.loadFullImage(pairId: 'pair1', photoId: id);
-      await load('p0');
-      for (final id
-          in ids.skip(1).take(FirebaseBackend.fullImageCacheSize - 1)) {
+      Future<List<String>> cached(List<String> ids) async {
+        // A cached image still loads after its document is gone.
+        for (final id in ids) {
+          await db.doc('pairs/pair1/photoData/$id').delete();
+        }
+        return [
+          for (final id in ids)
+            if (await load(id).then((_) => true, onError: (_) => false)) id,
+        ];
+      }
+
+      for (final id in ['p0', 'p1', 'p2']) {
+        await put(id, 100);
         await load(id);
       }
       await load('p0'); // p0 is now the most recent, p1 the least
-      await load('p${FirebaseBackend.fullImageCacheSize}'); // evicts p1
-      for (final id in ['p0', 'p1']) {
-        await db.doc('pairs/pair1/photoData/$id').delete();
-      }
-      expect(await load('p0'), [0]);
-      await expectLater(load('p1'), throwsAppException('unknown'));
+      await put('p3', 150);
+      await load('p3'); // 450 bytes: evicts p1, then p2
+      expect(await cached(['p0', 'p1', 'p2', 'p3']), ['p0', 'p3']);
+
+      // An image over the whole budget is still kept (alone).
+      await put('big', 1000);
+      await load('big');
+      expect(await cached(['p0', 'p3', 'big']), ['big']);
     });
 
     test('reactions are written as a single map entry', () async {
@@ -565,5 +580,64 @@ void main() {
           .data()!;
       expect(meta['reactions'], {'bob': photoReactions.first});
     });
+
+    // The rules reject updating a missing document with permission-denied
+    // (not not-found); simulate that on the fake.
+    void denyUpdate(String photoId) =>
+        whenCalling(Invocation.method(#update, null))
+            .on(db.doc('pairs/pair1/photos/$photoId'))
+            .thenThrow(
+              FirebaseException(
+                plugin: 'cloud_firestore',
+                code: 'permission-denied',
+              ),
+            );
+    Future<void> react(String photoId) => b.setReaction(
+      pairId: 'pair1',
+      photoId: photoId,
+      uid: 'bob',
+      emoji: photoReactions.first,
+    );
+
+    test(
+      'setReaction: permission-denied on a deleted photo is a no-op',
+      () async {
+        final photo = await addPhoto();
+        await b.deletePhoto(pairId: 'pair1', photoId: photo.id);
+        denyUpdate(photo.id);
+        await react(photo.id);
+      },
+    );
+
+    test(
+      'setReaction: permission-denied on an existing photo throws',
+      () async {
+        final photo = await addPhoto();
+        denyUpdate(photo.id);
+        await expectLater(react(photo.id), throwsAppException('unknown'));
+      },
+    );
+
+    test('watchPhotos maps isPending and skips unchanged lists', () async {
+      final emitted = <List<GoalPhoto>>[];
+      final sub = b
+          .watchPhotos(pairId: 'pair1', from: '2026-11-15', to: '2026-11-15')
+          .listen(emitted.add);
+      await pumpEventQueue();
+      final photo = await addPhoto();
+      await pumpEventQueue();
+      // A write that changes nothing a GoalPhoto exposes.
+      await db.doc('pairs/pair1/photos/${photo.id}').update({'updatedAt': 1});
+      await pumpEventQueue();
+      await react(photo.id);
+      await pumpEventQueue();
+      await sub.cancel();
+
+      expect(emitted.map((l) => l.length), [0, 1, 1]);
+      expect(emitted.last.single.reactions, {'bob': photoReactions.first});
+      // The fake has no pending writes.
+      expect(emitted.last.single.isPending, isFalse);
+    });
   });
 }
+

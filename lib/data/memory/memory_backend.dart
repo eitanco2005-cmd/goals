@@ -390,6 +390,22 @@ class MemoryBackend
   final Map<String, List<GoalPhoto>> _photos = {}; // by pairId
   final Map<String, Uint8List> _photoData = {}; // by photoId
 
+  /// Photos matching the [watchPhotos]/[fetchPhotos] filter, in the same
+  /// order as the Firestore query: date, then createdAt. Never pending:
+  /// writes here are instantly "on the server".
+  List<GoalPhoto> _photosIn(
+          String pairId, String? uid, String from, String to) =>
+      (_photos[pairId] ?? const <GoalPhoto>[])
+          .where((p) =>
+              (uid == null || p.uid == uid) &&
+              p.date.compareTo(from) >= 0 &&
+              p.date.compareTo(to) <= 0)
+          .toList()
+        ..sort((a, b) {
+          final byDate = a.date.compareTo(b.date);
+          return byDate != 0 ? byDate : a.createdAt.compareTo(b.createdAt);
+        });
+
   @override
   Stream<List<GoalPhoto>> watchPhotos({
     required String pairId,
@@ -397,17 +413,16 @@ class MemoryBackend
     required String from,
     required String to,
   }) =>
-      _watch(() => (_photos[pairId] ?? const <GoalPhoto>[])
-          .where((p) =>
-              (uid == null || p.uid == uid) &&
-              p.date.compareTo(from) >= 0 &&
-              p.date.compareTo(to) <= 0)
-          .toList()
-        // Same order as the Firestore query: date, then createdAt.
-        ..sort((a, b) {
-          final byDate = a.date.compareTo(b.date);
-          return byDate != 0 ? byDate : a.createdAt.compareTo(b.createdAt);
-        }));
+      _watch(() => _photosIn(pairId, uid, from, to));
+
+  @override
+  Future<List<GoalPhoto>> fetchPhotos({
+    required String pairId,
+    String? uid,
+    required String from,
+    required String to,
+  }) async =>
+      _photosIn(pairId, uid, from, to);
 
   @override
   Future<Uint8List> loadFullImage({

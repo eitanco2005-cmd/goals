@@ -53,6 +53,14 @@ String _firestoreCode(String code) => switch (code) {
   _ => 'unknown',
 };
 
+/// Whether [error] means the backend could not be reached (offline or
+/// timed out), i.e. maps to AppException('network').
+bool isNetworkError(Object error) => switch (error) {
+  FirebaseException() => _firestoreCode(error.code) == 'network',
+  TimeoutException() => true,
+  _ => false,
+};
+
 /// Runs [action] and rethrows any failure as an [AppException].
 Future<T> guard<T>(Future<T> Function() action) async {
   try {
