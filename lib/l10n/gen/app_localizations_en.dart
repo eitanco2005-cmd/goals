@@ -287,6 +287,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statusUnlogged => 'Not logged';
 
   @override
+  String get groupNewCode => 'Make a new invite code';
+
+  @override
+  String get groupNewCodeBody =>
+      'The current code stops working. Share the new one with the people you still want to invite.';
+
+  @override
+  String get groupNewCodeConfirm => 'Make new code';
+
+  @override
+  String groupNewCodeDone(String code) {
+    return 'New invite code: $code';
+  }
+
+  @override
+  String get groupLeave => 'Leave the challenge';
+
+  @override
+  String get groupLeaveTitle => 'Leave the challenge?';
+
+  @override
+  String get groupLeaveBody =>
+      'You\'ll stop seeing the group and they\'ll stop seeing your new entries. What you already shared stays in the group\'s history. You can join again with a code.';
+
+  @override
+  String get groupLeaveConfirm => 'Leave';
+
+  @override
   String get goalsTitle => 'Goals';
 
   @override

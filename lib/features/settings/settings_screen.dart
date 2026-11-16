@@ -205,8 +205,105 @@ class _ChallengeTiles extends ConsumerWidget {
             ),
           ),
         ],
+        if (pair != null) ...[
+          ListTile(
+            leading: const Icon(Icons.autorenew),
+            title: Text(l.groupNewCode),
+            onTap: () => _renewCode(context, ref, pair.id),
+          ),
+          ListTile(
+            leading: Icon(
+              Icons.logout,
+              color: Theme.of(context).colorScheme.error,
+            ),
+            title: Text(
+              l.groupLeave,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+            onTap: () => _leave(context, ref, pair.id),
+          ),
+        ],
       ],
     );
+  }
+
+  Future<bool> _confirm(
+    BuildContext context, {
+    required String title,
+    required String body,
+    required String action,
+  }) async =>
+      await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(title),
+          content: Text(body),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(MaterialLocalizations.of(context).cancelButtonLabel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(action),
+            ),
+          ],
+        ),
+      ) ??
+      false;
+
+  Future<void> _renewCode(
+    BuildContext context,
+    WidgetRef ref,
+    String pairId,
+  ) async {
+    final l = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final uid = ref.read(authStateProvider).value?.uid;
+    if (uid == null) return;
+    if (!await _confirm(
+      context,
+      title: l.groupNewCode,
+      body: l.groupNewCodeBody,
+      action: l.groupNewCodeConfirm,
+    )) {
+      return;
+    }
+    try {
+      final code = await ref
+          .read(pairRepositoryProvider)
+          .renewInviteCode(uid: uid, pairId: pairId);
+      messenger.showSnackBar(SnackBar(content: Text(l.groupNewCodeDone(code))));
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(errorMessage(l, e))));
+    }
+  }
+
+  Future<void> _leave(
+    BuildContext context,
+    WidgetRef ref,
+    String pairId,
+  ) async {
+    final l = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final uid = ref.read(authStateProvider).value?.uid;
+    if (uid == null) return;
+    if (!await _confirm(
+      context,
+      title: l.groupLeaveTitle,
+      body: l.groupLeaveBody,
+      action: l.groupLeaveConfirm,
+    )) {
+      return;
+    }
+    try {
+      // The router moves to the start/join screen once the profile updates.
+      await ref
+          .read(pairRepositoryProvider)
+          .leavePair(uid: uid, pairId: pairId);
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(errorMessage(l, e))));
+    }
   }
 }
 

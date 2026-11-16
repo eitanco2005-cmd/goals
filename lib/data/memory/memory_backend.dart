@@ -272,6 +272,49 @@ class MemoryBackend
   @override
   Stream<Pair?> watchPair(String pairId) => _watch(() => _pairs[pairId]);
 
+  @override
+  Future<void> leavePair({required String uid, required String pairId}) async {
+    final pair = _pairs[pairId];
+    if (pair == null || !pair.memberUids.contains(uid)) return;
+    _pairs[pairId] = Pair(
+      id: pair.id,
+      memberUids: [...pair.memberUids]..remove(uid),
+      memberNames: {...pair.memberNames}..remove(uid),
+      inviteCode: pair.inviteCode,
+      activeChallengeId: pair.activeChallengeId,
+    );
+    final profile = _profiles[uid];
+    if (profile != null) {
+      _profiles[uid] = UserProfile(
+        uid: profile.uid,
+        displayName: profile.displayName,
+        languageCode: profile.languageCode,
+      );
+    }
+    _notify();
+  }
+
+  @override
+  Future<String> renewInviteCode({
+    required String uid,
+    required String pairId,
+  }) async {
+    final pair = _pairs[pairId];
+    if (pair == null || !pair.memberUids.contains(uid)) {
+      throw const AppException('unknown', 'not a member');
+    }
+    final code = _newCode();
+    _pairs[pairId] = Pair(
+      id: pair.id,
+      memberUids: pair.memberUids,
+      memberNames: pair.memberNames,
+      inviteCode: code,
+      activeChallengeId: pair.activeChallengeId,
+    );
+    _notify();
+    return code;
+  }
+
   // ----------------------------------------------------------- Challenge
   @override
   Stream<Challenge?> watchActiveChallenge(String pairId) =>

@@ -1,4 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:goals_challenge/features/pairing/pairing_screen.dart';
+import 'package:goals_challenge/data/repositories.dart';
 import 'package:goals_challenge/features/auth/sign_in_screen.dart';
 import 'package:goals_challenge/features/pairing/invite_code_card.dart';
 import 'package:goals_challenge/features/settings/settings_screen.dart';
@@ -104,5 +106,52 @@ void main() {
     expect(find.byType(SignInScreen), findsOneWidget);
     // The language chosen in the profile survives sign-out.
     expect(find.text('Welcome back'), findsOneWidget);
+  });
+
+  testWidgets('make a new invite code; the old one stops working', (
+    tester,
+  ) async {
+    final b = await signedInPairedBackend();
+    await pumpApp(tester, b);
+    await _openSettings(tester);
+    expect(find.text('DEMO42'), findsOneWidget);
+    await scrollToCenter(tester, find.text('Make a new invite code'));
+    await tester.tap(find.text('Make a new invite code'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Make new code'));
+    await tester.pumpAndSettle();
+
+    final code = (await b.watchPair('demo-pair').first)!.inviteCode;
+    expect(code, isNot('DEMO42'));
+    expect(find.text('New invite code: $code'), findsOneWidget);
+
+    final other = await b.signUp(
+      email: 'x@x.com',
+      password: 'secret1',
+      displayName: 'X',
+      languageCode: 'en',
+    );
+    await expectLater(
+      b.joinPair(uid: other.uid, displayName: 'X', code: 'DEMO42'),
+      throwsA(isA<AppException>()),
+    );
+  });
+
+  testWidgets('leave the challenge (with confirmation)', (tester) async {
+    final b = await signedInPairedBackend();
+    final me = b.currentUser!.uid;
+    await pumpApp(tester, b);
+    await _openSettings(tester);
+    await scrollToCenter(tester, find.text('Leave the challenge'));
+    await tester.tap(find.text('Leave the challenge'));
+    await tester.pumpAndSettle();
+    expect(find.text('Leave the challenge?'), findsOneWidget);
+    await tester.tap(find.text('Leave'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(PairingScreen), findsOneWidget);
+    final pair = (await b.watchPair('demo-pair').first)!;
+    expect(pair.memberUids, isNot(contains(me)));
+    expect((await b.watchProfile(me).first)!.pairId, isNull);
   });
 }

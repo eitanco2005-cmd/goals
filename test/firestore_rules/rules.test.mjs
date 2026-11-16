@@ -228,6 +228,81 @@ describe('pairing', () => {
     }));
   });
 
+  // Mirrors FirebaseBackend.leavePair.
+  function leave(uid, { reopen } = {}) {
+    const f = db(uid);
+    return runTransaction(f, async (tx) => {
+      const pairRef = doc(f, `pairs/${PAIR}`);
+      const pair = (await tx.get(pairRef)).data();
+      tx.update(pairRef, {
+        memberUids: pair.memberUids.filter((u) => u !== uid),
+        [`memberNames.${uid}`]: deleteField(), ...stamp(),
+      });
+      tx.update(doc(f, `users/${uid}`), { pairId: null, ...stamp() });
+      if (reopen ?? pair.memberUids.length >= MAX_MEMBERS) {
+        tx.update(doc(f, `inviteCodes/${CODE}`), { open: true });
+      }
+    });
+  }
+
+  // Mirrors FirebaseBackend.renewInviteCode.
+  function renew(uid, newCode = 'NEWC0D') {
+    const f = db(uid);
+    return runTransaction(f, async (tx) => {
+      const pairRef = doc(f, `pairs/${PAIR}`);
+      const pair = (await tx.get(pairRef)).data();
+      await tx.get(doc(f, `inviteCodes/${newCode}`));
+      tx.set(doc(f, `inviteCodes/${newCode}`), {
+        pairId: PAIR, open: pair.memberUids.length < MAX_MEMBERS, createdBy: uid,
+      });
+      tx.update(pairRef, { inviteCode: newCode, ...stamp() });
+      tx.update(doc(f, `inviteCodes/${pair.inviteCode}`), { open: false });
+    });
+  }
+
+  it('a member can leave; nobody can remove someone else', async () => {
+    await pairedAliceBob();
+    await assertFails(updateDoc(doc(db('alice'), `pairs/${PAIR}`), {
+      memberUids: ['alice'], 'memberNames.bob': deleteField(), ...stamp(),
+    }));
+    await assertSucceeds(leave('bob'));
+    const pair = (await getDoc(doc(db('alice'), `pairs/${PAIR}`))).data();
+    if (pair.memberUids.join() !== 'alice' || 'bob' in pair.memberNames) {
+      throw new Error('bob not removed');
+    }
+    // Bob can no longer read the group.
+    await assertFails(getDoc(doc(db('bob'), `pairs/${PAIR}/summaries/alice_${DATE}`)));
+  });
+
+  it('leaving a full group reopens the invite code', async () => {
+    await signUp('m1');
+    await createPair('m1');
+    for (let i = 2; i <= MAX_MEMBERS; i++) {
+      await signUp(`m${i}`);
+      await joinPair(`m${i}`);
+    }
+    // The flag must match the group: no reopening while still full.
+    await assertFails(updateDoc(doc(db('m1'), `inviteCodes/${CODE}`), { open: true }));
+    await assertSucceeds(leave('m3'));
+    const invite = (await getDoc(doc(db('m1'), `inviteCodes/${CODE}`))).data();
+    if (invite.open !== true) throw new Error('code not reopened');
+    await signUp('late');
+    await assertSucceeds(joinPair('late'));
+  });
+
+  it('a member can replace the invite code; the old one stops working', async () => {
+    await pairedAliceBob();
+    await signUp('carol');
+    // Outsiders cannot.
+    await assertFails(renew('carol'));
+    await assertSucceeds(renew('bob'));
+    const pair = (await getDoc(doc(db('alice'), `pairs/${PAIR}`))).data();
+    if (pair.inviteCode !== 'NEWC0D') throw new Error('code not replaced');
+    const old = (await getDoc(doc(db('carol'), `inviteCodes/${CODE}`))).data();
+    if (old.open !== false) throw new Error('old code still open');
+    await assertSucceeds(joinPair('carol', { code: 'NEWC0D' }));
+  });
+
   it('joiner cannot change other fields', async () => {
     await signUp('alice');
     await signUp('bob');

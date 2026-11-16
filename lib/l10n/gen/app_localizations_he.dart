@@ -288,6 +288,34 @@ class AppLocalizationsHe extends AppLocalizations {
   String get statusUnlogged => 'לא עודכן';
 
   @override
+  String get groupNewCode => 'יצירת קוד הזמנה חדש';
+
+  @override
+  String get groupNewCodeBody =>
+      'הקוד הנוכחי יפסיק לעבוד. שתפו את החדש עם מי שעוד רוצים להזמין.';
+
+  @override
+  String get groupNewCodeConfirm => 'יצירת קוד חדש';
+
+  @override
+  String groupNewCodeDone(String code) {
+    return 'קוד ההזמנה החדש: $code';
+  }
+
+  @override
+  String get groupLeave => 'עזיבת האתגר';
+
+  @override
+  String get groupLeaveTitle => 'לעזוב את האתגר?';
+
+  @override
+  String get groupLeaveBody =>
+      'לא תראו יותר את הקבוצה והיא לא תראה רישומים חדשים שלכם. מה שכבר שיתפתם נשאר בהיסטוריה של הקבוצה. אפשר להצטרף שוב עם קוד.';
+
+  @override
+  String get groupLeaveConfirm => 'עזיבה';
+
+  @override
   String get goalsTitle => 'יעדים';
 
   @override

@@ -211,6 +211,51 @@ void main() {
     expect(c.goals.firstWhere((g) => g.id == GoalIds.water).target, 10);
   });
 
+  test(
+    'leavePair removes the member; leaving a full group reopens it',
+    () async {
+      final first = await signUp('M1');
+      final pair = await createPair(first);
+      final others = <AppUser>[];
+      for (var i = 2; i <= maxGroupMembers; i++) {
+        final u = await signUp('M$i');
+        await join(u, pair.inviteCode);
+        others.add(u);
+      }
+      var invite = await db.doc('inviteCodes/${pair.inviteCode}').get();
+      expect(invite.data()!['open'], isFalse);
+
+      await b.leavePair(uid: others.first.uid, pairId: pair.id);
+      await pumpEventQueue();
+      final after = (await b.watchPair(pair.id).first)!;
+      expect(after.memberUids, isNot(contains(others.first.uid)));
+      expect(after.memberNames.containsKey(others.first.uid), isFalse);
+      expect((await b.watchProfile(others.first.uid).first)!.pairId, isNull);
+      invite = await db.doc('inviteCodes/${pair.inviteCode}').get();
+      expect(invite.data()!['open'], isTrue);
+    },
+  );
+
+  test('renewInviteCode replaces and closes the old code', () async {
+    final a = await signUp('A');
+    final pair = await createPair(a);
+    final code = await b.renewInviteCode(uid: a.uid, pairId: pair.id);
+    await pumpEventQueue();
+    expect(code, isNot(pair.inviteCode));
+    expect((await b.watchPair(pair.id).first)!.inviteCode, code);
+    final old = await db.doc('inviteCodes/${pair.inviteCode}').get();
+    expect(old.data()!['open'], isFalse);
+    final fresh = await db.doc('inviteCodes/$code').get();
+    expect(fresh.data(), containsPair('open', true));
+
+    final c = await signUp('C');
+    await expectLater(
+      b.joinPair(uid: c.uid, displayName: 'C', code: pair.inviteCode),
+      throwsAppException('pair-full'),
+    );
+    await join(c, code);
+  });
+
   test('setGoalValue writes the log and the summary', () async {
     final a = await signUp('A');
     final pair = await createPair(a);

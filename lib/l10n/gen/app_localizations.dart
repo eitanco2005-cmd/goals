@@ -596,6 +596,54 @@ abstract class AppLocalizations {
   /// **'Not logged'**
   String get statusUnlogged;
 
+  /// No description provided for @groupNewCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Make a new invite code'**
+  String get groupNewCode;
+
+  /// No description provided for @groupNewCodeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The current code stops working. Share the new one with the people you still want to invite.'**
+  String get groupNewCodeBody;
+
+  /// No description provided for @groupNewCodeConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Make new code'**
+  String get groupNewCodeConfirm;
+
+  /// No description provided for @groupNewCodeDone.
+  ///
+  /// In en, this message translates to:
+  /// **'New invite code: {code}'**
+  String groupNewCodeDone(String code);
+
+  /// No description provided for @groupLeave.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave the challenge'**
+  String get groupLeave;
+
+  /// No description provided for @groupLeaveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave the challenge?'**
+  String get groupLeaveTitle;
+
+  /// No description provided for @groupLeaveBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ll stop seeing the group and they\'ll stop seeing your new entries. What you already shared stays in the group\'s history. You can join again with a code.'**
+  String get groupLeaveBody;
+
+  /// No description provided for @groupLeaveConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave'**
+  String get groupLeaveConfirm;
+
   /// No description provided for @goalsTitle.
   ///
   /// In en, this message translates to:

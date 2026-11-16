@@ -83,14 +83,18 @@ service cloud.firestore {
       allow get: if signedIn();
       allow list: if false;
 
-      // Only together with the brand-new pair it points to.
+      // Together with the brand-new group it points to, or as a member's
+      // replacement for the group's current code.
       allow create: if signedIn()
         && request.resource.data.keys().hasOnly(['pairId', 'open', 'createdBy'])
         && request.resource.data.createdBy == request.auth.uid
-        && request.resource.data.open == true
-        && !exists(pairPath(request.resource.data.pairId))
-        && getAfter(pairPath(request.resource.data.pairId)).data.memberUids == [request.auth.uid]
-        && getAfter(pairPath(request.resource.data.pairId)).data.inviteCode == code;
+        && getAfter(pairPath(request.resource.data.pairId)).data.inviteCode == code
+        && ((request.resource.data.open == true
+              && !exists(pairPath(request.resource.data.pairId))
+              && getAfter(pairPath(request.resource.data.pairId)).data.memberUids == [request.auth.uid])
+            || (request.auth.uid in get(pairPath(request.resource.data.pairId)).data.memberUids
+              && request.resource.data.open
+                  == (getAfter(pairPath(request.resource.data.pairId)).data.memberUids.size() < maxMembers())));
 
       // Closed by the member who takes the last spot, in the join
       // transaction.
@@ -101,6 +105,16 @@ service cloud.firestore {
         && !(request.auth.uid in get(pairPath(resource.data.pairId)).data.memberUids)
         && getAfter(pairPath(resource.data.pairId)).data.memberUids.size() == maxMembers()
         && request.auth.uid in getAfter(pairPath(resource.data.pairId)).data.memberUids;
+
+      // A member keeps the flag true to the group: open only while it is the
+      // group's current code and the group has room (a member leaving a
+      // full group reopens it; a replaced code is closed).
+      allow update: if signedIn()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['open'])
+        && request.auth.uid in get(pairPath(resource.data.pairId)).data.memberUids
+        && request.resource.data.open
+            == (getAfter(pairPath(resource.data.pairId)).data.inviteCode == code
+                && getAfter(pairPath(resource.data.pairId)).data.memberUids.size() < maxMembers());
 
       allow delete: if false;
     }
@@ -125,6 +139,8 @@ service cloud.firestore {
 
       allow update: if signedIn()
         && (joinOk(resource.data, request.resource.data)
+            || leaveOk(resource.data, request.resource.data)
+            || newCodeOk(resource.data, request.resource.data)
             || memberUpdateOk(resource.data, request.resource.data))
         && stampOk(request.resource.data);
 
@@ -142,6 +158,25 @@ service cloud.firestore {
           && isName(after.memberNames[request.auth.uid])
           && getAfter(invitePath(before.inviteCode)).data.open
               == (after.memberUids.size() < maxMembers());
+      }
+
+      // A member leaves: removes exactly themself (uid + name).
+      function leaveOk(before, after) {
+        return request.auth.uid in before.memberUids
+          && after.memberUids == before.memberUids.removeAll([request.auth.uid])
+          && after.diff(before).affectedKeys().hasOnly(['memberUids', 'memberNames', 'updatedAt'])
+          && before.memberNames.diff(after.memberNames).affectedKeys().hasOnly([request.auth.uid])
+          && !(request.auth.uid in after.memberNames);
+      }
+
+      // A member replaces the invite code (e.g. it was shared too widely);
+      // the new code doc is created in the same batch.
+      function newCodeOk(before, after) {
+        return request.auth.uid in before.memberUids
+          && after.diff(before).affectedKeys().hasOnly(['inviteCode', 'updatedAt'])
+          && after.inviteCode is string
+          && after.inviteCode != before.inviteCode
+          && getAfter(invitePath(after.inviteCode)).data.pairId == pairId;
       }
 
       // A member switches the active challenge or renames themself.

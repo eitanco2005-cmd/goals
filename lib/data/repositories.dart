@@ -102,6 +102,15 @@ abstract interface class PairRepository {
   });
 
   Stream<Pair?> watchPair(String pairId);
+
+  /// Leaves the group: removes [uid] from it and clears their profile's
+  /// pairId (the app then shows the start/join screen). Leaving a full
+  /// group reopens its invite code. Needs a connection.
+  Future<void> leavePair({required String uid, required String pairId});
+
+  /// Replaces the group's invite code (the old one stops working) and
+  /// returns the new code. Needs a connection.
+  Future<String> renewInviteCode({required String uid, required String pairId});
 }
 
 /// Most goals a challenge can have (mirrors `validChallenge` in the rules).

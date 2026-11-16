@@ -326,6 +326,62 @@ class FirebaseBackend
     return pair!;
   });
 
+  @override
+  Future<void> leavePair({required String uid, required String pairId}) =>
+      guard(() async {
+        await _firestore.runTransaction<void>((tx) async {
+          final pairRef = _pairDoc(pairId);
+          final snap = await tx.get(pairRef);
+          if (!snap.exists) return;
+          final pair = Pair.fromMap(snap.data()!);
+          if (!pair.memberUids.contains(uid)) return;
+          tx
+            ..update(pairRef, {
+              'memberUids': [...pair.memberUids]..remove(uid),
+              FieldPath(['memberNames', uid]): FieldValue.delete(),
+              ..._stamp,
+            })
+            ..update(_userDoc(uid), {'pairId': null, ..._stamp});
+          // A spot opened up in a full group: the code works again.
+          if (pair.isFull) {
+            tx.update(_inviteDoc(pair.inviteCode), {'open': true});
+          }
+        });
+      });
+
+  @override
+  Future<String> renewInviteCode({
+    required String uid,
+    required String pairId,
+  }) => guard(() async {
+    AppException? failure; // see createPair
+    final code = await _firestore.runTransaction<String?>((tx) async {
+      final pairRef = _pairDoc(pairId);
+      final snap = await tx.get(pairRef);
+      if (!snap.exists) {
+        failure = const AppException('unknown', 'no group');
+        return null;
+      }
+      final pair = Pair.fromMap(snap.data()!);
+      final code = await _findFreeCode(tx);
+      if (code == null) {
+        failure = const AppException('unknown', 'no free invite code');
+        return null;
+      }
+      tx
+        ..set(_inviteDoc(code), {
+          'pairId': pairId,
+          'open': !pair.isFull,
+          'createdBy': uid,
+        })
+        ..update(pairRef, {'inviteCode': code, ..._stamp})
+        ..update(_inviteDoc(pair.inviteCode), {'open': false});
+      return code;
+    });
+    if (failure != null) throw failure!;
+    return code!;
+  });
+
   /// Picks a random invite code that is not taken yet (read inside [tx] so
   /// a concurrent creator cannot grab the same one). Null if every attempt
   /// collided.
