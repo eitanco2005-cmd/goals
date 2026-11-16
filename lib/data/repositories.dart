@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import '../domain/models.dart';
 
 /// Repository contracts. Two implementations exist:
@@ -12,6 +14,8 @@ import '../domain/models.dart';
 ///   pairs/{pairId}/logs/{uid}/days/{date}           DailyLog   (owner only)
 ///   pairs/{pairId}/summaries/{uid}_{date}           DaySummary (both members)
 ///   pairs/{pairId}/workouts/{workoutId}             WorkoutEntry
+///   pairs/{pairId}/photos/{photoId}                GoalPhoto metadata + thumbnail (both members)
+///   pairs/{pairId}/photoData/{photoId}             {uid, data: full JPEG bytes} (both members)
 ///   inviteCodes/{code}                              {pairId, open, createdBy}
 ///     (`open` is cleared when the partner joins, so a full pair can be
 ///     reported as 'pair-full' without outsiders reading the pair doc)
@@ -36,7 +40,7 @@ class AppException implements Exception {
 
   /// One of: 'invalid-credentials', 'email-in-use', 'weak-password',
   /// 'invalid-email', 'invalid-code', 'pair-full', 'already-paired',
-  /// 'network', 'unknown'.
+  /// 'network', 'photo-too-large', 'photo-limit', 'unknown'.
   final String code;
   final Object? details;
 
@@ -163,4 +167,58 @@ abstract interface class LogRepository {
   });
   Future<void> addWorkout({required String pairId, required WorkoutEntry entry});
   Future<void> deleteWorkout({required String pairId, required String id});
+}
+
+/// Size limits for photos (Firestore documents are capped at 1 MiB).
+const maxFullPhotoBytes = 800 * 1024;
+const maxThumbnailBytes = 60 * 1024;
+
+/// Max photos one person can add per logging day (keeps storage bounded).
+const maxPhotosPerDay = 20;
+
+/// Long-side pixel sizes the client resizes to before upload.
+const fullPhotoMaxSide = 1080;
+const thumbnailMaxSide = 320;
+
+abstract interface class PhotoRepository {
+  /// Photos of the pair in an inclusive date range, oldest first.
+  /// When [uid] is given, only that person's photos.
+  Stream<List<GoalPhoto>> watchPhotos({
+    required String pairId,
+    String? uid,
+    required String from,
+    required String to,
+  });
+
+  /// Full-size JPEG bytes for a photo (cached after the first load).
+  Future<Uint8List> loadFullImage({
+    required String pairId,
+    required String photoId,
+  });
+
+  /// Stores a photo. [fullJpeg]/[thumbnailJpeg] must already be resized
+  /// (see [fullPhotoMaxSide]/[thumbnailMaxSide]).
+  /// Throws AppException('photo-too-large' | 'photo-limit').
+  Future<GoalPhoto> addPhoto({
+    required String pairId,
+    required String uid,
+    required String date,
+    required String goalId,
+    required Uint8List fullJpeg,
+    required Uint8List thumbnailJpeg,
+    required int width,
+    required int height,
+  });
+
+  /// Deletes one of the caller's own photos (metadata and full image).
+  Future<void> deletePhoto({required String pairId, required String photoId});
+
+  /// Sets ([emoji] one of [photoReactions]) or removes (null) [uid]'s
+  /// reaction on a partner's photo.
+  Future<void> setReaction({
+    required String pairId,
+    required String photoId,
+    required String uid,
+    required String? emoji,
+  });
 }

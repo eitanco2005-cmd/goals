@@ -35,5 +35,6 @@ Future<List<Override>> firebaseOverrides() async {
     pairRepositoryProvider.overrideWithValue(backend),
     challengeRepositoryProvider.overrideWithValue(backend),
     logRepositoryProvider.overrideWithValue(backend),
+    photoRepositoryProvider.overrideWithValue(backend),
   ];
 }

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show visibleForTesting;
 
@@ -23,7 +24,8 @@ class MemoryBackend
         ProfileRepository,
         PairRepository,
         ChallengeRepository,
-        LogRepository {
+        LogRepository,
+        PhotoRepository {
   MemoryBackend({bool seedDemo = false, Random? random})
       : _random = random ?? Random() {
     if (seedDemo) _seed();
@@ -380,6 +382,112 @@ class MemoryBackend
   @override
   Future<void> deleteWorkout({required String pairId, required String id}) async {
     _workouts[pairId]?.removeWhere((w) => w.id == id);
+    _notify();
+  }
+
+  // -------------------------------------------------------------- Photos
+  final Map<String, List<GoalPhoto>> _photos = {}; // by pairId
+  final Map<String, Uint8List> _photoData = {}; // by photoId
+
+  @override
+  Stream<List<GoalPhoto>> watchPhotos({
+    required String pairId,
+    String? uid,
+    required String from,
+    required String to,
+  }) =>
+      _watch(() => (_photos[pairId] ?? const <GoalPhoto>[])
+          .where((p) =>
+              (uid == null || p.uid == uid) &&
+              p.date.compareTo(from) >= 0 &&
+              p.date.compareTo(to) <= 0)
+          .toList()
+        ..sort((a, b) => a.createdAt.compareTo(b.createdAt)));
+
+  @override
+  Future<Uint8List> loadFullImage({
+    required String pairId,
+    required String photoId,
+  }) async {
+    final data = _photoData[photoId];
+    if (data == null) throw const AppException('unknown', 'photo not found');
+    return data;
+  }
+
+  @override
+  Future<GoalPhoto> addPhoto({
+    required String pairId,
+    required String uid,
+    required String date,
+    required String goalId,
+    required Uint8List fullJpeg,
+    required Uint8List thumbnailJpeg,
+    required int width,
+    required int height,
+  }) async {
+    if (fullJpeg.length > maxFullPhotoBytes ||
+        thumbnailJpeg.length > maxThumbnailBytes) {
+      throw const AppException('photo-too-large');
+    }
+    final list = _photos[pairId] ??= [];
+    if (list.where((p) => p.uid == uid && p.date == date).length >=
+        maxPhotosPerDay) {
+      throw const AppException('photo-limit');
+    }
+    final photo = GoalPhoto(
+      id: _id('ph'),
+      uid: uid,
+      date: date,
+      goalId: goalId,
+      createdAt: DateTime.now(),
+      thumbnail: thumbnailJpeg,
+      width: width,
+      height: height,
+    );
+    list.add(photo);
+    _photoData[photo.id] = fullJpeg;
+    _notify();
+    return photo;
+  }
+
+  @override
+  Future<void> deletePhoto({
+    required String pairId,
+    required String photoId,
+  }) async {
+    _photos[pairId]?.removeWhere((p) => p.id == photoId);
+    _photoData.remove(photoId);
+    _notify();
+  }
+
+  @override
+  Future<void> setReaction({
+    required String pairId,
+    required String photoId,
+    required String uid,
+    required String? emoji,
+  }) async {
+    final list = _photos[pairId];
+    final i = list?.indexWhere((p) => p.id == photoId) ?? -1;
+    if (list == null || i < 0) return;
+    final p = list[i];
+    final reactions = Map<String, String>.from(p.reactions);
+    if (emoji == null) {
+      reactions.remove(uid);
+    } else {
+      reactions[uid] = emoji;
+    }
+    list[i] = GoalPhoto(
+      id: p.id,
+      uid: p.uid,
+      date: p.date,
+      goalId: p.goalId,
+      createdAt: p.createdAt,
+      thumbnail: p.thumbnail,
+      width: p.width,
+      height: p.height,
+      reactions: reactions,
+    );
     _notify();
   }
 

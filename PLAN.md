@@ -41,7 +41,7 @@ A two-person habit challenge app for tracking your own daily and weekly goals an
 4. **Settings**: challenge start and end dates (start new rounds), goal editing, language, reminder times, partner pairing
 
 ## Partner visibility
-**Summary only**: you see your partner's ✔/✘ for each goal and their daily %, not their exact numbers.
+**Summary only**: you see your partner's ✔/✘ for each goal and their daily %, not their exact numbers. For weekly goals (workouts, junk food), you see only whether the goal was met, not the counts. Photos are the exception: they are shared on purpose.
 
 ## Photos
 - **Optional:** every goal card has a 📷 button (camera or gallery) to attach a photo for that goal, like a meal, a workout, a book page or the last glass of water.

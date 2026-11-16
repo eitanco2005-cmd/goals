@@ -21,6 +21,8 @@ final challengeRepositoryProvider =
     Provider<ChallengeRepository>((ref) => throw UnimplementedError());
 final logRepositoryProvider =
     Provider<LogRepository>((ref) => throw UnimplementedError());
+final photoRepositoryProvider =
+    Provider<PhotoRepository>((ref) => throw UnimplementedError());
 
 /// True when running against the in-memory demo backend.
 final isDemoModeProvider = Provider<bool>((ref) => false);

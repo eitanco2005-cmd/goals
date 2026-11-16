@@ -4,6 +4,8 @@
 /// shape is used by Firestore and by the in-memory demo backend.
 library;
 
+import 'dart:typed_data';
+
 /// How a goal's value is entered.
 enum GoalType {
   /// Tap +1 / -1 (water glasses, meals, sweets).
@@ -366,5 +368,75 @@ class WorkoutEntry {
         date: m['date'] as String,
         type: WorkoutType.values.byName(m['type'] as String),
         minutes: (m['minutes'] as num).toInt(),
+      );
+}
+
+/// Reactions a partner can put on a photo.
+const photoReactions = ['❤️', '💪', '🔥'];
+
+/// A photo one partner attached to a goal on a given day.
+///
+/// Photos are deliberately shared with the partner (unlike detailed logs).
+/// This object carries only metadata plus a small [thumbnail]; the full image
+/// is loaded on demand with `PhotoRepository.loadFullImage`.
+class GoalPhoto {
+  const GoalPhoto({
+    required this.id,
+    required this.uid,
+    required this.date,
+    required this.goalId,
+    required this.createdAt,
+    required this.thumbnail,
+    required this.width,
+    required this.height,
+    this.reactions = const {},
+  });
+
+  final String id;
+
+  /// Owner (the partner who took the photo).
+  final String uid;
+
+  /// Logging day key `yyyy-MM-dd` the photo belongs to.
+  final String date;
+  final String goalId;
+  final DateTime createdAt;
+
+  /// JPEG, ~320px on the long side.
+  final Uint8List thumbnail;
+
+  /// Pixel size of the full image.
+  final int width;
+  final int height;
+
+  /// uid -> one of [photoReactions]. Only the partner reacts.
+  final Map<String, String> reactions;
+
+  Map<String, dynamic> toMap() => {
+        'id': id,
+        'uid': uid,
+        'date': date,
+        'goalId': goalId,
+        'createdAt': createdAt.millisecondsSinceEpoch,
+        'thumbnail': thumbnail,
+        'width': width,
+        'height': height,
+        'reactions': reactions,
+      };
+
+  /// [thumbnail] must already be converted to [Uint8List] by the caller
+  /// (Firestore returns a `Blob`).
+  factory GoalPhoto.fromMap(Map<String, dynamic> m) => GoalPhoto(
+        id: m['id'] as String,
+        uid: m['uid'] as String,
+        date: m['date'] as String,
+        goalId: m['goalId'] as String,
+        createdAt: DateTime.fromMillisecondsSinceEpoch(
+            (m['createdAt'] as num).toInt()),
+        thumbnail: m['thumbnail'] as Uint8List,
+        width: (m['width'] as num).toInt(),
+        height: (m['height'] as num).toInt(),
+        reactions:
+            Map<String, String>.from((m['reactions'] as Map?) ?? const {}),
       );
 }

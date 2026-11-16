@@ -14,6 +14,7 @@ List<Override> memoryOverrides(MemoryBackend b, {bool demo = false}) => [
       pairRepositoryProvider.overrideWithValue(b),
       challengeRepositoryProvider.overrideWithValue(b),
       logRepositoryProvider.overrideWithValue(b),
+      photoRepositoryProvider.overrideWithValue(b),
     ];
 
 /// Pumps the full app (router included) on top of [backend].

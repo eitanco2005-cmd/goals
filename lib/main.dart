@@ -27,5 +27,6 @@ List<Override> demoOverrides() {
     pairRepositoryProvider.overrideWithValue(backend),
     challengeRepositoryProvider.overrideWithValue(backend),
     logRepositoryProvider.overrideWithValue(backend),
+    photoRepositoryProvider.overrideWithValue(backend),
   ];
 }

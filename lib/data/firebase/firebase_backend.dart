@@ -29,7 +29,8 @@ class FirebaseBackend
         ProfileRepository,
         PairRepository,
         ChallengeRepository,
-        LogRepository {
+        LogRepository,
+        PhotoRepository {
   FirebaseBackend({
     required this._auth,
     required this._firestore,
@@ -229,10 +230,9 @@ class FirebaseBackend
         final snap = await _getPreferCache(_userDoc(uid));
         final pairId = snap.data()?['pairId'] as String?;
         if (pairId == null) return;
-        await _write(_pairDoc(pairId).update({
-          'memberNames.$uid': displayName,
-          ..._stamp,
-        }));
+        await _write(
+          _pairDoc(pairId).update({'memberNames.$uid': displayName, ..._stamp}),
+        );
       });
 
   @override
@@ -487,18 +487,19 @@ class FirebaseBackend
               final after = (before ?? DailyLog(uid: uid, date: date))
                   .withValue(goalId, value);
               final summary = summarizeDay(after, dailyGoals);
-              commit = (_firestore.batch()
-                    ..set(logRef, {
-                      'uid': uid,
-                      'date': date,
-                      'values': {goalId: value ?? FieldValue.delete()},
-                      ..._stamp,
-                    }, SetOptions(merge: true))
-                    ..set(_summaryDoc(pairId, uid, date), {
-                      ...summary.toMap(),
-                      ..._stamp,
-                    }))
-                  .commit();
+              commit =
+                  (_firestore.batch()
+                        ..set(logRef, {
+                          'uid': uid,
+                          'date': date,
+                          'values': {goalId: value ?? FieldValue.delete()},
+                          ..._stamp,
+                        }, SetOptions(merge: true))
+                        ..set(_summaryDoc(pairId, uid, date), {
+                          ...summary.toMap(),
+                          ..._stamp,
+                        }))
+                      .commit();
               return after;
             });
     _pendingLogs[key] = step;
@@ -558,4 +559,45 @@ class FirebaseBackend
   @override
   Future<void> deleteWorkout({required String pairId, required String id}) =>
       guard(() => _write(_workouts(pairId).doc(id).delete()));
+
+  // -------------------------------------------------------------- Photos
+  // TODO(photos-agent): implement against pairs/{pairId}/photos and
+  // pairs/{pairId}/photoData (see repositories.dart).
+  @override
+  Stream<List<GoalPhoto>> watchPhotos({
+    required String pairId,
+    String? uid,
+    required String from,
+    required String to,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<Uint8List> loadFullImage({
+    required String pairId,
+    required String photoId,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<GoalPhoto> addPhoto({
+    required String pairId,
+    required String uid,
+    required String date,
+    required String goalId,
+    required Uint8List fullJpeg,
+    required Uint8List thumbnailJpeg,
+    required int width,
+    required int height,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<void> deletePhoto({required String pairId, required String photoId}) =>
+      throw UnimplementedError();
+
+  @override
+  Future<void> setReaction({
+    required String pairId,
+    required String photoId,
+    required String uid,
+    required String? emoji,
+  }) => throw UnimplementedError();
 }
