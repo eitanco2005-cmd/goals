@@ -167,7 +167,8 @@ class GoalDef {
     target: m['target'] as num,
     period: GoalPeriod.values.byName(m['period'] as String),
     icon: m['icon'] as String,
-    step: (m['step'] as num?) ?? 1,
+    // Goals in hours step by half an hour (early ones were saved with 15).
+    step: m['hours'] == true && m['step'] == 15 ? 30 : (m['step'] as num?) ?? 1,
     requirements: Map<String, num>.from(
       (m['requirements'] as Map?)?.cast<String, num>() ?? const {},
     ),

@@ -147,16 +147,19 @@ void main() {
     expect(added.target, 120);
     expect(added.hours, isTrue);
     expect(GoalDef.fromMap(added.toMap()).hours, isTrue);
+    expect(added.step, 30);
+    // Hours goals saved earlier with quarter-hour steps load with 30.
+    expect(GoalDef.fromMap({...added.toMap(), 'step': 15}).step, 30);
 
     await tester.tap(find.byIcon(Icons.today_outlined));
     await tester.pumpAndSettle();
     await scrollToCenter(tester, find.text('0 / 2 h'));
     expect(find.text('0 / 2 h'), findsOneWidget);
     final card = find.byKey(ValueKey('goal-${added.id}'));
-    await tester.tap(find.descendant(of: card, matching: find.text('+0:15')));
+    await tester.tap(find.descendant(of: card, matching: find.text('+0:30')));
     await tester.pumpAndSettle();
     expect(
-      find.descendant(of: card, matching: find.text('0:15 / 2 h')),
+      find.descendant(of: card, matching: find.text('0:30 / 2 h')),
       findsOneWidget,
     );
   });

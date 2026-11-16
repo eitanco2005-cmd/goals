@@ -228,7 +228,7 @@ class _GoalFormState extends State<_GoalForm> {
       period: _isWorkouts ? GoalPeriod.weekly : _period,
       icon: _icon,
       step: switch (type) {
-        GoalType.minutes => 15,
+        GoalType.minutes => inHours ? 30 : 15,
         GoalType.number || GoalType.counter => numberStep(target),
         _ => 1,
       },
