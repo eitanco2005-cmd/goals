@@ -286,6 +286,90 @@ class AppLocalizationsHe extends AppLocalizations {
   String get statusUnlogged => 'לא עודכן';
 
   @override
+  String get photoAdd => 'הוספת תמונה';
+
+  @override
+  String photoAddFor(String goal) {
+    return 'הוספת תמונה: $goal';
+  }
+
+  @override
+  String get photoUploading => 'מעלים את התמונה…';
+
+  @override
+  String get photoTakePhoto => 'צילום תמונה';
+
+  @override
+  String get photoChooseFromGallery => 'בחירה מהגלריה';
+
+  @override
+  String photoOpen(String goal, String time) {
+    return 'תמונה: $goal, $time';
+  }
+
+  @override
+  String get photoPartnerPhotos => 'התמונות של היום';
+
+  @override
+  String photoYourReaction(String emoji) {
+    return 'התגובה שלך: $emoji';
+  }
+
+  @override
+  String photoReact(String emoji) {
+    return 'תגובה $emoji';
+  }
+
+  @override
+  String photoPartnerReacted(String name, String emoji) {
+    return 'תגובה מ$name: $emoji';
+  }
+
+  @override
+  String photoReactionSnack(String name, String emoji, String goalIcon) {
+    return 'תגובה חדשה מ$name: $emoji על התמונה שלך $goalIcon';
+  }
+
+  @override
+  String get photoView => 'לצפייה';
+
+  @override
+  String get photoClose => 'סגירה';
+
+  @override
+  String get photoDelete => 'מחיקת התמונה';
+
+  @override
+  String get photoDeleteTitle => 'למחוק את התמונה?';
+
+  @override
+  String get photoDeleteBody =>
+      'התמונה תיעלם אצל שני הצדדים. אי אפשר לבטל את המחיקה.';
+
+  @override
+  String get photoDeleteConfirm => 'מחיקה';
+
+  @override
+  String get photoDeleted => 'התמונה נמחקה';
+
+  @override
+  String get photoLoadFailed => 'לא הצלחנו לטעון את התמונה המלאה';
+
+  @override
+  String get photoErrTooLarge => 'התמונה גדולה מדי. נסו תמונה אחרת';
+
+  @override
+  String photoErrLimit(int count) {
+    return 'הגעת למגבלה של $count תמונות ביום';
+  }
+
+  @override
+  String get photoErrUnreadable => 'לא הצלחנו לקרוא את התמונה. נסו תמונה אחרת';
+
+  @override
+  String get photoErrPicker => 'לא הצלחנו לפתוח את המצלמה או את הגלריה';
+
+  @override
   String todayClearedGoal(String goal) {
     return '$goal: הרישום נמחק';
   }

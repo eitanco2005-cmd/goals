@@ -9,6 +9,10 @@ import '../../core/errors.dart';
 import '../../core/providers.dart';
 import '../../domain/models.dart';
 import '../../l10n/gen/app_localizations.dart';
+import '../photos/photo_capture.dart';
+import '../photos/photo_providers.dart';
+import '../photos/photo_thumbnails.dart';
+import '../photos/photo_viewer.dart';
 import 'goal_card.dart';
 import 'partner_strip.dart';
 import 'today_cards.dart';
@@ -42,6 +46,38 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     super.dispose();
   }
 
+  /// "Noa reacted ❤️ to your photo 🥗", with a shortcut to the photo.
+  void _showReaction(PartnerReaction reaction, String myUid) {
+    final l = AppLocalizations.of(context);
+    final name =
+        ref.read(pairProvider).value?.memberNames[reaction.reactorUid] ??
+        l.todayPartnerFallbackName;
+    final goals = ref.read(challengeProvider).value?.goals ?? const [];
+    final icon =
+        goals.where((g) => g.id == reaction.photo.goalId).firstOrNull?.icon ??
+        unknownGoalIcon;
+    HapticFeedback.lightImpact();
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(l.photoReactionSnack(name, reaction.emoji, icon)),
+          behavior: SnackBarBehavior.floating,
+          persist: false, // auto-hide even though it has an action
+          action: SnackBarAction(
+            label: l.photoView,
+            onPressed: () {
+              final mine = ref.read(userTodayPhotosProvider(myUid));
+              final i = mine.indexWhere((p) => p.id == reaction.photo.id);
+              if (i >= 0) {
+                openPhotoViewer(context, photos: mine, initialIndex: i);
+              }
+            },
+          ),
+        ),
+      );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
@@ -64,6 +100,15 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text(errorMessage(l, value))));
       }
+    });
+
+    ref.listen(todayPhotosProvider, (prev, next) {
+      final before = prev?.value;
+      final after = next.value;
+      final myUid = ref.read(authStateProvider).value?.uid;
+      if (before == null || after == null || myUid == null) return;
+      final reactions = newPartnerReactions(before, after, myUid);
+      if (reactions.isNotEmpty) _showReaction(reactions.last, myUid);
     });
 
     final body = switch (ref.watch(challengeProvider)) {
@@ -142,6 +187,7 @@ class _TodayContent extends ConsumerWidget {
     final showDemo =
         ref.watch(isDemoModeProvider) &&
         !ref.watch(demoBannerDismissedProvider);
+    final lang = Localizations.localeOf(context).languageCode;
     final dailyGoals = challenge.dailyGoals;
     final weeklyGoals = challenge.weeklyGoals;
     final met =
@@ -199,6 +245,14 @@ class _TodayContent extends ConsumerWidget {
                       value: log.value?.valueOf(goal.id),
                       enabled: log.value != null,
                       onChanged: (v) => _set(context, ref, goal, v),
+                      photoAction: GoalPhotoButton(
+                        goal: goal,
+                        title: goal.title(lang),
+                      ),
+                      photos: GoalPhotoStrip(
+                        goal: goal,
+                        title: goal.title(lang),
+                      ),
                     ),
                   ),
               if (weeklyGoals.isNotEmpty) ...[

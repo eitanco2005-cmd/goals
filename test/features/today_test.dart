@@ -10,9 +10,11 @@ import 'package:goals_challenge/data/repositories.dart';
 import 'package:goals_challenge/domain/default_goals.dart';
 import 'package:goals_challenge/domain/models.dart';
 import 'package:goals_challenge/features/pairing/invite_code_card.dart';
+import 'package:goals_challenge/features/photos/photo_thumbnails.dart';
 import 'package:goals_challenge/features/today/partner_strip.dart';
 import 'package:goals_challenge/features/today/today_header.dart';
 import 'package:goals_challenge/features/today/today_providers.dart';
+import 'package:image/image.dart' as img;
 import 'package:material_ui/material_ui.dart';
 
 import '../helpers.dart';
@@ -437,6 +439,47 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
+    });
+  }
+
+  for (final lang in ['he', 'en']) {
+    testWidgets('renders photos without overflow at 360px in $lang', (
+      tester,
+    ) async {
+      final b = await signedInPairedBackend(languageCode: lang);
+      final jpeg = img.encodeJpg(img.Image(width: 40, height: 30));
+      Future<void> add(String uid, String goalId) => b.addPhoto(
+        pairId: 'demo-pair',
+        uid: uid,
+        date: todayKey(),
+        goalId: goalId,
+        fullJpeg: jpeg,
+        thumbnailJpeg: jpeg,
+        width: 40,
+        height: 30,
+      );
+      // Many of mine on the tightest cards, plus plenty of Noa's.
+      for (final goalId in [GoalIds.sweets, GoalIds.steps, GoalIds.veggies]) {
+        for (var i = 0; i < 6; i++) {
+          await add(b.currentUser!.uid, goalId);
+        }
+      }
+      for (var i = 0; i < 8; i++) {
+        await add('demo-partner', GoalIds.water);
+      }
+      await pumpApp(tester, b, size: const Size(360, 3600));
+      expect(tester.takeException(), isNull);
+      expect(
+        _inCard(GoalIds.sweets, find.byType(PhotoThumbnail)),
+        findsWidgets,
+      );
+      expect(
+        find.descendant(
+          of: find.byType(PartnerStrip),
+          matching: find.byType(PhotoThumbnail),
+        ),
+        findsWidgets,
+      );
     });
   }
 

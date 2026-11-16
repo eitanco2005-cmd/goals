@@ -7,6 +7,8 @@ import '../../core/theme.dart';
 import '../../domain/models.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../pairing/invite_code_card.dart';
+import '../photos/photo_providers.dart';
+import '../photos/photo_thumbnails.dart';
 import 'progress_ring.dart';
 import 'today_providers.dart';
 
@@ -28,6 +30,8 @@ class PartnerSection extends ConsumerWidget {
           AppLocalizations.of(context).todayPartnerFallbackName,
       summary: ref.watch(partnerTodaySummaryProvider).value,
       dailyGoals: dailyGoals,
+      photos: ref.watch(partnerTodayPhotosProvider),
+      myUid: ref.watch(authStateProvider.select((a) => a.value?.uid)),
     );
   }
 }
@@ -40,11 +44,19 @@ class PartnerStrip extends StatelessWidget {
     required this.name,
     required this.summary,
     required this.dailyGoals,
+    this.photos = const [],
+    this.myUid,
   });
 
   final String name;
   final DaySummary? summary;
   final List<GoalDef> dailyGoals;
+
+  /// The partner's photos today, newest first. The row is hidden when empty.
+  final List<GoalPhoto> photos;
+
+  /// My uid, to show the reaction I gave on each photo.
+  final String? myUid;
 
   @override
   Widget build(BuildContext context) {
@@ -141,6 +153,21 @@ class PartnerStrip extends StatelessWidget {
                   ],
                 );
               },
+            ),
+            AnimatedSize(
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOut,
+              alignment: AlignmentDirectional.topStart,
+              child: photos.isEmpty
+                  ? const SizedBox(width: double.infinity)
+                  : Padding(
+                      padding: const EdgeInsetsDirectional.only(top: 12),
+                      child: PartnerPhotoRow(
+                        photos: photos,
+                        goals: dailyGoals,
+                        myUid: myUid,
+                      ),
+                    ),
             ),
           ],
         ),

@@ -596,6 +596,144 @@ abstract class AppLocalizations {
   /// **'Not logged'**
   String get statusUnlogged;
 
+  /// No description provided for @photoAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a photo'**
+  String get photoAdd;
+
+  /// No description provided for @photoAddFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a photo: {goal}'**
+  String photoAddFor(String goal);
+
+  /// No description provided for @photoUploading.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading photo…'**
+  String get photoUploading;
+
+  /// No description provided for @photoTakePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Take photo'**
+  String get photoTakePhoto;
+
+  /// No description provided for @photoChooseFromGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose from gallery'**
+  String get photoChooseFromGallery;
+
+  /// No description provided for @photoOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo: {goal}, {time}'**
+  String photoOpen(String goal, String time);
+
+  /// No description provided for @photoPartnerPhotos.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s photos'**
+  String get photoPartnerPhotos;
+
+  /// No description provided for @photoYourReaction.
+  ///
+  /// In en, this message translates to:
+  /// **'Your reaction: {emoji}'**
+  String photoYourReaction(String emoji);
+
+  /// No description provided for @photoReact.
+  ///
+  /// In en, this message translates to:
+  /// **'React {emoji}'**
+  String photoReact(String emoji);
+
+  /// No description provided for @photoPartnerReacted.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} reacted {emoji}'**
+  String photoPartnerReacted(String name, String emoji);
+
+  /// No description provided for @photoReactionSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} reacted {emoji} to your photo {goalIcon}'**
+  String photoReactionSnack(String name, String emoji, String goalIcon);
+
+  /// No description provided for @photoView.
+  ///
+  /// In en, this message translates to:
+  /// **'View'**
+  String get photoView;
+
+  /// No description provided for @photoClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get photoClose;
+
+  /// No description provided for @photoDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete photo'**
+  String get photoDelete;
+
+  /// No description provided for @photoDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this photo?'**
+  String get photoDeleteTitle;
+
+  /// No description provided for @photoDeleteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'It will disappear for both of you. This can\'t be undone.'**
+  String get photoDeleteBody;
+
+  /// No description provided for @photoDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get photoDeleteConfirm;
+
+  /// No description provided for @photoDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo deleted'**
+  String get photoDeleted;
+
+  /// No description provided for @photoLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the full photo'**
+  String get photoLoadFailed;
+
+  /// No description provided for @photoErrTooLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'This photo is too large. Try another one'**
+  String get photoErrTooLarge;
+
+  /// No description provided for @photoErrLimit.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve reached the limit of {count} photos a day'**
+  String photoErrLimit(int count);
+
+  /// No description provided for @photoErrUnreadable.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read this photo. Try another one'**
+  String get photoErrUnreadable;
+
+  /// No description provided for @photoErrPicker.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open the camera or gallery'**
+  String get photoErrPicker;
+
   /// No description provided for @todayClearedGoal.
   ///
   /// In en, this message translates to:

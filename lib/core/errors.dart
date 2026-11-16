@@ -13,6 +13,9 @@ String errorMessage(AppLocalizations l, Object error) {
     'pair-full' => l.errPairFull,
     'already-paired' => l.errAlreadyPaired,
     'network' => l.errNetwork,
+    'photo-too-large' => l.photoErrTooLarge,
+    'photo-limit' => l.photoErrLimit(maxPhotosPerDay),
+    'photo-unreadable' => l.photoErrUnreadable,
     _ => l.errUnknown,
   };
 }

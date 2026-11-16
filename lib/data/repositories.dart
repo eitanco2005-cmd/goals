@@ -40,7 +40,8 @@ class AppException implements Exception {
 
   /// One of: 'invalid-credentials', 'email-in-use', 'weak-password',
   /// 'invalid-email', 'invalid-code', 'pair-full', 'already-paired',
-  /// 'network', 'photo-too-large', 'photo-limit', 'unknown'.
+  /// 'network', 'photo-too-large', 'photo-limit', 'photo-unreadable',
+  /// 'unknown'.
   final String code;
   final Object? details;
 

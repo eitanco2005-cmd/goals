@@ -19,12 +19,20 @@ class GoalCard extends StatefulWidget {
     required this.value,
     required this.onChanged,
     this.enabled = true,
+    this.photoAction,
+    this.photos,
   });
 
   final GoalDef goal;
   final num? value;
   final ValueChanged<num?> onChanged;
   final bool enabled;
+
+  /// Shown at the end of the controls row (the 📷 button).
+  final Widget? photoAction;
+
+  /// Shown under the controls (today's photos for this goal).
+  final Widget? photos;
 
   @override
   State<GoalCard> createState() => _GoalCardState();
@@ -127,13 +135,24 @@ class _GoalCardState extends State<GoalCard>
             ],
           ),
           const SizedBox(height: 12),
-          GoalControl(
-            goal: goal,
-            title: title,
-            value: widget.value,
-            enabled: widget.enabled,
-            onChanged: widget.onChanged,
+          Row(
+            children: [
+              Expanded(
+                child: GoalControl(
+                  goal: goal,
+                  title: title,
+                  value: widget.value,
+                  enabled: widget.enabled,
+                  onChanged: widget.onChanged,
+                ),
+              ),
+              if (widget.photoAction case final action?) ...[
+                const SizedBox(width: 4),
+                action,
+              ],
+            ],
           ),
+          ?widget.photos,
         ],
       ),
     );

@@ -107,16 +107,16 @@ class CounterControl extends StatelessWidget {
                 style: FilledButton.styleFrom(
                   minimumSize: const Size(48, 48),
                   padding: const EdgeInsetsDirectional.symmetric(
-                    horizontal: 14,
+                    horizontal: 12,
                   ),
                   foregroundColor: AppColors.met,
                   backgroundColor: AppColors.met.withValues(alpha: 0.12),
                 ),
                 onPressed: change == null ? null : () => change(0),
-                child: Text(
-                  l.todayNoneToday,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                // Shrink rather than clip on narrow phones.
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(l.todayNoneToday, maxLines: 1),
                 ),
               ),
             ),

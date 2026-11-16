@@ -287,6 +287,90 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statusUnlogged => 'Not logged';
 
   @override
+  String get photoAdd => 'Add a photo';
+
+  @override
+  String photoAddFor(String goal) {
+    return 'Add a photo: $goal';
+  }
+
+  @override
+  String get photoUploading => 'Uploading photo…';
+
+  @override
+  String get photoTakePhoto => 'Take photo';
+
+  @override
+  String get photoChooseFromGallery => 'Choose from gallery';
+
+  @override
+  String photoOpen(String goal, String time) {
+    return 'Photo: $goal, $time';
+  }
+
+  @override
+  String get photoPartnerPhotos => 'Today\'s photos';
+
+  @override
+  String photoYourReaction(String emoji) {
+    return 'Your reaction: $emoji';
+  }
+
+  @override
+  String photoReact(String emoji) {
+    return 'React $emoji';
+  }
+
+  @override
+  String photoPartnerReacted(String name, String emoji) {
+    return '$name reacted $emoji';
+  }
+
+  @override
+  String photoReactionSnack(String name, String emoji, String goalIcon) {
+    return '$name reacted $emoji to your photo $goalIcon';
+  }
+
+  @override
+  String get photoView => 'View';
+
+  @override
+  String get photoClose => 'Close';
+
+  @override
+  String get photoDelete => 'Delete photo';
+
+  @override
+  String get photoDeleteTitle => 'Delete this photo?';
+
+  @override
+  String get photoDeleteBody =>
+      'It will disappear for both of you. This can\'t be undone.';
+
+  @override
+  String get photoDeleteConfirm => 'Delete';
+
+  @override
+  String get photoDeleted => 'Photo deleted';
+
+  @override
+  String get photoLoadFailed => 'Couldn\'t load the full photo';
+
+  @override
+  String get photoErrTooLarge => 'This photo is too large. Try another one';
+
+  @override
+  String photoErrLimit(int count) {
+    return 'You\'ve reached the limit of $count photos a day';
+  }
+
+  @override
+  String get photoErrUnreadable => 'Couldn\'t read this photo. Try another one';
+
+  @override
+  String get photoErrPicker => 'Couldn\'t open the camera or gallery';
+
+  @override
   String todayClearedGoal(String goal) {
     return '$goal cleared';
   }
