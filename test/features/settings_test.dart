@@ -13,8 +13,9 @@ Future<void> _openSettings(WidgetTester tester) async {
 }
 
 void main() {
-  testWidgets('shows partner, dates and a disabled edit-goals tile',
-      (tester) async {
+  testWidgets('shows partner, dates and a disabled edit-goals tile', (
+    tester,
+  ) async {
     await pumpApp(tester, await signedInPairedBackend());
     await _openSettings(tester);
 
@@ -23,12 +24,14 @@ void main() {
     expect(find.byType(InviteCodeCard), findsNothing);
     expect(find.textContaining('Day 21 of 90'), findsOneWidget);
     final editGoals = tester.widget<ListTile>(
-        find.widgetWithText(ListTile, 'Edit goals'));
+      find.widgetWithText(ListTile, 'Edit goals'),
+    );
     expect(editGoals.enabled, isFalse);
   });
 
-  testWidgets('solo pair shows waiting state and the invite code',
-      (tester) async {
+  testWidgets('solo pair shows waiting state and the invite code', (
+    tester,
+  ) async {
     final backend = await signedInSoloBackend();
     await pumpApp(tester, backend);
     await _openSettings(tester);
@@ -38,8 +41,9 @@ void main() {
     expect(find.text('Jan 1, 2026 – Dec 31, 2026'), findsOneWidget);
   });
 
-  testWidgets('language switch flips the app to Hebrew RTL and back',
-      (tester) async {
+  testWidgets('language switch flips the app to Hebrew RTL and back', (
+    tester,
+  ) async {
     final backend = await signedInPairedBackend();
     await pumpApp(tester, backend);
     await _openSettings(tester);
@@ -75,8 +79,9 @@ void main() {
     expect(profile!.displayName, 'Dana');
   });
 
-  testWidgets('sign out asks for confirmation and returns to sign-in',
-      (tester) async {
+  testWidgets('sign out asks for confirmation and returns to sign-in', (
+    tester,
+  ) async {
     await pumpApp(tester, await signedInPairedBackend());
     await _openSettings(tester);
 

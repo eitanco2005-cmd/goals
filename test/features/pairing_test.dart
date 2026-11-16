@@ -12,16 +12,18 @@ import '../helpers.dart';
 Future<MemoryBackend> _unpairedBackend({bool seedDemo = false}) async {
   final b = MemoryBackend(seedDemo: seedDemo);
   await b.signUp(
-      email: 'me@x.com',
-      password: 'secret1',
-      displayName: 'Me',
-      languageCode: 'en');
+    email: 'me@x.com',
+    password: 'secret1',
+    displayName: 'Me',
+    languageCode: 'en',
+  );
   return b;
 }
 
 void main() {
-  testWidgets('create a challenge → app shows the tabs (Today)',
-      (tester) async {
+  testWidgets('create a challenge → app shows the tabs (Today)', (
+    tester,
+  ) async {
     final backend = await _unpairedBackend();
     await pumpApp(tester, backend);
     expect(find.byType(PairingScreen), findsOneWidget);
@@ -42,10 +44,12 @@ void main() {
     expect(find.text('Today'), findsWidgets);
 
     final profile = await backend.watchProfile(backend.currentUser!.uid).first;
-    final challenge =
-        await backend.watchActiveChallenge(profile!.pairId!).first;
+    final challenge = await backend
+        .watchActiveChallenge(profile!.pairId!)
+        .first;
     expect(challenge!.goals, isNotEmpty);
-    final days = DateTime.parse(challenge.endDate)
+    final days =
+        DateTime.parse(challenge.endDate)
             .difference(DateTime.parse(challenge.startDate))
             .inDays +
         1;
@@ -101,10 +105,11 @@ void main() {
   testWidgets('pairing screen fits a narrow phone in Hebrew', (tester) async {
     final b = MemoryBackend();
     await b.signUp(
-        email: 'me@x.com',
-        password: 'secret1',
-        displayName: 'Me',
-        languageCode: 'he');
+      email: 'me@x.com',
+      password: 'secret1',
+      displayName: 'Me',
+      languageCode: 'he',
+    );
     await pumpApp(tester, b, size: const Size(360, 640));
     await tester.tap(find.text('פתיחת אתגר חדש'));
     await tester.pumpAndSettle();
@@ -112,25 +117,34 @@ void main() {
     expect(find.text('🥗 ירקות בכל ארוחה'), findsOneWidget);
   });
 
-  testWidgets('InviteCodeCard copies the code to the clipboard',
-      (tester) async {
+  testWidgets('InviteCodeCard copies the code to the clipboard', (
+    tester,
+  ) async {
     String? copied;
-    tester.binding.defaultBinaryMessenger
-        .setMockMethodCallHandler(SystemChannels.platform, (call) async {
-      if (call.method == 'Clipboard.setData') {
-        copied = (call.arguments as Map)['text'] as String;
-      }
-      return null;
-    });
-    addTearDown(() => tester.binding.defaultBinaryMessenger
-        .setMockMethodCallHandler(SystemChannels.platform, null));
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (call) async {
+        if (call.method == 'Clipboard.setData') {
+          copied = (call.arguments as Map)['text'] as String;
+        }
+        return null;
+      },
+    );
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        null,
+      ),
+    );
 
-    await tester.pumpWidget(const MaterialApp(
-      locale: Locale('en'),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: Scaffold(body: InviteCodeCard(code: 'AB12CD')),
-    ));
+    await tester.pumpWidget(
+      const MaterialApp(
+        locale: Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(body: InviteCodeCard(code: 'AB12CD')),
+      ),
+    );
     expect(find.text('AB12CD'), findsOneWidget);
     await tester.tap(find.text('Copy'));
     await tester.pump();

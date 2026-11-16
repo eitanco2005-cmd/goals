@@ -5,39 +5,56 @@ import 'package:goals_challenge/app.dart';
 import 'package:goals_challenge/core/providers.dart';
 import 'package:goals_challenge/data/memory/memory_backend.dart';
 import 'package:goals_challenge/domain/default_goals.dart';
+import 'package:goals_challenge/features/widget/widget_sync.dart';
 import 'package:material_ui/material_ui.dart';
 
-List<Override> memoryOverrides(MemoryBackend b, {bool demo = false}) => [
-      isDemoModeProvider.overrideWithValue(demo),
-      authRepositoryProvider.overrideWithValue(b),
-      profileRepositoryProvider.overrideWithValue(b),
-      pairRepositoryProvider.overrideWithValue(b),
-      challengeRepositoryProvider.overrideWithValue(b),
-      logRepositoryProvider.overrideWithValue(b),
-      photoRepositoryProvider.overrideWithValue(b),
-    ];
+List<Override> memoryOverrides(
+  MemoryBackend b, {
+  bool demo = false,
+  WidgetStore? widgetStore,
+}) => [
+  isDemoModeProvider.overrideWithValue(demo),
+  authRepositoryProvider.overrideWithValue(b),
+  profileRepositoryProvider.overrideWithValue(b),
+  pairRepositoryProvider.overrideWithValue(b),
+  challengeRepositoryProvider.overrideWithValue(b),
+  logRepositoryProvider.overrideWithValue(b),
+  photoRepositoryProvider.overrideWithValue(b),
+  // No native home-screen widget under test (tests run as Android).
+  widgetStoreProvider.overrideWithValue(widgetStore),
+];
 
 /// Pumps the full app (router included) on top of [backend].
-Future<void> pumpApp(WidgetTester tester, MemoryBackend backend,
-    {Size size = const Size(400, 860)}) async {
+Future<void> pumpApp(
+  WidgetTester tester,
+  MemoryBackend backend, {
+  Size size = const Size(400, 860),
+}) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
-  await tester.pumpWidget(ProviderScope(
-      overrides: memoryOverrides(backend), child: const GoalsApp()));
+  await tester.pumpWidget(
+    ProviderScope(overrides: memoryOverrides(backend), child: const GoalsApp()),
+  );
   await tester.pumpAndSettle();
 }
 
 /// A backend where 'me@x.com' is signed in and paired with the demo partner.
-Future<MemoryBackend> signedInPairedBackend({String languageCode = 'en'}) async {
+Future<MemoryBackend> signedInPairedBackend({
+  String languageCode = 'en',
+}) async {
   final b = MemoryBackend(seedDemo: true);
   final u = await b.signUp(
-      email: 'me@x.com',
-      password: 'secret1',
-      displayName: 'Me',
-      languageCode: languageCode);
+    email: 'me@x.com',
+    password: 'secret1',
+    displayName: 'Me',
+    languageCode: languageCode,
+  );
   await b.joinPair(
-      uid: u.uid, displayName: 'Me', code: MemoryBackend.demoInviteCode);
+    uid: u.uid,
+    displayName: 'Me',
+    code: MemoryBackend.demoInviteCode,
+  );
   return b;
 }
 
@@ -45,15 +62,17 @@ Future<MemoryBackend> signedInPairedBackend({String languageCode = 'en'}) async 
 Future<MemoryBackend> signedInSoloBackend({String languageCode = 'en'}) async {
   final b = MemoryBackend();
   final u = await b.signUp(
-      email: 'me@x.com',
-      password: 'secret1',
-      displayName: 'Me',
-      languageCode: languageCode);
+    email: 'me@x.com',
+    password: 'secret1',
+    displayName: 'Me',
+    languageCode: languageCode,
+  );
   await b.createPair(
-      uid: u.uid,
-      displayName: 'Me',
-      startDate: '2026-01-01',
-      endDate: '2026-12-31',
-      goals: defaultGoals);
+    uid: u.uid,
+    displayName: 'Me',
+    startDate: '2026-01-01',
+    endDate: '2026-12-31',
+    goals: defaultGoals,
+  );
   return b;
 }

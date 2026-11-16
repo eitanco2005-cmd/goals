@@ -287,6 +287,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statusUnlogged => 'Not logged';
 
   @override
+  String widgetTitle(String name, int percent) {
+    return '$name · $percent% today';
+  }
+
+  @override
+  String widgetGoalsDone(int met, int total) {
+    return '$met/$total';
+  }
+
+  @override
+  String widgetNoPhotos(String name) {
+    return 'No photos from $name yet today';
+  }
+
+  @override
   String get photoAdd => 'Add a photo';
 
   @override

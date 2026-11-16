@@ -596,6 +596,24 @@ abstract class AppLocalizations {
   /// **'Not logged'**
   String get statusUnlogged;
 
+  /// No description provided for @widgetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} · {percent}% today'**
+  String widgetTitle(String name, int percent);
+
+  /// No description provided for @widgetGoalsDone.
+  ///
+  /// In en, this message translates to:
+  /// **'{met}/{total}'**
+  String widgetGoalsDone(int met, int total);
+
+  /// No description provided for @widgetNoPhotos.
+  ///
+  /// In en, this message translates to:
+  /// **'No photos from {name} yet today'**
+  String widgetNoPhotos(String name);
+
   /// No description provided for @photoAdd.
   ///
   /// In en, this message translates to:

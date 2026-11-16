@@ -32,13 +32,15 @@ void main() {
   });
 
   test('summarizeDay computes percent over daily goals', () {
-    final daily = defaultGoals.where((g) => g.period == GoalPeriod.daily).toList();
+    final daily = defaultGoals
+        .where((g) => g.period == GoalPeriod.daily)
+        .toList();
     expect(daily, hasLength(9));
-    final log = DailyLog(uid: 'u', date: '2026-11-15', values: {
-      GoalIds.water: 8,
-      GoalIds.steps: 10000,
-      GoalIds.sweets: 3,
-    });
+    final log = DailyLog(
+      uid: 'u',
+      date: '2026-11-15',
+      values: {GoalIds.water: 8, GoalIds.steps: 10000, GoalIds.sweets: 3},
+    );
     final s = summarizeDay(log, daily);
     expect(s.percent, 22); // 2 of 9
     expect(s.statuses[GoalIds.sweets], GoalStatus.notMet);
@@ -54,28 +56,31 @@ void main() {
     test('needs 1 run + 2 strength of >= 30 min', () {
       expect(evaluateWorkouts(g, []), GoalStatus.unlogged);
       expect(
-          evaluateWorkouts(g, [
-            w(WorkoutType.run, 30),
-            w(WorkoutType.strength, 45),
-            w(WorkoutType.strength, 30),
-          ]),
-          GoalStatus.met);
+        evaluateWorkouts(g, [
+          w(WorkoutType.run, 30),
+          w(WorkoutType.strength, 45),
+          w(WorkoutType.strength, 30),
+        ]),
+        GoalStatus.met,
+      );
       expect(
-          evaluateWorkouts(g, [
-            w(WorkoutType.strength, 30),
-            w(WorkoutType.strength, 30),
-            w(WorkoutType.strength, 30),
-          ]),
-          GoalStatus.notMet);
+        evaluateWorkouts(g, [
+          w(WorkoutType.strength, 30),
+          w(WorkoutType.strength, 30),
+          w(WorkoutType.strength, 30),
+        ]),
+        GoalStatus.notMet,
+      );
     });
     test('short workouts do not count', () {
       expect(
-          evaluateWorkouts(g, [
-            w(WorkoutType.run, 20),
-            w(WorkoutType.strength, 45),
-            w(WorkoutType.strength, 30),
-          ]),
-          GoalStatus.notMet);
+        evaluateWorkouts(g, [
+          w(WorkoutType.run, 20),
+          w(WorkoutType.strength, 45),
+          w(WorkoutType.strength, 30),
+        ]),
+        GoalStatus.notMet,
+      );
     });
   });
 }

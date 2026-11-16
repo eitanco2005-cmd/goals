@@ -286,6 +286,21 @@ class AppLocalizationsHe extends AppLocalizations {
   String get statusUnlogged => 'לא עודכן';
 
   @override
+  String widgetTitle(String name, int percent) {
+    return '$name · $percent% היום';
+  }
+
+  @override
+  String widgetGoalsDone(int met, int total) {
+    return '$met/$total';
+  }
+
+  @override
+  String widgetNoPhotos(String name) {
+    return 'עוד אין תמונות של $name היום';
+  }
+
+  @override
   String get photoAdd => 'הוספת תמונה';
 
   @override

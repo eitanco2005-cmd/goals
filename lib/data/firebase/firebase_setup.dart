@@ -15,10 +15,9 @@ import 'firebase_backend.dart';
 const firestoreCacheSizeBytes = 150 * 1024 * 1024;
 
 /// Initializes Firebase (with Firestore offline persistence on Android and
-/// web) and returns the provider overrides that plug [FirebaseBackend] into
-/// all repository providers. Called from `main()` when the app is built with
-/// `--dart-define=USE_FIREBASE=true`.
-Future<List<Override>> firebaseOverrides() async {
+/// web) and returns the backend. Shared by the app and the background job
+/// that refreshes the home-screen widget.
+Future<FirebaseBackend> initFirebaseBackend() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   final firestore = FirebaseFirestore.instance;
@@ -30,10 +29,14 @@ Future<List<Override>> firebaseOverrides() async {
     webPersistentTabManager: kIsWeb ? WebPersistentMultipleTabManager() : null,
   );
 
-  final backend = FirebaseBackend(
-    auth: FirebaseAuth.instance,
-    firestore: firestore,
-  );
+  return FirebaseBackend(auth: FirebaseAuth.instance, firestore: firestore);
+}
+
+/// Provider overrides that plug [FirebaseBackend] into all repository
+/// providers. Called from `main()` when the app is built with
+/// `--dart-define=USE_FIREBASE=true`.
+Future<List<Override>> firebaseOverrides() async {
+  final backend = await initFirebaseBackend();
   return [
     isDemoModeProvider.overrideWithValue(false),
     authRepositoryProvider.overrideWithValue(backend),

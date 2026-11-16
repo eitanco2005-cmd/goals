@@ -45,8 +45,10 @@ void main() {
     );
 
     test('auth loading -> splash', () {
-      expect(go(Routes.today, authLoading: true, signedIn: false),
-          Routes.splash);
+      expect(
+        go(Routes.today, authLoading: true, signedIn: false),
+        Routes.splash,
+      );
       expect(go(Routes.splash, authLoading: true, signedIn: false), isNull);
     });
 
@@ -105,31 +107,36 @@ void main() {
       expect(profileStatusOf(const AsyncLoading()), ProfileStatus.loading);
       expect(profileStatusOf(const AsyncData(null)), ProfileStatus.missing);
       expect(profileStatusOf(const AsyncData(profile)), ProfileStatus.ready);
-      expect(profileStatusOf(AsyncError('x', StackTrace.empty)),
-          ProfileStatus.error);
+      expect(
+        profileStatusOf(AsyncError('x', StackTrace.empty)),
+        ProfileStatus.error,
+      );
     });
   });
 
   group('splash recovery', () {
     Future<void> pumpOnSplash(WidgetTester tester, MemoryBackend b) async {
-      await tester.pumpWidget(ProviderScope(
-          overrides: memoryOverrides(b), child: const GoalsApp()));
+      await tester.pumpWidget(
+        ProviderScope(overrides: memoryOverrides(b), child: const GoalsApp()),
+      );
       await tester.pump();
       await tester.pump();
     }
 
     Future<AppUser> signUpWithoutProfile(MemoryBackend b) async {
       final u = await b.signUp(
-          email: 'dana@x.com',
-          password: 'secret1',
-          displayName: 'Dana',
-          languageCode: 'en');
+        email: 'dana@x.com',
+        password: 'secret1',
+        displayName: 'Dana',
+        languageCode: 'en',
+      );
       b.debugDeleteProfile(u.uid);
       return u;
     }
 
-    testWidgets('a missing profile is created and the user reaches /pair',
-        (tester) async {
+    testWidgets('a missing profile is created and the user reaches /pair', (
+      tester,
+    ) async {
       final b = MemoryBackend();
       final u = await signUpWithoutProfile(b);
       await pumpApp(tester, b);
@@ -152,14 +159,16 @@ void main() {
       expect(find.byType(SignInScreen), findsOneWidget);
     });
 
-    testWidgets('a profile that never loads shows Try again after a while',
-        (tester) async {
+    testWidgets('a profile that never loads shows Try again after a while', (
+      tester,
+    ) async {
       final b = _HangingProfile();
       await b.signUp(
-          email: 'dana@x.com',
-          password: 'secret1',
-          displayName: 'Dana',
-          languageCode: 'he');
+        email: 'dana@x.com',
+        password: 'secret1',
+        displayName: 'Dana',
+        languageCode: 'he',
+      );
       await pumpOnSplash(tester, b);
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
       expect(find.text('לנסות שוב'), findsNothing);

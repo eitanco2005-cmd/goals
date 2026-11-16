@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../l10n/gen/app_localizations.dart';
+import '../widget/widget_sync.dart';
 
 /// Bottom navigation between the four main tabs.
 class HomeShell extends ConsumerWidget {
@@ -12,6 +13,8 @@ class HomeShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
+    // Keeps the Android home-screen widget in sync while the app runs.
+    ref.watch(partnerWidgetSyncProvider);
     return Scaffold(
       body: shell,
       bottomNavigationBar: NavigationBar(

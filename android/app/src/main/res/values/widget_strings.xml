@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_name">Partner\'s photos</string>
+    <string name="widget_description">Your partner\'s photos of today, rotating, with their progress</string>
+    <string name="widget_open_app">Open the app to see your partner\'s day</string>
+</resources>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_name">התמונות של בן/בת הזוג</string>
+    <string name="widget_description">התמונות של היום מבן/בת הזוג, מתחלפות, עם ההתקדמות שלהם</string>
+    <string name="widget_open_app">פתחו את האפליקציה כדי לראות את היום של בן/בת הזוג</string>
+</resources>

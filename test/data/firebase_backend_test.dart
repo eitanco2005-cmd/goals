@@ -251,7 +251,11 @@ void main() {
     final log = await b
         .watchDailyLog(pairId: pair.id, uid: a.uid, date: date)
         .first;
-    expect(log.values, {GoalIds.water: 8, GoalIds.sweets: 3, GoalIds.veggies: 1});
+    expect(log.values, {
+      GoalIds.water: 8,
+      GoalIds.sweets: 3,
+      GoalIds.veggies: 1,
+    });
     final summary = (await b
         .watchDaySummary(pairId: pair.id, uid: a.uid, date: date)
         .first)!;
@@ -285,28 +289,30 @@ void main() {
     );
   });
 
-  test('ensureProfile creates a missing profile and keeps an existing one',
-      () async {
-    final u = await signUp('Dana');
-    await b.ensureProfile(u, languageCode: 'en');
-    expect((await b.watchProfile(u.uid).first)!.languageCode, 'he');
+  test(
+    'ensureProfile creates a missing profile and keeps an existing one',
+    () async {
+      final u = await signUp('Dana');
+      await b.ensureProfile(u, languageCode: 'en');
+      expect((await b.watchProfile(u.uid).first)!.languageCode, 'he');
 
-    await db.doc('users/${u.uid}').delete();
-    await b.ensureProfile(
-      const AppUser(uid: 'x', email: 'noa.k@x.com'),
-      languageCode: 'en',
-    );
-    final created = (await b.watchProfile('x').first)!;
-    expect(created.displayName, 'noa.k');
-    expect(created.languageCode, 'en');
-    expect(created.pairId, isNull);
+      await db.doc('users/${u.uid}').delete();
+      await b.ensureProfile(
+        const AppUser(uid: 'x', email: 'noa.k@x.com'),
+        languageCode: 'en',
+      );
+      final created = (await b.watchProfile('x').first)!;
+      expect(created.displayName, 'noa.k');
+      expect(created.languageCode, 'en');
+      expect(created.pairId, isNull);
 
-    await b.ensureProfile(
-      AppUser(uid: u.uid, displayName: 'D' * 150),
-      languageCode: 'he',
-    );
-    expect((await b.watchProfile(u.uid).first)!.displayName, 'D' * 100);
-  });
+      await b.ensureProfile(
+        AppUser(uid: u.uid, displayName: 'D' * 150),
+        languageCode: 'he',
+      );
+      expect((await b.watchProfile(u.uid).first)!.displayName, 'D' * 100);
+    },
+  );
 
   test('ensureProfile waits for a sign-up in flight', () async {
     final pending = signUp('Dana');
@@ -640,4 +646,3 @@ void main() {
     });
   });
 }
-
