@@ -69,27 +69,29 @@ class _PairingScreenState extends ConsumerState<PairingScreen> {
         if (!didPop) _setMode(null);
       },
       child: Scaffold(
+        // Sign out sits in the top bar, out of the way of the main choice.
+        appBar: AppBar(
+          automaticallyImplyLeading: false,
+          actions: [
+            TextButton.icon(
+              style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
+              onPressed: _signOut,
+              icon: const Icon(Icons.logout, size: 18),
+              label: Text(l.signOut),
+            ),
+            const SizedBox(width: 8),
+          ],
+        ),
         body: SafeArea(
+          top: false,
           child: Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsetsDirectional.fromSTEB(20, 8, 20, 24),
+              padding: const EdgeInsetsDirectional.fromSTEB(20, 0, 20, 48),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 480),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Align(
-                      alignment: AlignmentDirectional.centerEnd,
-                      child: TextButton.icon(
-                        style: TextButton.styleFrom(
-                          minimumSize: const Size(48, 48),
-                        ),
-                        onPressed: _signOut,
-                        icon: const Icon(Icons.logout, size: 18),
-                        label: Text(l.signOut),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
                     const ExcludeSemantics(
                       child: Text(
                         '🎯',
