@@ -349,9 +349,7 @@ void main() {
     expect(find.text("All of today's goals are done! 🎉"), findsOneWidget);
   });
 
-  testWidgets('solo user sees the invite card with the code', (
-    tester,
-  ) async {
+  testWidgets('solo user sees the invite card with the code', (tester) async {
     final b = await signedInSoloBackend();
     await pumpApp(tester, b, size: _tall);
 

@@ -288,6 +288,56 @@ class AppLocalizationsHe extends AppLocalizations {
   String get statusUnlogged => 'לא עודכן';
 
   @override
+  String get shortcutLogWater => '+1 כוס מים';
+
+  @override
+  String get shortcutAddPhoto => 'הוספת תמונה';
+
+  @override
+  String shortcutWaterLogged(String icon, int value, int target) {
+    return '$icon $value/$target – נרשם';
+  }
+
+  @override
+  String get shortcutChooseGoal => 'לאיזה יעד התמונה?';
+
+  @override
+  String get homeSection => 'מסך הבית';
+
+  @override
+  String get homeAddWidget => 'הוספת הווידג׳ט';
+
+  @override
+  String get homeAddWidgetSubtitle =>
+      'התמונות וההתקדמות של הקבוצה, בלי לפתוח את האפליקציה';
+
+  @override
+  String get homeAddWidgetManual =>
+      'לחצו לחיצה ארוכה על מקום ריק במסך הבית, בחרו \"ווידג׳טים\" ומצאו את \"תמונות האתגר\".';
+
+  @override
+  String get homeShortcutsHint =>
+      'טיפ: לחיצה ארוכה על אייקון האפליקציה ל־+1 כוס מים או לתמונה מהירה';
+
+  @override
+  String get homeInstallTitle => 'הוסיפו את האפליקציה למסך הבית';
+
+  @override
+  String get homeInstallIos =>
+      'ב־Safari הקישו על \"שיתוף\" (הריבוע עם החץ) ואז על \"הוסף למסך הבית\".';
+
+  @override
+  String get homeInstallOther =>
+      'פתחו את תפריט הדפדפן (⋮) ובחרו \"התקנת אפליקציה\" או \"הוספה למסך הבית\".';
+
+  @override
+  String get homeInstallWhy =>
+      'היא תיפתח במסך מלא, כמו אפליקציה רגילה – במרחק נגיעה.';
+
+  @override
+  String get homeGotIt => 'הבנתי';
+
+  @override
   String widgetTitle(String name, int percent) {
     return '$name · $percent% היום';
   }

@@ -15,8 +15,11 @@ abstract final class AuthValidators {
   static bool isValidEmail(String v) => _email.hasMatch(v.trim());
 
   /// Sign-in only checks presence; sign-up also checks the length.
-  static String? password(AppLocalizations l, String? v,
-      {bool checkLength = false}) {
+  static String? password(
+    AppLocalizations l,
+    String? v, {
+    bool checkLength = false,
+  }) {
     final value = v ?? '';
     if (value.isEmpty) return l.authPasswordRequired;
     if (checkLength && value.length < 6) return l.errWeakPassword;
@@ -27,7 +30,9 @@ abstract final class AuthValidators {
   static String? name(AppLocalizations l, String? v) {
     final value = v?.trim() ?? '';
     if (value.isEmpty) return l.authNameRequired;
-    if (value.length > maxNameLength) return l.sessionNameTooLong(maxNameLength);
+    if (value.length > maxNameLength) {
+      return l.sessionNameTooLong(maxNameLength);
+    }
     return null;
   }
 }

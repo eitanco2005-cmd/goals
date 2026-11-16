@@ -9,8 +9,11 @@ import '../../core/dates.dart';
 import '../../core/demo.dart';
 import '../../core/errors.dart';
 import '../../core/providers.dart';
+import '../../domain/default_goals.dart';
 import '../../domain/models.dart';
 import '../../l10n/gen/app_localizations.dart';
+import '../home_access/home_access_ui.dart';
+import '../home_access/quick_actions.dart';
 import '../photos/photo_capture.dart';
 import '../photos/photo_providers.dart';
 import '../photos/photo_thumbnails.dart';
@@ -57,6 +60,56 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     }
     _lifecycle.dispose();
     super.dispose();
+  }
+
+  Future<void> _runQuickAction() async {
+    final action = ref.read(pendingQuickActionProvider.notifier).take();
+    final challenge = ref.read(challengeProvider).value;
+    if (action == null || challenge == null) return;
+    final l = AppLocalizations.of(context);
+    final lang = Localizations.localeOf(context).languageCode;
+    switch (action) {
+      case QuickAction.logWater:
+        final water = challenge.dailyGoals
+            .where((g) => g.id == GoalIds.water)
+            .firstOrNull;
+        if (water == null) return;
+        final current =
+            ref.read(todayLogProvider).value?.valueOf(water.id) ?? 0;
+        final next = current + 1;
+        final messenger = ScaffoldMessenger.of(context);
+        HapticFeedback.selectionClick();
+        try {
+          await ref
+              .read(todayLogControllerProvider.notifier)
+              .setValue(water.id, next);
+          messenger
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              SnackBar(
+                content: Text(
+                  l.shortcutWaterLogged(
+                    water.icon,
+                    next.toInt(),
+                    water.target.toInt(),
+                  ),
+                ),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+        } catch (e) {
+          messenger.showSnackBar(SnackBar(content: Text(errorMessage(l, e))));
+        }
+      case QuickAction.addPhoto:
+        final goal = await showGoalChooser<GoalDef>(
+          context,
+          title: l.shortcutChooseGoal,
+          options: [
+            for (final g in challenge.goals) (g.icon, g.title(lang), g),
+          ],
+        );
+        if (goal != null && mounted) await addGoalPhoto(context, ref, goal);
+    }
   }
 
   /// Announces [r] once the partner's reaction on that photo has settled for
@@ -156,6 +209,17 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
       });
     }
 
+    // A launcher shortcut (long-press on the app icon) waiting to run. It
+    // needs the day's log loaded, so +1 never overwrites a value not seen yet.
+    if (ref.watch(pendingQuickActionProvider) != null &&
+        ref.watch(todayScopeProvider) != null &&
+        ref.watch(challengeProvider).value != null &&
+        ref.watch(todayLogProvider).hasValue) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _runQuickAction();
+      });
+    }
+
     final body = switch (ref.watch(challengeProvider)) {
       AsyncValue(value: final Challenge challenge) => _TodayContent(
         challenge: challenge,
@@ -244,6 +308,7 @@ class _TodayContent extends ConsumerWidget {
           padding: const EdgeInsetsDirectional.fromSTEB(16, 12, 16, 32),
           sliver: SliverList.list(
             children: [
+              const InstallAppCard(),
               if (showDemo) ...[
                 DemoModeBanner(
                   code: demoInviteCode,

@@ -6,6 +6,7 @@ import 'package:material_ui/material_ui.dart';
 import 'core/providers.dart';
 import 'core/router.dart';
 import 'core/theme.dart';
+import 'features/home_access/quick_actions.dart';
 import 'l10n/gen/app_localizations.dart';
 
 class GoalsApp extends ConsumerWidget {
@@ -28,6 +29,8 @@ class GoalsApp extends ConsumerWidget {
         GlobalWidgetsLocalizations.delegate,
       ],
       routerConfig: router,
+      builder: (context, child) =>
+          QuickActionsBinding(child: child ?? const SizedBox.shrink()),
     );
   }
 }

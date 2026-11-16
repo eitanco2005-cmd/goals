@@ -29,6 +29,10 @@ abstract interface class WidgetStore {
 
   /// Hands [snapshot] to the native widget and asks it to redraw.
   Future<void> publish(WidgetSnapshot snapshot);
+
+  /// Asks the launcher to put the widget on the home screen (Android 8+
+  /// shows its own confirmation). False when the launcher can't do that.
+  Future<bool> requestPin();
 }
 
 /// SharedPreferences key the Kotlin widget reads (see PartnerWidgetProvider).
@@ -82,6 +86,15 @@ class HomeWidgetStore implements WidgetStore {
       snapshot.encode(),
     );
     await HomeWidget.updateWidget(qualifiedAndroidName: androidWidgetProvider);
+  }
+
+  @override
+  Future<bool> requestPin() async {
+    if (await HomeWidget.isRequestPinWidgetSupported() != true) return false;
+    await HomeWidget.requestPinWidget(
+      qualifiedAndroidName: androidWidgetProvider,
+    );
+    return true;
   }
 }
 

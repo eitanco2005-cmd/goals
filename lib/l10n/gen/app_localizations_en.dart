@@ -287,6 +287,56 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statusUnlogged => 'Not logged';
 
   @override
+  String get shortcutLogWater => '+1 glass of water';
+
+  @override
+  String get shortcutAddPhoto => 'Add a photo';
+
+  @override
+  String shortcutWaterLogged(String icon, int value, int target) {
+    return '$icon $value/$target – logged';
+  }
+
+  @override
+  String get shortcutChooseGoal => 'Photo for which goal?';
+
+  @override
+  String get homeSection => 'Home screen';
+
+  @override
+  String get homeAddWidget => 'Add the widget';
+
+  @override
+  String get homeAddWidgetSubtitle =>
+      'The group\'s photos and progress, without opening the app';
+
+  @override
+  String get homeAddWidgetManual =>
+      'Long-press an empty spot on your home screen, tap Widgets, and find “Challenge photos”.';
+
+  @override
+  String get homeShortcutsHint =>
+      'Tip: long-press the app icon for a quick +1 glass of water or a photo';
+
+  @override
+  String get homeInstallTitle => 'Add the app to your home screen';
+
+  @override
+  String get homeInstallIos =>
+      'In Safari, tap Share (the square with the arrow), then “Add to Home Screen”.';
+
+  @override
+  String get homeInstallOther =>
+      'Open the browser menu (⋮) and choose “Install app” or “Add to Home screen”.';
+
+  @override
+  String get homeInstallWhy =>
+      'It opens full-screen, like a regular app – one tap away.';
+
+  @override
+  String get homeGotIt => 'Got it';
+
+  @override
   String widgetTitle(String name, int percent) {
     return '$name · $percent% today';
   }

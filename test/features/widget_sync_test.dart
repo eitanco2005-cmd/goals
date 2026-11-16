@@ -39,6 +39,14 @@ class FakeWidgetStore implements WidgetStore {
   @override
   Future<void> publish(WidgetSnapshot snapshot) async =>
       published.add(snapshot);
+
+  var pinRequests = 0;
+
+  @override
+  Future<bool> requestPin() async {
+    pinRequests++;
+    return true;
+  }
 }
 
 GoalPhoto photo(String id, String goalId, int minute) => GoalPhoto(

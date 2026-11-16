@@ -8,6 +8,7 @@ import '../../core/providers.dart';
 import '../../domain/models.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../auth/language_switch.dart';
+import '../home_access/home_access_ui.dart';
 import '../pairing/invite_code_card.dart';
 import 'edit_name_dialog.dart';
 import 'settings_section.dart';
@@ -47,6 +48,11 @@ class SettingsScreen extends ConsumerWidget {
                   title: l.settingsChallenge,
                   children: const [_ChallengeTiles()],
                 ),
+                if (HomeScreenTiles.hasContent(ref))
+                  SettingsSection(
+                    title: l.homeSection,
+                    children: const [HomeScreenTiles()],
+                  ),
                 SettingsSection(
                   title: l.settingsAccount,
                   children: const [_SignOutTile()],

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Launcher shortcut "Add a photo": a camera on the app's color. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <path android:fillColor="#E07A5F" android:pathData="M24,24m-24,0a24,24 0,1 1,48 0a24,24 0,1 1,-48 0" />
+    <path android:fillColor="#FFFFFF" android:pathData="M19,15l-2.5,3H13a2,2 0,0 0,-2 2v11a2,2 0,0 0,2 2h22a2,2 0,0 0,2 -2V20a2,2 0,0 0,-2 -2h-3.5L29,15z" />
+    <path android:fillColor="#E07A5F" android:pathData="M24,25.5m-5,0a5,5 0,1 1,10 0a5,5 0,1 1,-10 0" />
+</vector>

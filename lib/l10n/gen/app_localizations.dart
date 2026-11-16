@@ -596,6 +596,90 @@ abstract class AppLocalizations {
   /// **'Not logged'**
   String get statusUnlogged;
 
+  /// No description provided for @shortcutLogWater.
+  ///
+  /// In en, this message translates to:
+  /// **'+1 glass of water'**
+  String get shortcutLogWater;
+
+  /// No description provided for @shortcutAddPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a photo'**
+  String get shortcutAddPhoto;
+
+  /// No description provided for @shortcutWaterLogged.
+  ///
+  /// In en, this message translates to:
+  /// **'{icon} {value}/{target} – logged'**
+  String shortcutWaterLogged(String icon, int value, int target);
+
+  /// No description provided for @shortcutChooseGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo for which goal?'**
+  String get shortcutChooseGoal;
+
+  /// No description provided for @homeSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Home screen'**
+  String get homeSection;
+
+  /// No description provided for @homeAddWidget.
+  ///
+  /// In en, this message translates to:
+  /// **'Add the widget'**
+  String get homeAddWidget;
+
+  /// No description provided for @homeAddWidgetSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The group\'s photos and progress, without opening the app'**
+  String get homeAddWidgetSubtitle;
+
+  /// No description provided for @homeAddWidgetManual.
+  ///
+  /// In en, this message translates to:
+  /// **'Long-press an empty spot on your home screen, tap Widgets, and find “Challenge photos”.'**
+  String get homeAddWidgetManual;
+
+  /// No description provided for @homeShortcutsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tip: long-press the app icon for a quick +1 glass of water or a photo'**
+  String get homeShortcutsHint;
+
+  /// No description provided for @homeInstallTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add the app to your home screen'**
+  String get homeInstallTitle;
+
+  /// No description provided for @homeInstallIos.
+  ///
+  /// In en, this message translates to:
+  /// **'In Safari, tap Share (the square with the arrow), then “Add to Home Screen”.'**
+  String get homeInstallIos;
+
+  /// No description provided for @homeInstallOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the browser menu (⋮) and choose “Install app” or “Add to Home screen”.'**
+  String get homeInstallOther;
+
+  /// No description provided for @homeInstallWhy.
+  ///
+  /// In en, this message translates to:
+  /// **'It opens full-screen, like a regular app – one tap away.'**
+  String get homeInstallWhy;
+
+  /// No description provided for @homeGotIt.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get homeGotIt;
+
   /// No description provided for @widgetTitle.
   ///
   /// In en, this message translates to:
