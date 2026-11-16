@@ -164,7 +164,7 @@ class AppLocalizationsHe extends AppLocalizations {
   String get pairJoinButton => 'הצטרפות לאתגר';
 
   @override
-  String get pairInviteTitle => 'הזמנת חברים';
+  String get pairInviteTitle => 'שליחת קישור להורדת האפליקציה';
 
   @override
   String get pairInviteExplain =>

@@ -156,17 +156,19 @@ class _ModeChoice extends ConsumerWidget {
           onTap: () => onSelected(_PairMode.join),
         ),
         const SizedBox(height: 12),
-        // Before there's a challenge: send friends the download link.
-        _ChoiceCard(
-          key: const ValueKey('invite-download'),
-          emoji: '📲',
-          title: l.pairInviteTitle,
-          subtitle: l.pairInviteSubtitle,
-          onTap: () => shareOrCopy(
-            ref,
-            ScaffoldMessenger.of(context),
-            l.pairInviteText('$siteUrl/download'),
-            copiedMessage: l.inviteCopied,
+        // Before there's a challenge: a small way to send friends the
+        // download link.
+        Center(
+          child: TextButton.icon(
+            key: const ValueKey('invite-download'),
+            icon: const Icon(Icons.share_outlined, size: 18),
+            label: Text(l.pairInviteTitle),
+            onPressed: () => shareOrCopy(
+              ref,
+              ScaffoldMessenger.of(context),
+              l.pairInviteText('$siteUrl/download'),
+              copiedMessage: l.inviteCopied,
+            ),
           ),
         ),
       ],
@@ -176,7 +178,6 @@ class _ModeChoice extends ConsumerWidget {
 
 class _ChoiceCard extends StatelessWidget {
   const _ChoiceCard({
-    super.key,
     required this.emoji,
     required this.title,
     required this.subtitle,

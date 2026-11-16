@@ -127,7 +127,7 @@ void main() {
       languageCode: 'en',
     );
     await pump(tester, b, extra: [sharerProvider.overrideWithValue(sharer)]);
-    expect(find.text('Invite friends'), findsOneWidget);
+    expect(find.text('Send friends the download link'), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('invite-download')));
     await tester.pumpAndSettle();
     expect(sharer.shared.single, contains('/download'));

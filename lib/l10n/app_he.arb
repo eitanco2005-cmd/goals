@@ -96,7 +96,7 @@
   "todayValueHours": "{value} שע׳",
   "goalsTimeMinutes": "דקות",
   "goalsTimeHours": "שעות",
-  "pairInviteTitle": "הזמנת חברים",
+  "pairInviteTitle": "שליחת קישור להורדת האפליקציה",
   "pairInviteSubtitle": "שלחו קישור להורדת האפליקציה",
   "pairInviteText": "בואו נעשה אתגר ביחד ב-Goals! להורדת האפליקציה: {link}",
   "statusUnlogged": "לא עודכן",

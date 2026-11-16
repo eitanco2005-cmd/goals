@@ -371,7 +371,7 @@ abstract class AppLocalizations {
   /// No description provided for @pairInviteTitle.
   ///
   /// In en, this message translates to:
-  /// **'Invite friends'**
+  /// **'Send friends the download link'**
   String get pairInviteTitle;
 
   /// No description provided for @pairInviteExplain.

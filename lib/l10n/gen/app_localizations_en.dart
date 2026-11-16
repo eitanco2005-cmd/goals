@@ -163,7 +163,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pairJoinButton => 'Join challenge';
 
   @override
-  String get pairInviteTitle => 'Invite friends';
+  String get pairInviteTitle => 'Send friends the download link';
 
   @override
   String get pairInviteExplain =>

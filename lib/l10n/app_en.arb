@@ -105,7 +105,7 @@
   "@todayValueHours": {"placeholders": {"value": {"type": "String"}}},
   "goalsTimeMinutes": "Minutes",
   "goalsTimeHours": "Hours",
-  "pairInviteTitle": "Invite friends",
+  "pairInviteTitle": "Send friends the download link",
   "pairInviteSubtitle": "Send a link to download the app",
   "pairInviteText": "Let's do a challenge together on Goals! Download the app: {link}",
   "@pairInviteText": {"placeholders": {"link": {"type": "String"}}},
