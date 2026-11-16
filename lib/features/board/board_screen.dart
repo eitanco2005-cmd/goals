@@ -143,6 +143,8 @@ class _Cell extends StatelessWidget {
     required this.isFuture,
     this.isToday = false,
     this.label,
+    this.monthLabel,
+    this.altMonth = false,
   });
 
   final double size;
@@ -152,6 +154,12 @@ class _Cell extends StatelessWidget {
 
   /// Day of the month, drawn inside bigger cells.
   final String? label;
+
+  /// Month name above the day number (on the 1st and the first day).
+  final String? monthLabel;
+
+  /// Every other month gets a tinted background so month changes stand out.
+  final bool altMonth;
 
   @override
   Widget build(BuildContext context) {
@@ -163,7 +171,11 @@ class _Cell extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: fill ?? (isFuture ? null : scheme.surfaceContainerHighest),
+        color:
+            fill ??
+            (altMonth
+                ? scheme.primary.withValues(alpha: isFuture ? 0.08 : 0.16)
+                : (isFuture ? null : scheme.surfaceContainerHighest)),
         borderRadius: BorderRadius.circular(size * 0.3),
         border: isToday
             ? Border.all(color: scheme.onSurface, width: 1.5)
@@ -176,24 +188,45 @@ class _Cell extends StatelessWidget {
                   : null),
       ),
       alignment: Alignment.center,
-      child: label == null
-          ? null
-          : Text(
-              label!,
-              textDirection: TextDirection.ltr,
-              style: TextStyle(
-                fontSize: size * 0.36,
-                fontWeight: isToday ? FontWeight.w800 : FontWeight.w600,
-                color: fill != null
-                    ? (ThemeData.estimateBrightnessForColor(fill) ==
-                              Brightness.dark
-                          ? Colors.white
-                          : Colors.black87)
-                    : scheme.onSurfaceVariant.withValues(
-                        alpha: isFuture ? 0.45 : 0.9,
-                      ),
-              ),
-            ),
+      child: label == null ? null : _labels(scheme, fill),
+    );
+  }
+}
+
+extension on _Cell {
+  Widget _labels(ColorScheme scheme, Color? fill) {
+    final color = fill != null
+        ? (ThemeData.estimateBrightnessForColor(fill) == Brightness.dark
+              ? Colors.white
+              : Colors.black87)
+        : scheme.onSurfaceVariant.withValues(alpha: isFuture ? 0.45 : 0.9);
+    final day = Text(
+      label!,
+      textDirection: TextDirection.ltr,
+      style: TextStyle(
+        fontSize: size * (monthLabel == null ? 0.36 : 0.28),
+        height: 1.1,
+        fontWeight: isToday ? FontWeight.w800 : FontWeight.w600,
+        color: color,
+      ),
+    );
+    if (monthLabel == null) return day;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          monthLabel!,
+          maxLines: 1,
+          overflow: TextOverflow.clip,
+          style: TextStyle(
+            fontSize: size * 0.24,
+            height: 1.1,
+            fontWeight: FontWeight.w800,
+            color: fill != null ? color : scheme.primary,
+          ),
+        ),
+        day,
+      ],
     );
   }
 }
@@ -346,6 +379,10 @@ class _Heatmap extends StatelessWidget {
     );
     final weekdayFormat = DateFormat('EEEEE', locale);
     final rangeFormat = DateFormat.MMMd(locale);
+    final monthFormat = DateFormat.MMM(locale);
+    final first = parseDayKey(challenge.startDate);
+    int monthIndex(DateTime d) =>
+        (d.year - first.year) * 12 + d.month - first.month;
     final range =
         '${rangeFormat.format(parseDayKey(challenge.startDate))} – '
         '${rangeFormat.format(parseDayKey(challenge.endDate))}';
@@ -428,6 +465,12 @@ class _Heatmap extends StatelessWidget {
                           isFuture: future,
                           isToday: key == today,
                           label: showNumbers ? '${date.day}' : null,
+                          monthLabel:
+                              showNumbers &&
+                                  (date.day == 1 || key == challenge.startDate)
+                              ? monthFormat.format(date)
+                              : null,
+                          altMonth: monthIndex(date).isOdd,
                         );
                         if (future) return square;
                         return Tooltip(
