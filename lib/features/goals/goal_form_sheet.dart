@@ -1,10 +1,13 @@
 import 'package:flutter/services.dart'
     show FilteringTextInputFormatter, TextInputFormatter;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../domain/models.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../today/today_format.dart';
+import 'goal_texts.dart';
+import 'translator.dart';
 
 /// Icons offered for goals (emoji keep the widget and the web simple).
 const goalIcons = [
@@ -162,26 +165,45 @@ class _GoalFormState extends State<_GoalForm> {
   String? _nonNegative(AppLocalizations l, String? v) =>
       int.tryParse(v ?? '') == null ? l.goalsTargetInvalid : null;
 
-  void _save() {
-    if (!_form.currentState!.validate()) return;
+  bool _saving = false;
+
+  Future<void> _save() async {
+    if (_saving || !_form.currentState!.validate()) return;
     final lang = Localizations.localeOf(context).languageCode;
+    final navigator = Navigator.of(context);
+    final translator = ProviderScope.containerOf(
+      context,
+      listen: false,
+    ).read(translatorProvider);
     final name = _name.text.trim();
+    final unit = _kind == GoalKind.number && !_isWorkouts
+        ? _unit.text.trim()
+        : '';
     final g = _goal;
 
-    // Titles: keep the other language unless it was the same text (a goal
-    // created in one language) — then rename both.
-    String titleFor(String code) {
-      if (g == null || code == lang) return name;
-      final other = g.title(code);
-      return other == g.title(lang) ? name : other;
-    }
-
-    final unit = _kind == GoalKind.number ? _unit.text.trim() : '';
-    String unitFor(String code) {
-      if (g == null || code == lang) return unit;
-      final other = g.unit(code);
-      return other == g.unit(lang) ? unit : other;
-    }
+    // Names and units in both languages: what was typed, plus a machine
+    // translation for the other language (see resolveGoalTexts).
+    setState(() => _saving = true);
+    Future<String?> translate(String text, String to) =>
+        translator.translate(text, from: lang, to: to);
+    final titles = await resolveGoalTexts(
+      old: g == null
+          ? null
+          : (he: g.titleHe, en: g.titleEn, machine: g.machineLang),
+      typed: name,
+      lang: lang,
+      translate: translate,
+    );
+    final units = await resolveGoalTexts(
+      old: g == null
+          ? null
+          : (he: g.unitHe, en: g.unitEn, machine: g.machineLang),
+      typed: unit,
+      lang: lang,
+      translate: translate,
+    );
+    if (!mounted) return;
+    setState(() => _saving = false);
 
     final yesNo = _kind == GoalKind.yesNo;
     final inHours = _kind == GoalKind.minutes && _hours;
@@ -197,8 +219,9 @@ class _GoalFormState extends State<_GoalForm> {
           };
     final result = GoalDef(
       id: g?.id ?? 'custom_${DateTime.now().microsecondsSinceEpoch}',
-      titleHe: titleFor('he'),
-      titleEn: titleFor('en'),
+      titleHe: titles.he,
+      titleEn: titles.en,
+      machineLang: titles.machine,
       type: type,
       comparison: yesNo || _isWorkouts ? Comparison.atLeast : _comparison,
       target: target,
@@ -210,8 +233,8 @@ class _GoalFormState extends State<_GoalForm> {
         _ => 1,
       },
       hours: inHours,
-      unitHe: _isWorkouts ? '' : unitFor('he'),
-      unitEn: _isWorkouts ? '' : unitFor('en'),
+      unitHe: units.he,
+      unitEn: units.en,
       requirements: _isWorkouts
           ? {
               'run': int.parse(_runs.text),
@@ -223,7 +246,7 @@ class _GoalFormState extends State<_GoalForm> {
       requiresPhoto:
           !_isWorkouts && _period == GoalPeriod.daily && _requiresPhoto,
     );
-    Navigator.of(context).pop(GoalSaved(result));
+    navigator.pop(GoalSaved(result));
   }
 
   Future<void> _delete() async {
@@ -435,7 +458,15 @@ class _GoalFormState extends State<_GoalForm> {
                 ),
               ],
               const SizedBox(height: 24),
-              FilledButton(onPressed: _save, child: Text(l.goalsSave)),
+              FilledButton(
+                onPressed: _saving ? null : _save,
+                child: _saving
+                    ? const SizedBox.square(
+                        dimension: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(l.goalsSave),
+              ),
               if (!isNew && widget.canDelete) ...[
                 const SizedBox(height: 8),
                 TextButton.icon(

@@ -5,6 +5,7 @@ import 'package:goals_challenge/app.dart';
 import 'package:goals_challenge/core/providers.dart';
 import 'package:goals_challenge/data/memory/memory_backend.dart';
 import 'package:goals_challenge/domain/default_goals.dart';
+import 'package:goals_challenge/features/goals/translator.dart';
 import 'package:goals_challenge/features/home_access/quick_actions.dart';
 import 'package:goals_challenge/features/invite/invite.dart';
 import 'package:goals_challenge/features/reminders/reminders.dart';
@@ -20,6 +21,7 @@ List<Override> memoryOverrides(
   ReminderScheduler? reminders,
   IncomingLinks? links,
   int? latestBuild,
+  Translator? translator,
 }) => [
   isDemoModeProvider.overrideWithValue(demo),
   authRepositoryProvider.overrideWithValue(b),
@@ -35,19 +37,52 @@ List<Override> memoryOverrides(
   // No network in tests.
   latestBuildProvider.overrideWith((ref) async => latestBuild),
   incomingLinksProvider.overrideWithValue(links),
+  // No network in tests: goal names aren't translated unless a test says so.
+  translatorProvider.overrideWithValue(translator ?? const NoTranslator()),
 ];
+
+/// A translator that never translates (as if offline).
+class NoTranslator implements Translator {
+  const NoTranslator();
+  @override
+  Future<String?> translate(
+    String text, {
+    required String from,
+    required String to,
+  }) async => null;
+}
+
+/// Translates from a fixed table, recording what it was asked.
+class FakeTranslator implements Translator {
+  FakeTranslator(this.table);
+  final Map<String, String> table;
+  final asked = <String>[];
+  @override
+  Future<String?> translate(
+    String text, {
+    required String from,
+    required String to,
+  }) async {
+    asked.add('$from>$to:$text');
+    return table[text];
+  }
+}
 
 /// Pumps the full app (router included) on top of [backend].
 Future<void> pumpApp(
   WidgetTester tester,
   MemoryBackend backend, {
   Size size = const Size(400, 860),
+  Translator? translator,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
   await tester.pumpWidget(
-    ProviderScope(overrides: memoryOverrides(backend), child: const GoalsApp()),
+    ProviderScope(
+      overrides: memoryOverrides(backend, translator: translator),
+      child: const GoalsApp(),
+    ),
   );
   await tester.pumpAndSettle();
 }

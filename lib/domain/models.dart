@@ -67,6 +67,7 @@ class GoalDef {
     this.unitHe = '',
     this.unitEn = '',
     this.hours = false,
+    this.machineLang = '',
   });
 
   final String id;
@@ -104,6 +105,11 @@ class GoalDef {
   /// A time goal set in hours: still stored in minutes, shown as h:mm.
   final bool hours;
 
+  /// Which language's name/unit was machine-translated ('he' / 'en'), or
+  /// empty when both were written by people. Editing that language counts
+  /// as a correction; editing the other one translates again.
+  final String machineLang;
+
   GoalDef copyWith({
     String? titleHe,
     String? titleEn,
@@ -115,6 +121,7 @@ class GoalDef {
     String? unitHe,
     String? unitEn,
     bool? hours,
+    String? machineLang,
   }) => GoalDef(
     id: id,
     titleHe: titleHe ?? this.titleHe,
@@ -130,6 +137,7 @@ class GoalDef {
     unitHe: unitHe ?? this.unitHe,
     unitEn: unitEn ?? this.unitEn,
     hours: hours ?? this.hours,
+    machineLang: machineLang ?? this.machineLang,
   );
 
   Map<String, dynamic> toMap() => {
@@ -147,6 +155,7 @@ class GoalDef {
     if (unitHe.isNotEmpty) 'unitHe': unitHe,
     if (unitEn.isNotEmpty) 'unitEn': unitEn,
     if (hours) 'hours': true,
+    if (machineLang.isNotEmpty) 'machineLang': machineLang,
   };
 
   factory GoalDef.fromMap(Map<String, dynamic> m) => GoalDef(
@@ -166,6 +175,7 @@ class GoalDef {
     unitHe: (m['unitHe'] as String?) ?? '',
     unitEn: (m['unitEn'] as String?) ?? '',
     hours: m['hours'] == true,
+    machineLang: (m['machineLang'] as String?) ?? '',
   );
 }
 
