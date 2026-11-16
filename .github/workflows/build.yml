@@ -1,15 +1,16 @@
 name: Build
 
-# Runs the tests and builds the Android APK + web app on GitHub's servers,
-# so no local Android SDK is needed. Download the APK from the run's
-# "Artifacts" section (Actions tab → latest run).
+# Runs the tests, builds the Android APK + web app against the real Firebase
+# project (our-challenge-e8f25), and — when the FIREBASE_SERVICE_ACCOUNT
+# secret is set — deploys the security rules, database indexes and the web
+# app (Firebase Hosting). Download the APK from the run's "Artifacts".
 on:
   push:
     branches: ['**']
   workflow_dispatch:
     inputs:
-      firebase:
-        description: 'Build against the real Firebase project (needs lib/firebase_options.dart from flutterfire configure)'
+      demo:
+        description: 'Build the offline demo instead (in-memory data, demo member)'
         type: boolean
         default: false
 
@@ -18,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 40
     env:
-      DEFINES: ${{ inputs.firebase && '--dart-define=USE_FIREBASE=true' || '' }}
+      DEFINES: ${{ inputs.demo && '' || '--dart-define=USE_FIREBASE=true' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -56,3 +57,44 @@ jobs:
         with:
           name: web
           path: build/web
+
+  deploy:
+    # Real builds of the main development branch only.
+    needs: build
+    if: ${{ !inputs.demo && github.ref == 'refs/heads/claude/lucid-heisenberg-65a7wv' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for the deploy key
+        id: key
+        run: |
+          if [ -z "$SERVICE_ACCOUNT" ]; then
+            echo "::notice::FIREBASE_SERVICE_ACCOUNT secret not set - skipping deploy."
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/download-artifact@v4
+        if: steps.key.outputs.present == 'true'
+        with:
+          name: web
+          path: build/web
+
+      - uses: actions/setup-node@v4
+        if: steps.key.outputs.present == 'true'
+        with:
+          node-version: '22'
+
+      - name: Deploy rules, indexes and web app
+        if: steps.key.outputs.present == 'true'
+        run: |
+          printf '%s' "$SERVICE_ACCOUNT" > "$RUNNER_TEMP/sa.json"
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json"
+          npx --yes firebase-tools@latest deploy \
+            --only firestore:rules,firestore:indexes,hosting \
+            --project our-challenge-e8f25 --non-interactive --force

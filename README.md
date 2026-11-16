@@ -28,6 +28,8 @@ flutter run -d chrome              # demo mode: in-memory backend with a demo pa
 flutter test                       # unit and widget tests
 ```
 
+Builds from GitHub Actions use the real Firebase project (`our-challenge-e8f25`). Local `flutter run` without `--dart-define=USE_FIREBASE=true` runs the demo.
+
 **Demo mode** is the default when the app runs without Firebase. Sign up with any email, choose *Join with a code*, and enter **DEMO42** to pair with the demo partner "Noa". Demo data is kept in memory only, so it is lost when the app reloads.
 
 ## Android APK without a local Android SDK
