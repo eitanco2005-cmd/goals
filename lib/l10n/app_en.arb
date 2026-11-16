@@ -98,6 +98,8 @@
   "statusFailed": "Failed",
   "statusOnTrack": "On track",
   "settingsEditGoalsHint": "Changes apply to the whole group",
+  "goalsUnit": "Unit (optional)",
+  "goalsUnitHint": "e.g. pages, km",
   "statusUnlogged": "Not logged",
   "goalsDeleted": "\"{goal}\" deleted",
   "@goalsDeleted": {"placeholders": {"goal": {"type": "String"}}},

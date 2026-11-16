@@ -293,6 +293,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsEditGoalsHint => 'Changes apply to the whole group';
 
   @override
+  String get goalsUnit => 'Unit (optional)';
+
+  @override
+  String get goalsUnitHint => 'e.g. pages, km';
+
+  @override
   String get statusUnlogged => 'Not logged';
 
   @override

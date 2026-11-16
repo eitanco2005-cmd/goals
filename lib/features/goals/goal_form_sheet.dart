@@ -4,6 +4,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../domain/models.dart';
 import '../../l10n/gen/app_localizations.dart';
+import '../today/today_format.dart';
 
 /// Icons offered for goals (emoji keep the widget and the web simple).
 const goalIcons = [
@@ -54,14 +55,26 @@ class GoalDeleted extends GoalFormResult {
 }
 
 /// The kinds a person can pick for a new goal.
-enum GoalKind { yesNo, count, minutes, number }
+/// What the goal form offers. "Number" covers both tap-to-count goals
+/// (small targets: +1 / -1) and bigger numbers (steps: +1,000 and typing);
+/// the app picks from the target.
+enum GoalKind { yesNo, number, minutes }
 
 GoalKind kindOf(GoalDef g) => switch (g.type) {
   GoalType.boolean => GoalKind.yesNo,
   GoalType.minutes => GoalKind.minutes,
-  GoalType.number => GoalKind.number,
-  GoalType.counter || GoalType.workouts => GoalKind.count,
+  GoalType.number || GoalType.counter || GoalType.workouts => GoalKind.number,
 };
+
+/// Big targets get the "type a number / +1,000" controls; small ones +1/-1.
+const bigNumberTarget = 100;
+
+/// +/- step for a number goal with [target].
+num numberStep(num target) => target >= 1000
+    ? 1000
+    : target >= bigNumberTarget
+    ? 10
+    : 1;
 
 /// Opens the add/edit form. [goal] null = new goal.
 Future<GoalFormResult?> showGoalForm(
@@ -95,6 +108,7 @@ class _GoalFormState extends State<_GoalForm> {
   late final _runs = TextEditingController();
   late final _strength = TextEditingController();
   late final _minMinutes = TextEditingController();
+  late final _unit = TextEditingController();
 
   late String _icon;
   late GoalKind _kind;
@@ -119,6 +133,7 @@ class _GoalFormState extends State<_GoalForm> {
     _comparison = g?.comparison ?? Comparison.atLeast;
     _requiresPhoto = g?.requiresPhoto ?? false;
     _name.text = g?.title(lang) ?? '';
+    _unit.text = g?.unit(lang) ?? '';
     _target.text = g == null ? '' : '${g.target.toInt()}';
     _runs.text = '${(g?.requirements['run'] ?? 0).toInt()}';
     _strength.text = '${(g?.requirements['strength'] ?? 0).toInt()}';
@@ -127,7 +142,7 @@ class _GoalFormState extends State<_GoalForm> {
 
   @override
   void dispose() {
-    for (final c in [_name, _target, _runs, _strength, _minMinutes]) {
+    for (final c in [_name, _target, _runs, _strength, _minMinutes, _unit]) {
       c.dispose();
     }
     super.dispose();
@@ -155,15 +170,22 @@ class _GoalFormState extends State<_GoalForm> {
       return other == g.title(lang) ? name : other;
     }
 
+    final unit = _kind == GoalKind.number ? _unit.text.trim() : '';
+    String unitFor(String code) {
+      if (g == null || code == lang) return unit;
+      final other = g.unit(code);
+      return other == g.unit(lang) ? unit : other;
+    }
+
     final yesNo = _kind == GoalKind.yesNo;
     final target = yesNo ? 1 : int.parse(_target.text);
     final type = _isWorkouts
         ? GoalType.workouts
         : switch (_kind) {
             GoalKind.yesNo => GoalType.boolean,
-            GoalKind.count => GoalType.counter,
             GoalKind.minutes => GoalType.minutes,
-            GoalKind.number => GoalType.number,
+            GoalKind.number =>
+              target >= bigNumberTarget ? GoalType.number : GoalType.counter,
           };
     final result = GoalDef(
       id: g?.id ?? 'custom_${DateTime.now().microsecondsSinceEpoch}',
@@ -176,9 +198,11 @@ class _GoalFormState extends State<_GoalForm> {
       icon: _icon,
       step: switch (type) {
         GoalType.minutes => 15,
-        GoalType.number => target >= 1000 ? 1000 : 1,
+        GoalType.number || GoalType.counter => numberStep(target),
         _ => 1,
       },
+      unitHe: _isWorkouts ? '' : unitFor('he'),
+      unitEn: _isWorkouts ? '' : unitFor('en'),
       requirements: _isWorkouts
           ? {
               'run': int.parse(_runs.text),
@@ -282,7 +306,7 @@ class _GoalFormState extends State<_GoalForm> {
                   onSelectionChanged: (s) => setState(() {
                     _period = s.first;
                     // Weekly goals are counted from daily entries.
-                    if (_period == GoalPeriod.weekly) _kind = GoalKind.count;
+                    if (_period == GoalPeriod.weekly) _kind = GoalKind.number;
                   }),
                 ),
                 label(l.goalsKind),
@@ -290,15 +314,14 @@ class _GoalFormState extends State<_GoalForm> {
                   segments: [
                     for (final (k, text) in [
                       (GoalKind.yesNo, l.goalsKindYesNo),
-                      (GoalKind.count, l.goalsKindCount),
-                      (GoalKind.minutes, l.goalsKindMinutes),
                       (GoalKind.number, l.goalsKindNumber),
+                      (GoalKind.minutes, l.goalsKindMinutes),
                     ])
                       ButtonSegment(
                         value: k,
                         label: Text(text),
                         enabled:
-                            _period == GoalPeriod.daily || k == GoalKind.count,
+                            _period == GoalPeriod.daily || k == GoalKind.number,
                       ),
                   ],
                   selected: {_kind},
@@ -361,6 +384,18 @@ class _GoalFormState extends State<_GoalForm> {
                   formatters: digits,
                   validator: (v) => _positive(l, v),
                 ),
+                if (_kind == GoalKind.number) ...[
+                  label(l.goalsUnit),
+                  TextFormField(
+                    key: const ValueKey('goal-unit'),
+                    controller: _unit,
+                    maxLength: 20,
+                    decoration: InputDecoration(
+                      hintText: l.goalsUnitHint,
+                      counterText: '',
+                    ),
+                  ),
+                ],
               ],
               if (!_isWorkouts && _period == GoalPeriod.daily) ...[
                 const SizedBox(height: 8),
@@ -426,7 +461,8 @@ String describeGoal(AppLocalizations l, GoalDef g) {
         ? '${l.goalsSummaryYesNo} · ${l.goalsSummaryPhoto}'
         : l.goalsSummaryYesNo;
   }
-  final value = '${g.target.toInt()}';
+  final fmt = GoalFormatter(l, l.localeName);
+  final value = [fmt.number(g.target), ?fmt.unit(g)].join(' ');
   final rule = switch (g.comparison) {
     Comparison.atLeast => l.goalsSummaryAtLeast(value),
     Comparison.atMost => l.goalsSummaryAtMost(value),

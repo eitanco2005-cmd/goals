@@ -90,6 +90,8 @@
   "statusFailed": "נכשל",
   "statusOnTrack": "בדרך הנכונה",
   "settingsEditGoalsHint": "השינויים חלים על כל הקבוצה",
+  "goalsUnit": "יחידה (רשות)",
+  "goalsUnitHint": "למשל עמודים, ק״מ",
   "statusUnlogged": "לא עודכן",
   "goalsDeleted": "\"{goal}\" נמחק",
   "pairEditGoals": "עריכת היעדים",

@@ -3,6 +3,7 @@ import 'package:goals_challenge/core/dates.dart';
 import 'package:goals_challenge/data/memory/memory_backend.dart';
 import 'package:goals_challenge/domain/default_goals.dart';
 import 'package:goals_challenge/domain/models.dart';
+import 'package:goals_challenge/features/goals/goal_form_sheet.dart';
 import 'package:goals_challenge/features/goals/goals_editor_screen.dart';
 import 'package:goals_challenge/features/today/today_screen.dart';
 import 'package:material_ui/material_ui.dart';
@@ -87,6 +88,62 @@ void main() {
     expect(find.byType(TodayScreen), findsOneWidget);
     await scrollToCenter(tester, find.text('Meditate'));
     expect(find.text('Meditate'), findsOneWidget);
+  });
+
+  testWidgets('a number goal with a unit; small targets count +1/-1', (
+    tester,
+  ) async {
+    final b = await signedInPairedBackend();
+    await pumpApp(tester, b);
+    await openEditor(tester);
+    await tester.tap(find.text('Add goal'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const ValueKey('goal-name')), 'Pages');
+    await tester.tap(find.text('Number'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const ValueKey('goal-target')), '20');
+    await tester.enterText(find.byKey(const ValueKey('goal-unit')), 'pages');
+    await saveSheet(tester);
+    await scrollToCenter(tester, find.text('at least 20 pages'));
+    expect(find.text('at least 20 pages'), findsOneWidget);
+    await tester.tap(find.text('Save').first);
+    await tester.pumpAndSettle();
+
+    final added = (await active(b)).goals.last;
+    expect(added.type, GoalType.counter);
+    expect(added.step, 1);
+    expect(added.unitEn, 'pages');
+    expect(added.unitHe, 'pages');
+
+    await tester.tap(find.byIcon(Icons.today_outlined));
+    await tester.pumpAndSettle();
+    await scrollToCenter(tester, find.text('0 / 20 pages'));
+    expect(find.text('0 / 20 pages'), findsOneWidget);
+  });
+
+  test('big number targets get typing and bigger steps', () {
+    expect(numberStep(8), 1);
+    expect(numberStep(250), 10);
+    expect(numberStep(10000), 1000);
+  });
+
+  test('units survive a save and load', () {
+    const g = GoalDef(
+      id: 'x',
+      titleHe: 'x',
+      titleEn: 'x',
+      type: GoalType.counter,
+      comparison: Comparison.atLeast,
+      target: 20,
+      period: GoalPeriod.daily,
+      icon: '📘',
+      unitHe: 'עמודים',
+      unitEn: 'pages',
+    );
+    final back = GoalDef.fromMap(g.toMap());
+    expect(back.unit('he'), 'עמודים');
+    expect(back.unit('en'), 'pages');
+    expect(GoalDef.fromMap({...g.toMap()}..remove('unitEn')).unitEn, '');
   });
 
   testWidgets('a new weekly goal is a count', (tester) async {

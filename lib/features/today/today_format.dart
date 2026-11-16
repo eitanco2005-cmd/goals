@@ -39,13 +39,19 @@ class GoalFormatter {
   String? unit(GoalDef g) => switch (g.type) {
     GoalType.number when g.id == GoalIds.steps => l.todayUnitSteps,
     GoalType.minutes => l.todayUnitMinutes,
-    _ => null,
+    _ => _custom(g),
   };
+
+  /// A unit the goal was given in the goal form, if any.
+  String? _custom(GoalDef g) {
+    final u = g.unit(l.localeName.substring(0, 2));
+    return u.isEmpty ? null : u;
+  }
 
   String _withUnit(GoalDef g, String text) => switch (g.type) {
     GoalType.number when g.id == GoalIds.steps => l.todayValueSteps(text),
     GoalType.minutes => l.todayValueMinutes(text),
-    _ => text,
+    _ => [text, ?_custom(g)].join(' '),
   };
 
   /// Target description shown under the goal title:

@@ -608,6 +608,18 @@ abstract class AppLocalizations {
   /// **'Changes apply to the whole group'**
   String get settingsEditGoalsHint;
 
+  /// No description provided for @goalsUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit (optional)'**
+  String get goalsUnit;
+
+  /// No description provided for @goalsUnitHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. pages, km'**
+  String get goalsUnitHint;
+
   /// No description provided for @statusUnlogged.
   ///
   /// In en, this message translates to:

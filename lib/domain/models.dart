@@ -57,6 +57,8 @@ class GoalDef {
     this.step = 1,
     this.requirements = const {},
     this.requiresPhoto = false,
+    this.unitHe = '',
+    this.unitEn = '',
   });
 
   final String id;
@@ -85,6 +87,12 @@ class GoalDef {
 
   String title(String languageCode) => languageCode == 'he' ? titleHe : titleEn;
 
+  /// Optional unit word for number goals ("pages", "km"); empty for none.
+  final String unitHe;
+  final String unitEn;
+
+  String unit(String languageCode) => languageCode == 'he' ? unitHe : unitEn;
+
   GoalDef copyWith({
     String? titleHe,
     String? titleEn,
@@ -93,6 +101,8 @@ class GoalDef {
     num? step,
     Map<String, num>? requirements,
     bool? requiresPhoto,
+    String? unitHe,
+    String? unitEn,
   }) => GoalDef(
     id: id,
     titleHe: titleHe ?? this.titleHe,
@@ -105,6 +115,8 @@ class GoalDef {
     step: step ?? this.step,
     requirements: requirements ?? this.requirements,
     requiresPhoto: requiresPhoto ?? this.requiresPhoto,
+    unitHe: unitHe ?? this.unitHe,
+    unitEn: unitEn ?? this.unitEn,
   );
 
   Map<String, dynamic> toMap() => {
@@ -119,6 +131,8 @@ class GoalDef {
     'step': step,
     'requirements': requirements,
     if (requiresPhoto) 'requiresPhoto': true,
+    if (unitHe.isNotEmpty) 'unitHe': unitHe,
+    if (unitEn.isNotEmpty) 'unitEn': unitEn,
   };
 
   factory GoalDef.fromMap(Map<String, dynamic> m) => GoalDef(
@@ -135,6 +149,8 @@ class GoalDef {
       (m['requirements'] as Map?)?.cast<String, num>() ?? const {},
     ),
     requiresPhoto: m['requiresPhoto'] == true,
+    unitHe: (m['unitHe'] as String?) ?? '',
+    unitEn: (m['unitEn'] as String?) ?? '',
   );
 }
 
