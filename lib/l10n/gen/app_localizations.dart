@@ -620,6 +620,30 @@ abstract class AppLocalizations {
   /// **'e.g. pages, km'**
   String get goalsUnitHint;
 
+  /// No description provided for @todayUnitHours.
+  ///
+  /// In en, this message translates to:
+  /// **'h'**
+  String get todayUnitHours;
+
+  /// No description provided for @todayValueHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{value} h'**
+  String todayValueHours(String value);
+
+  /// No description provided for @goalsTimeMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Minutes'**
+  String get goalsTimeMinutes;
+
+  /// No description provided for @goalsTimeHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Hours'**
+  String get goalsTimeHours;
+
   /// No description provided for @statusUnlogged.
   ///
   /// In en, this message translates to:
@@ -941,7 +965,7 @@ abstract class AppLocalizations {
   /// No description provided for @goalsKindMinutes.
   ///
   /// In en, this message translates to:
-  /// **'Minutes'**
+  /// **'Time'**
   String get goalsKindMinutes;
 
   /// No description provided for @goalsKindNumber.

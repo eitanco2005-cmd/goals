@@ -59,6 +59,7 @@ class GoalDef {
     this.requiresPhoto = false,
     this.unitHe = '',
     this.unitEn = '',
+    this.hours = false,
   });
 
   final String id;
@@ -93,6 +94,9 @@ class GoalDef {
 
   String unit(String languageCode) => languageCode == 'he' ? unitHe : unitEn;
 
+  /// A time goal set in hours: still stored in minutes, shown as h:mm.
+  final bool hours;
+
   GoalDef copyWith({
     String? titleHe,
     String? titleEn,
@@ -103,6 +107,7 @@ class GoalDef {
     bool? requiresPhoto,
     String? unitHe,
     String? unitEn,
+    bool? hours,
   }) => GoalDef(
     id: id,
     titleHe: titleHe ?? this.titleHe,
@@ -117,6 +122,7 @@ class GoalDef {
     requiresPhoto: requiresPhoto ?? this.requiresPhoto,
     unitHe: unitHe ?? this.unitHe,
     unitEn: unitEn ?? this.unitEn,
+    hours: hours ?? this.hours,
   );
 
   Map<String, dynamic> toMap() => {
@@ -133,6 +139,7 @@ class GoalDef {
     if (requiresPhoto) 'requiresPhoto': true,
     if (unitHe.isNotEmpty) 'unitHe': unitHe,
     if (unitEn.isNotEmpty) 'unitEn': unitEn,
+    if (hours) 'hours': true,
   };
 
   factory GoalDef.fromMap(Map<String, dynamic> m) => GoalDef(
@@ -151,6 +158,7 @@ class GoalDef {
     requiresPhoto: m['requiresPhoto'] == true,
     unitHe: (m['unitHe'] as String?) ?? '',
     unitEn: (m['unitEn'] as String?) ?? '',
+    hours: m['hours'] == true,
   );
 }
 

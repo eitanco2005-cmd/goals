@@ -161,7 +161,7 @@ class MeasureControl extends StatelessWidget {
     final v = value;
     final change = onChanged;
     final unit = fmt.unit(goal);
-    final step = fmt.number(goal.step);
+    final step = fmt.stepLabel(goal);
     return Row(
       children: [
         _StepTextButton(
@@ -183,7 +183,14 @@ class MeasureControl extends StatelessWidget {
               borderRadius: BorderRadius.circular(14),
               child: InkWell(
                 borderRadius: BorderRadius.circular(14),
-                onTap: change == null ? null : () => _enterValue(context, unit),
+                onTap: change == null
+                    ? null
+                    : () => _enterValue(
+                        context,
+                        goal.type == GoalType.minutes
+                            ? l.todayUnitMinutes
+                            : unit,
+                      ),
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(minHeight: 48),
                   child: Padding(
@@ -194,7 +201,7 @@ class MeasureControl extends StatelessWidget {
                     child: Semantics(
                       label: v == null
                           ? '$title: ${l.statusUnlogged}'
-                          : '$title: ${[fmt.number(v), ?unit].join(' ')}',
+                          : '$title: ${[fmt.amount(goal, v), ?unit].join(' ')}',
                       excludeSemantics: true,
                       child: FittedBox(
                         fit: BoxFit.scaleDown,
@@ -202,7 +209,7 @@ class MeasureControl extends StatelessWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             _AnimatedValue(
-                              text: v == null ? '–' : fmt.number(v),
+                              text: v == null ? '–' : fmt.amount(goal, v),
                               muted: v == null,
                             ),
                             if (unit != null && v != null) ...[

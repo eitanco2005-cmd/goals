@@ -35,10 +35,25 @@ class GoalFormatter {
   /// Grouped number, e.g. `6,400`.
   String number(num v) => _number.format(v);
 
+  /// A goal's value as shown: `6,400`, or `1:15` for a time goal in hours.
+  String amount(GoalDef g, num v) =>
+      g.type == GoalType.minutes && g.hours ? hoursMinutes(v) : number(v);
+
+  /// Minutes as hours: `2`, `1:15`, `0:30`.
+  static String hoursMinutes(num minutes) {
+    final total = minutes.round();
+    final h = total ~/ 60;
+    final m = total % 60;
+    return m == 0 ? '$h' : '$h:${m.toString().padLeft(2, '0')}';
+  }
+
+  /// The +/- button text: `1,000`, `15`, or `0:15` for a goal in hours.
+  String stepLabel(GoalDef g) => amount(g, g.step);
+
   /// Short unit word shown next to a value ("steps", "min"), if any.
   String? unit(GoalDef g) => switch (g.type) {
     GoalType.number when g.id == GoalIds.steps => l.todayUnitSteps,
-    GoalType.minutes => l.todayUnitMinutes,
+    GoalType.minutes => g.hours ? l.todayUnitHours : l.todayUnitMinutes,
     _ => _custom(g),
   };
 
@@ -50,7 +65,8 @@ class GoalFormatter {
 
   String _withUnit(GoalDef g, String text) => switch (g.type) {
     GoalType.number when g.id == GoalIds.steps => l.todayValueSteps(text),
-    GoalType.minutes => l.todayValueMinutes(text),
+    GoalType.minutes =>
+      g.hours ? l.todayValueHours(text) : l.todayValueMinutes(text),
     _ => [text, ?_custom(g)].join(' '),
   };
 
@@ -59,11 +75,11 @@ class GoalFormatter {
   String? target(GoalDef g, num? value) {
     if (g.type == GoalType.boolean || g.type == GoalType.workouts) return null;
     if (g.comparison == Comparison.atMost) {
-      return l.todayAtMost(_withUnit(g, number(g.target)));
+      return l.todayAtMost(_withUnit(g, amount(g, g.target)));
     }
     return _withUnit(
       g,
-      l.todayProgressOf(number(value ?? 0), number(g.target)),
+      l.todayProgressOf(amount(g, value ?? 0), amount(g, g.target)),
     );
   }
 }

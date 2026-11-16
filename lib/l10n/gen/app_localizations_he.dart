@@ -300,6 +300,20 @@ class AppLocalizationsHe extends AppLocalizations {
   String get goalsUnitHint => 'למשל עמודים, ק״מ';
 
   @override
+  String get todayUnitHours => 'שע׳';
+
+  @override
+  String todayValueHours(String value) {
+    return '$value שע׳';
+  }
+
+  @override
+  String get goalsTimeMinutes => 'דקות';
+
+  @override
+  String get goalsTimeHours => 'שעות';
+
+  @override
   String get statusUnlogged => 'לא עודכן';
 
   @override
@@ -484,7 +498,7 @@ class AppLocalizationsHe extends AppLocalizations {
   String get goalsKindCount => 'ספירה';
 
   @override
-  String get goalsKindMinutes => 'דקות';
+  String get goalsKindMinutes => 'זמן';
 
   @override
   String get goalsKindNumber => 'מספר';

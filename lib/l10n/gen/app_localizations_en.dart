@@ -299,6 +299,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get goalsUnitHint => 'e.g. pages, km';
 
   @override
+  String get todayUnitHours => 'h';
+
+  @override
+  String todayValueHours(String value) {
+    return '$value h';
+  }
+
+  @override
+  String get goalsTimeMinutes => 'Minutes';
+
+  @override
+  String get goalsTimeHours => 'Hours';
+
+  @override
   String get statusUnlogged => 'Not logged';
 
   @override
@@ -485,7 +499,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get goalsKindCount => 'Count';
 
   @override
-  String get goalsKindMinutes => 'Minutes';
+  String get goalsKindMinutes => 'Time';
 
   @override
   String get goalsKindNumber => 'Number';

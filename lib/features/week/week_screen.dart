@@ -233,6 +233,13 @@ class _GoalHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final outcome = goalOutcome(
+      goal,
+      status,
+      periodOpen: open,
+      onPace: onPace,
+      periodEnded: !open,
+    );
     final theme = Theme.of(context);
     final lang = Localizations.localeOf(context).languageCode;
     return Row(
@@ -258,21 +265,14 @@ class _GoalHeader extends StatelessWidget {
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: status == GoalStatus.unlogged
                       ? theme.colorScheme.onSurfaceVariant
-                      : goalOutcome(
-                          goal,
-                          status,
-                          periodOpen: open,
-                          onPace: onPace,
-                        ).color,
+                      : outcome.color,
                   fontWeight: FontWeight.w600,
                 ),
               ),
             ],
           ),
         ),
-        _StatusChip(
-          outcome: goalOutcome(goal, status, periodOpen: open, onPace: onPace),
-        ),
+        _StatusChip(outcome: outcome),
       ],
     );
   }
@@ -690,6 +690,7 @@ class _GroupWeekCard extends ConsumerWidget {
                               g,
                               status,
                               periodOpen: week == currentWeekStart(),
+                              periodEnded: week != currentWeekStart(),
                             );
                             return Semantics(
                               label: '${g.title(lang)}: ${outcome.label(l)}',

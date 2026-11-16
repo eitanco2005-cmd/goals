@@ -121,6 +121,46 @@ void main() {
     expect(find.text('0 / 20 pages'), findsOneWidget);
   });
 
+  testWidgets('a time goal in hours', (tester) async {
+    final b = await signedInPairedBackend();
+    await pumpApp(tester, b);
+    await openEditor(tester);
+    await tester.tap(find.text('Add goal'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const ValueKey('goal-name')), 'Study');
+    await tester.tap(find.text('Time'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Hours'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Hours'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const ValueKey('goal-target')));
+    await tester.enterText(find.byKey(const ValueKey('goal-target')), '2');
+    await saveSheet(tester);
+    await scrollToCenter(tester, find.text('at least 2 h'));
+    expect(find.text('at least 2 h'), findsOneWidget);
+    await tester.tap(find.text('Save').first);
+    await tester.pumpAndSettle();
+
+    final added = (await active(b)).goals.last;
+    expect(added.type, GoalType.minutes);
+    expect(added.target, 120);
+    expect(added.hours, isTrue);
+    expect(GoalDef.fromMap(added.toMap()).hours, isTrue);
+
+    await tester.tap(find.byIcon(Icons.today_outlined));
+    await tester.pumpAndSettle();
+    await scrollToCenter(tester, find.text('0 / 2 h'));
+    expect(find.text('0 / 2 h'), findsOneWidget);
+    final card = find.byKey(ValueKey('goal-${added.id}'));
+    await tester.tap(find.descendant(of: card, matching: find.text('+0:15')));
+    await tester.pumpAndSettle();
+    expect(
+      find.descendant(of: card, matching: find.text('0:15 / 2 h')),
+      findsOneWidget,
+    );
+  });
+
   test('big number targets get typing and bigger steps', () {
     expect(numberStep(8), 1);
     expect(numberStep(250), 10);

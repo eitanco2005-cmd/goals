@@ -115,6 +115,9 @@ class _GoalFormState extends State<_GoalForm> {
   late GoalPeriod _period;
   late Comparison _comparison;
   late bool _requiresPhoto;
+
+  /// A time goal set in hours (stored in minutes).
+  late bool _hours;
   bool _initialized = false;
 
   GoalDef? get _goal => widget.goal;
@@ -132,9 +135,12 @@ class _GoalFormState extends State<_GoalForm> {
     _period = g?.period ?? GoalPeriod.daily;
     _comparison = g?.comparison ?? Comparison.atLeast;
     _requiresPhoto = g?.requiresPhoto ?? false;
+    _hours = g?.hours ?? false;
     _name.text = g?.title(lang) ?? '';
     _unit.text = g?.unit(lang) ?? '';
-    _target.text = g == null ? '' : '${g.target.toInt()}';
+    _target.text = g == null
+        ? ''
+        : '${(g.hours ? g.target / 60 : g.target).toInt()}';
     _runs.text = '${(g?.requirements['run'] ?? 0).toInt()}';
     _strength.text = '${(g?.requirements['strength'] ?? 0).toInt()}';
     _minMinutes.text = '${(g?.requirements['minMinutes'] ?? 0).toInt()}';
@@ -178,7 +184,9 @@ class _GoalFormState extends State<_GoalForm> {
     }
 
     final yesNo = _kind == GoalKind.yesNo;
-    final target = yesNo ? 1 : int.parse(_target.text);
+    final inHours = _kind == GoalKind.minutes && _hours;
+    final entered = yesNo ? 1 : int.parse(_target.text);
+    final target = inHours ? entered * 60 : entered;
     final type = _isWorkouts
         ? GoalType.workouts
         : switch (_kind) {
@@ -201,6 +209,7 @@ class _GoalFormState extends State<_GoalForm> {
         GoalType.number || GoalType.counter => numberStep(target),
         _ => 1,
       },
+      hours: inHours,
       unitHe: _isWorkouts ? '' : unitFor('he'),
       unitEn: _isWorkouts ? '' : unitFor('en'),
       requirements: _isWorkouts
@@ -378,6 +387,22 @@ class _GoalFormState extends State<_GoalForm> {
                       setState(() => _comparison = s.first),
                 ),
                 label(l.goalsTarget),
+                if (_kind == GoalKind.minutes) ...[
+                  SegmentedButton<bool>(
+                    key: const ValueKey('goal-time-unit'),
+                    segments: [
+                      ButtonSegment(
+                        value: false,
+                        label: Text(l.goalsTimeMinutes),
+                      ),
+                      ButtonSegment(value: true, label: Text(l.goalsTimeHours)),
+                    ],
+                    selected: {_hours},
+                    showSelectedIcon: false,
+                    onSelectionChanged: (s) => setState(() => _hours = s.first),
+                  ),
+                  const SizedBox(height: 8),
+                ],
                 _NumberField(
                   key: const ValueKey('goal-target'),
                   controller: _target,
@@ -462,7 +487,7 @@ String describeGoal(AppLocalizations l, GoalDef g) {
         : l.goalsSummaryYesNo;
   }
   final fmt = GoalFormatter(l, l.localeName);
-  final value = [fmt.number(g.target), ?fmt.unit(g)].join(' ');
+  final value = [fmt.amount(g, g.target), ?fmt.unit(g)].join(' ');
   final rule = switch (g.comparison) {
     Comparison.atLeast => l.goalsSummaryAtLeast(value),
     Comparison.atMost => l.goalsSummaryAtMost(value),

@@ -77,6 +77,25 @@ void main() {
         GoalOutcome.notYet,
       );
     });
+    test('a week that ended short of a weekly goal reads "failed"', () {
+      final w = goal(GoalIds.workouts);
+      expect(
+        goalOutcome(w, GoalStatus.notMet, periodEnded: true),
+        GoalOutcome.failed,
+      );
+      expect(
+        goalOutcome(w, GoalStatus.unlogged, periodEnded: true),
+        GoalOutcome.failed,
+      );
+      expect(
+        goalOutcome(w, GoalStatus.met, periodEnded: true),
+        GoalOutcome.met,
+      );
+      expect(
+        goalOutcome(goal(GoalIds.junkFood), GoalStatus.met, periodEnded: true),
+        GoalOutcome.met,
+      );
+    });
     test('board stats start at the first logged day', () {
       const days = ['2026-11-13', '2026-11-14', '2026-11-15', '2026-11-16'];
       final s = [
