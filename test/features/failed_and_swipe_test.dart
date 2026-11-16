@@ -96,6 +96,11 @@ void main() {
         GoalOutcome.met,
       );
     });
+    test('old Hebrew goal names load with the new wording', () {
+      final map = goal(GoalIds.reading).toMap()
+        ..['titleHe'] = 'לפחות שעה קריאה';
+      expect(GoalDef.fromMap(map).titleHe, 'מינימום שעה קריאה');
+    });
     test('board stats start at the first logged day', () {
       const days = ['2026-11-13', '2026-11-14', '2026-11-15', '2026-11-16'];
       final s = [

@@ -81,7 +81,7 @@ const List<GoalDef> defaultGoals = [
   ),
   GoalDef(
     id: GoalIds.sweets,
-    titleHe: 'ממתק/חטיף אחד לכל היותר',
+    titleHe: 'מקסימום ממתק/חטיף אחד',
     titleEn: 'Max one sweet/snack',
     type: GoalType.counter,
     comparison: Comparison.atMost,
@@ -102,7 +102,7 @@ const List<GoalDef> defaultGoals = [
   ),
   GoalDef(
     id: GoalIds.reading,
-    titleHe: 'לפחות שעה קריאה',
+    titleHe: 'מינימום שעה קריאה',
     titleEn: 'At least 1 hour reading',
     type: GoalType.minutes,
     comparison: Comparison.atLeast,

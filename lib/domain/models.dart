@@ -43,6 +43,13 @@ enum GoalStatus {
   unlogged,
 }
 
+/// Default goal titles reworded since challenges were created with them
+/// (challenges keep a copy of their goals, so they're renamed on load).
+const _renamedHe = {
+  'לפחות שעה קריאה': 'מינימום שעה קריאה',
+  'ממתק/חטיף אחד לכל היותר': 'מקסימום ממתק/חטיף אחד',
+};
+
 /// Definition of a single goal inside a challenge.
 class GoalDef {
   const GoalDef({
@@ -144,7 +151,7 @@ class GoalDef {
 
   factory GoalDef.fromMap(Map<String, dynamic> m) => GoalDef(
     id: m['id'] as String,
-    titleHe: m['titleHe'] as String,
+    titleHe: _renamedHe[m['titleHe']] ?? m['titleHe'] as String,
     titleEn: m['titleEn'] as String,
     type: GoalType.values.byName(m['type'] as String),
     comparison: Comparison.values.byName(m['comparison'] as String),
