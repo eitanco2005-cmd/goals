@@ -143,7 +143,6 @@ class _Cell extends StatelessWidget {
     required this.isFuture,
     this.isToday = false,
     this.label,
-    this.monthLabel,
     this.altMonth = false,
   });
 
@@ -154,9 +153,6 @@ class _Cell extends StatelessWidget {
 
   /// Day of the month, drawn inside bigger cells.
   final String? label;
-
-  /// Month name above the day number (on the 1st and the first day).
-  final String? monthLabel;
 
   /// Every other month gets a tinted background so month changes stand out.
   final bool altMonth;
@@ -188,45 +184,24 @@ class _Cell extends StatelessWidget {
                   : null),
       ),
       alignment: Alignment.center,
-      child: label == null ? null : _labels(scheme, fill),
-    );
-  }
-}
-
-extension on _Cell {
-  Widget _labels(ColorScheme scheme, Color? fill) {
-    final color = fill != null
-        ? (ThemeData.estimateBrightnessForColor(fill) == Brightness.dark
-              ? Colors.white
-              : Colors.black87)
-        : scheme.onSurfaceVariant.withValues(alpha: isFuture ? 0.45 : 0.9);
-    final day = Text(
-      label!,
-      textDirection: TextDirection.ltr,
-      style: TextStyle(
-        fontSize: size * (monthLabel == null ? 0.36 : 0.28),
-        height: 1.1,
-        fontWeight: isToday ? FontWeight.w800 : FontWeight.w600,
-        color: color,
-      ),
-    );
-    if (monthLabel == null) return day;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          monthLabel!,
-          maxLines: 1,
-          overflow: TextOverflow.clip,
-          style: TextStyle(
-            fontSize: size * 0.24,
-            height: 1.1,
-            fontWeight: FontWeight.w800,
-            color: fill != null ? color : scheme.primary,
-          ),
-        ),
-        day,
-      ],
+      child: label == null
+          ? null
+          : Text(
+              label!,
+              textDirection: TextDirection.ltr,
+              style: TextStyle(
+                fontSize: size * 0.36,
+                fontWeight: isToday ? FontWeight.w800 : FontWeight.w600,
+                color: fill != null
+                    ? (ThemeData.estimateBrightnessForColor(fill) ==
+                              Brightness.dark
+                          ? Colors.white
+                          : Colors.black87)
+                    : scheme.onSurfaceVariant.withValues(
+                        alpha: isFuture ? 0.45 : 0.9,
+                      ),
+              ),
+            ),
     );
   }
 }
@@ -379,8 +354,31 @@ class _Heatmap extends StatelessWidget {
     );
     final weekdayFormat = DateFormat('EEEEE', locale);
     final rangeFormat = DateFormat.MMMd(locale);
-    final monthFormat = DateFormat.MMM(locale);
     final first = parseDayKey(challenge.startDate);
+    // Whether day [d] of [week] is the 1st of a month inside the challenge.
+    bool monthStartsAt(DateTime week, int d) {
+      final date = DateTime(week.year, week.month, week.day + d);
+      final key = dayKey(date);
+      return date.day == 1 &&
+          key.compareTo(challenge.startDate) > 0 &&
+          key.compareTo(challenge.endDate) <= 0;
+    }
+
+    Widget divider({required double width, required double height}) => SizedBox(
+      width: width,
+      height: height,
+      child: Center(
+        child: Container(
+          width: width > height ? width : 3,
+          height: width > height ? 3 : height,
+          decoration: BoxDecoration(
+            color: theme.colorScheme.primary,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+      ),
+    );
+
     int monthIndex(DateTime d) =>
         (d.year - first.year) * 12 + d.month - first.month;
     final range =
@@ -423,11 +421,19 @@ class _Heatmap extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             for (final (i, week) in weeks.indexed) ...[
-              if (i > 0) const SizedBox(width: gap),
+              if (i > 0)
+                // A month starting on Sunday: the line runs between weeks.
+                monthStartsAt(week, 0)
+                    ? divider(width: gap, height: 7 * cell + 6 * gap)
+                    : const SizedBox(width: gap),
               Column(
                 children: [
                   for (var d = 0; d < 7; d++) ...[
-                    if (d > 0) const SizedBox(height: gap),
+                    if (d > 0)
+                      // A line above the 1st of each month.
+                      monthStartsAt(week, d)
+                          ? divider(width: cell, height: gap)
+                          : const SizedBox(height: gap),
                     Builder(
                       builder: (context) {
                         final date = DateTime(
@@ -465,11 +471,6 @@ class _Heatmap extends StatelessWidget {
                           isFuture: future,
                           isToday: key == today,
                           label: showNumbers ? '${date.day}' : null,
-                          monthLabel:
-                              showNumbers &&
-                                  (date.day == 1 || key == challenge.startDate)
-                              ? monthFormat.format(date)
-                              : null,
                           altMonth: monthIndex(date).isOdd,
                         );
                         if (future) return square;
