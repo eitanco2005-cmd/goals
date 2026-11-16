@@ -596,6 +596,84 @@ abstract class AppLocalizations {
   /// **'Not logged'**
   String get statusUnlogged;
 
+  /// No description provided for @remindersSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders'**
+  String get remindersSection;
+
+  /// No description provided for @remindersEvening.
+  ///
+  /// In en, this message translates to:
+  /// **'End-of-day check'**
+  String get remindersEvening;
+
+  /// No description provided for @remindersEveningSub.
+  ///
+  /// In en, this message translates to:
+  /// **'At {time}: what\'s still not logged today'**
+  String remindersEveningSub(String time);
+
+  /// No description provided for @remindersMidday.
+  ///
+  /// In en, this message translates to:
+  /// **'Midday nudge'**
+  String get remindersMidday;
+
+  /// No description provided for @remindersMiddaySub.
+  ///
+  /// In en, this message translates to:
+  /// **'At {time}: how many goals are still open'**
+  String remindersMiddaySub(String time);
+
+  /// No description provided for @remindersDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications are off for this app. Turn them on in your phone settings.'**
+  String get remindersDenied;
+
+  /// No description provided for @remindersChannel.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders'**
+  String get remindersChannel;
+
+  /// No description provided for @reminderEveningTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'End-of-day check'**
+  String get reminderEveningTitle;
+
+  /// No description provided for @reminderEveningBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Still to log: {goals}'**
+  String reminderEveningBody(String goals);
+
+  /// No description provided for @reminderEveningGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'How did today go? Confirm your goals before the day ends.'**
+  String get reminderEveningGeneric;
+
+  /// No description provided for @reminderMiddayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Halfway through the day'**
+  String get reminderMiddayTitle;
+
+  /// No description provided for @reminderMiddayBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 goal still open} other{{count} goals still open}}: {goals}'**
+  String reminderMiddayBody(int count, String goals);
+
+  /// No description provided for @reminderMiddayGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick check-in: how are today\'s goals going?'**
+  String get reminderMiddayGeneric;
+
   /// No description provided for @groupNewCode.
   ///
   /// In en, this message translates to:

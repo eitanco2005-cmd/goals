@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../l10n/gen/app_localizations.dart';
+import '../reminders/reminders.dart';
 import '../week/week_providers.dart';
 import '../widget/widget_sync.dart';
 
@@ -16,6 +17,8 @@ class HomeShell extends ConsumerWidget {
     final l = AppLocalizations.of(context);
     // Keeps the Android home-screen widget in sync while the app runs.
     ref.watch(groupWidgetSyncProvider);
+    // Keeps on-device reminders (Android) in step with today's log.
+    ref.watch(reminderSyncProvider);
     // Keeps my weekly summary (what the group sees) up to date.
     ref.watch(weekSummaryPublisherProvider(currentWeekStart()));
     return Scaffold(

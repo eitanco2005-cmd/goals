@@ -2,4 +2,4 @@
 <!-- Shortcut icons are looked up by name at runtime (quick_actions), so the
      release resource shrinker must not remove them. -->
 <resources xmlns:tools="http://schemas.android.com/tools"
-    tools:keep="@drawable/ic_shortcut_water,@drawable/ic_shortcut_photo" />
+    tools:keep="@drawable/ic_shortcut_water,@drawable/ic_shortcut_photo,@drawable/ic_stat_notify" />

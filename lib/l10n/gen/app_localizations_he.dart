@@ -288,6 +288,61 @@ class AppLocalizationsHe extends AppLocalizations {
   String get statusUnlogged => 'לא עודכן';
 
   @override
+  String get remindersSection => 'תזכורות';
+
+  @override
+  String get remindersEvening => 'וידוא סוף יום';
+
+  @override
+  String remindersEveningSub(String time) {
+    return 'ב־$time: מה עוד לא עודכן היום';
+  }
+
+  @override
+  String get remindersMidday => 'תזכורת צהריים';
+
+  @override
+  String remindersMiddaySub(String time) {
+    return 'ב־$time: כמה יעדים עוד פתוחים';
+  }
+
+  @override
+  String get remindersDenied =>
+      'ההתראות כבויות לאפליקציה. אפשר להפעיל אותן בהגדרות הטלפון.';
+
+  @override
+  String get remindersChannel => 'תזכורות';
+
+  @override
+  String get reminderEveningTitle => 'וידוא סוף יום';
+
+  @override
+  String reminderEveningBody(String goals) {
+    return 'עוד לא עודכן: $goals';
+  }
+
+  @override
+  String get reminderEveningGeneric =>
+      'איך היה היום? עדכנו את היעדים לפני שהיום נגמר.';
+
+  @override
+  String get reminderMiddayTitle => 'חצי יום עבר';
+
+  @override
+  String reminderMiddayBody(int count, String goals) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count יעדים עוד פתוחים',
+      one: 'יעד אחד עוד פתוח',
+    );
+    return '$_temp0: $goals';
+  }
+
+  @override
+  String get reminderMiddayGeneric => 'בדיקה קצרה: איך מתקדמים היעדים של היום?';
+
+  @override
   String get groupNewCode => 'יצירת קוד הזמנה חדש';
 
   @override

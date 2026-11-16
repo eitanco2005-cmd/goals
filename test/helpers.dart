@@ -6,6 +6,7 @@ import 'package:goals_challenge/core/providers.dart';
 import 'package:goals_challenge/data/memory/memory_backend.dart';
 import 'package:goals_challenge/domain/default_goals.dart';
 import 'package:goals_challenge/features/home_access/quick_actions.dart';
+import 'package:goals_challenge/features/reminders/reminders.dart';
 import 'package:goals_challenge/features/widget/widget_sync.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -14,6 +15,7 @@ List<Override> memoryOverrides(
   bool demo = false,
   WidgetStore? widgetStore,
   LauncherShortcuts? shortcuts,
+  ReminderScheduler? reminders,
 }) => [
   isDemoModeProvider.overrideWithValue(demo),
   authRepositoryProvider.overrideWithValue(b),
@@ -25,6 +27,7 @@ List<Override> memoryOverrides(
   // No native home-screen widget under test (tests run as Android).
   widgetStoreProvider.overrideWithValue(widgetStore),
   launcherShortcutsProvider.overrideWithValue(shortcuts),
+  reminderSchedulerProvider.overrideWithValue(reminders),
 ];
 
 /// Pumps the full app (router included) on top of [backend].

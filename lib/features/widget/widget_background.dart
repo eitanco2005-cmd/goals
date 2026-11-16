@@ -8,7 +8,10 @@ import '../../core/config.dart';
 import '../../core/dates.dart';
 import '../../data/firebase/firebase_backend.dart';
 import '../../data/firebase/firebase_setup.dart';
+import '../../domain/models.dart';
 import '../../l10n/gen/app_localizations.dart';
+import '../reminders/reminder_plan.dart';
+import '../reminders/reminders.dart';
 import 'widget_snapshot.dart';
 import 'widget_sync.dart';
 
@@ -67,15 +70,25 @@ Future<void> refreshWidgetInBackground() async {
   final pairId = profile?.pairId;
   if (profile == null || pairId == null) return;
   final pair = await backend.watchPair(pairId).first.timeout(wait);
-  final others = pair?.othersOf(user.uid) ?? const <String>[];
-  if (pair == null || others.isEmpty) return;
   final challenge = await backend
       .watchActiveChallenge(pairId)
       .first
       .timeout(wait);
-  if (challenge == null) return;
-
+  if (pair == null || challenge == null) return;
   final today = todayKey();
+  final others = pair.othersOf(user.uid);
+  if (others.isEmpty) {
+    // Nobody else to show on the widget; reminders still matter.
+    await _replanReminders(
+      backend: backend,
+      uid: user.uid,
+      pairId: pairId,
+      today: today,
+      challenge: challenge,
+      languageCode: profile.languageCode,
+    );
+    return;
+  }
   final photos = await backend
       .fetchPhotos(pairId: pairId, from: today, to: today)
       .timeout(wait);
@@ -91,6 +104,15 @@ Future<void> refreshWidgetInBackground() async {
       ),
   ];
 
+  await _replanReminders(
+    backend: backend,
+    uid: user.uid,
+    pairId: pairId,
+    today: today,
+    challenge: challenge,
+    languageCode: profile.languageCode,
+  );
+
   await syncGroupWidget(
     store: HomeWidgetStore(),
     photoRepo: backend,
@@ -100,4 +122,38 @@ Future<void> refreshWidgetInBackground() async {
     goals: challenge.goals,
     photos: photos,
   );
+}
+
+/// Keeps the next week of reminders scheduled even when the app isn't
+/// opened, with today's check naming the goals still open.
+Future<void> _replanReminders({
+  required FirebaseBackend backend,
+  required String uid,
+  required String pairId,
+  required String today,
+  required Challenge challenge,
+  required String languageCode,
+}) async {
+  final settings = await loadReminderSettings();
+  if (settings == null) return;
+  final l = lookupAppLocalizations(Locale(languageCode));
+  try {
+    final log = await backend
+        .watchDailyLog(pairId: pairId, uid: uid, date: today)
+        .first
+        .timeout(const Duration(seconds: 20));
+    final plan = planReminders(
+      settings: settings,
+      now: DateTime.now(),
+      openToday: [
+        for (final g in challenge.dailyGoals)
+          if (log.valueOf(g.id) == null) g.title(languageCode),
+      ],
+      challengeEnd: challenge.endDate,
+    );
+    await LocalNotificationsScheduler(channelName: l.remindersChannel)
+        .replaceAll(renderReminders(l, plan));
+  } catch (e) {
+    debugPrint('reminders: background re-plan failed: $e');
+  }
 }

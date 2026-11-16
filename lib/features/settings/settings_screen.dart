@@ -10,6 +10,8 @@ import '../../l10n/gen/app_localizations.dart';
 import '../auth/language_switch.dart';
 import '../goals/goals_editor_screen.dart';
 import '../home_access/home_access_ui.dart';
+import '../reminders/reminder_tiles.dart';
+import '../reminders/reminders.dart';
 import '../pairing/invite_code_card.dart';
 import 'edit_name_dialog.dart';
 import 'settings_section.dart';
@@ -49,6 +51,11 @@ class SettingsScreen extends ConsumerWidget {
                   title: l.settingsChallenge,
                   children: const [_ChallengeTiles()],
                 ),
+                if (ref.watch(reminderSchedulerProvider) != null)
+                  SettingsSection(
+                    title: l.remindersSection,
+                    children: const [ReminderTiles()],
+                  ),
                 if (HomeScreenTiles.hasContent(ref))
                   SettingsSection(
                     title: l.homeSection,

@@ -287,6 +287,62 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statusUnlogged => 'Not logged';
 
   @override
+  String get remindersSection => 'Reminders';
+
+  @override
+  String get remindersEvening => 'End-of-day check';
+
+  @override
+  String remindersEveningSub(String time) {
+    return 'At $time: what\'s still not logged today';
+  }
+
+  @override
+  String get remindersMidday => 'Midday nudge';
+
+  @override
+  String remindersMiddaySub(String time) {
+    return 'At $time: how many goals are still open';
+  }
+
+  @override
+  String get remindersDenied =>
+      'Notifications are off for this app. Turn them on in your phone settings.';
+
+  @override
+  String get remindersChannel => 'Reminders';
+
+  @override
+  String get reminderEveningTitle => 'End-of-day check';
+
+  @override
+  String reminderEveningBody(String goals) {
+    return 'Still to log: $goals';
+  }
+
+  @override
+  String get reminderEveningGeneric =>
+      'How did today go? Confirm your goals before the day ends.';
+
+  @override
+  String get reminderMiddayTitle => 'Halfway through the day';
+
+  @override
+  String reminderMiddayBody(int count, String goals) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count goals still open',
+      one: '1 goal still open',
+    );
+    return '$_temp0: $goals';
+  }
+
+  @override
+  String get reminderMiddayGeneric =>
+      'Quick check-in: how are today\'s goals going?';
+
+  @override
   String get groupNewCode => 'Make a new invite code';
 
   @override
