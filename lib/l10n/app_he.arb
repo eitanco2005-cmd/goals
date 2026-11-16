@@ -87,7 +87,9 @@
 
   "statusMet": "בוצע",
   "statusNotMet": "עוד לא",
+  "statusFailed": "נכשל",
   "statusUnlogged": "לא עודכן",
+  "goalsDeleted": "\"{goal}\" נמחק",
   "pairEditGoals": "עריכת היעדים",
   "todayNeedsPhoto": "הוסיפו תמונה כדי להשלים את היעד",
   "todayNeedsPhotoShort": "חסרה תמונה",

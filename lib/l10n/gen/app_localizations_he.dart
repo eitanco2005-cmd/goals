@@ -285,7 +285,15 @@ class AppLocalizationsHe extends AppLocalizations {
   String get statusNotMet => 'עוד לא';
 
   @override
+  String get statusFailed => 'נכשל';
+
+  @override
   String get statusUnlogged => 'לא עודכן';
+
+  @override
+  String goalsDeleted(String goal) {
+    return '\"$goal\" נמחק';
+  }
 
   @override
   String get pairEditGoals => 'עריכת היעדים';

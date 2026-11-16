@@ -239,7 +239,10 @@ void main() {
 
     await tester.tap(_inCard(id, find.text("Didn't")));
     await tester.pumpAndSettle();
-    expect(_inCard(id, find.text('Not yet')), findsOneWidget);
+    expect(
+      _inCard(id, find.text('Failed')),
+      findsOneWidget,
+    ); // a "no" breaks the rule
 
     await tester.tap(_inCard(id, find.text("Didn't")));
     await tester.pumpAndSettle();

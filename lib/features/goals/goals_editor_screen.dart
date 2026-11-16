@@ -92,6 +92,50 @@ class _GoalsEditorScreenState extends ConsumerState<GoalsEditorScreen> {
     });
   }
 
+  /// The last daily goal can't be removed (a challenge needs one).
+  bool _canDelete(GoalDef goal) {
+    if (goal.period == GoalPeriod.daily && _dailyCount <= 1) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context).goalsNeedOneDaily),
+          ),
+        );
+      return false;
+    }
+    return true;
+  }
+
+  void _deleteWithUndo(GoalDef goal) {
+    final l = AppLocalizations.of(context);
+    final lang = Localizations.localeOf(context).languageCode;
+    final index = _goals.indexWhere((g) => g.id == goal.id);
+    if (index < 0) return;
+    setState(() {
+      _goals.removeAt(index);
+      _dirty = true;
+    });
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(l.goalsDeleted(goal.title(lang))),
+          behavior: SnackBarBehavior.floating,
+          persist: false,
+          action: SnackBarAction(
+            label: l.todayUndo,
+            onPressed: () {
+              if (!mounted) return;
+              setState(
+                () => _goals.insert(index.clamp(0, _goals.length), goal),
+              );
+            },
+          ),
+        ),
+      );
+  }
+
   Future<void> _save() async {
     final l = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
@@ -164,17 +208,29 @@ class _GoalsEditorScreenState extends ConsumerState<GoalsEditorScreen> {
             child: Column(
               children: [
                 for (final g in goals)
-                  ListTile(
-                    key: ValueKey('edit-${g.id}'),
-                    leading: Text(
-                      g.icon,
-                      style: const TextStyle(fontSize: 24),
-                      textDirection: TextDirection.ltr,
+                  // Swipe sideways to delete (with Undo).
+                  Dismissible(
+                    key: ValueKey('dismiss-${g.id}'),
+                    background: const _DeleteBackground(
+                      alignment: AlignmentDirectional.centerStart,
                     ),
-                    title: Text(g.title(lang)),
-                    subtitle: Text(describeGoal(l, g)),
-                    trailing: const Icon(Icons.edit_outlined),
-                    onTap: () => _edit(g),
+                    secondaryBackground: const _DeleteBackground(
+                      alignment: AlignmentDirectional.centerEnd,
+                    ),
+                    confirmDismiss: (_) async => _canDelete(g),
+                    onDismissed: (_) => _deleteWithUndo(g),
+                    child: ListTile(
+                      key: ValueKey('edit-${g.id}'),
+                      leading: Text(
+                        g.icon,
+                        style: const TextStyle(fontSize: 24),
+                        textDirection: TextDirection.ltr,
+                      ),
+                      title: Text(g.title(lang)),
+                      subtitle: Text(describeGoal(l, g)),
+                      trailing: const Icon(Icons.edit_outlined),
+                      onTap: () => _edit(g),
+                    ),
                   ),
               ],
             ),
@@ -317,6 +373,27 @@ class NewRoundScreen extends ConsumerWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Red "delete" backdrop revealed while swiping a goal.
+class _DeleteBackground extends StatelessWidget {
+  const _DeleteBackground({required this.alignment});
+  final AlignmentGeometry alignment;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      color: scheme.error,
+      alignment: alignment,
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Icon(
+        Icons.delete_outline,
+        color: scheme.onError,
+        semanticLabel: AppLocalizations.of(context).goalsDelete,
       ),
     );
   }

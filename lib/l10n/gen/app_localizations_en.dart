@@ -284,7 +284,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statusNotMet => 'Not yet';
 
   @override
+  String get statusFailed => 'Failed';
+
+  @override
   String get statusUnlogged => 'Not logged';
+
+  @override
+  String goalsDeleted(String goal) {
+    return '\"$goal\" deleted';
+  }
 
   @override
   String get pairEditGoals => 'Edit goals';

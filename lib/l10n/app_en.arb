@@ -95,7 +95,10 @@
 
   "statusMet": "Done",
   "statusNotMet": "Not yet",
+  "statusFailed": "Failed",
   "statusUnlogged": "Not logged",
+  "goalsDeleted": "\"{goal}\" deleted",
+  "@goalsDeleted": {"placeholders": {"goal": {"type": "String"}}},
   "pairEditGoals": "Edit goals",
   "todayNeedsPhoto": "Add a photo to complete this goal",
   "todayNeedsPhotoShort": "Needs a photo",

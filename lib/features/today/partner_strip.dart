@@ -160,10 +160,16 @@ class PartnerStrip extends StatelessWidget {
                         icon: g.icon,
                         size: size,
                         status: summary?.statuses[g.id] ?? GoalStatus.unlogged,
+                        outcome: goalOutcome(
+                          g,
+                          summary?.statuses[g.id] ?? GoalStatus.unlogged,
+                        ),
                         semanticsLabel: l.todayGoalStatusSemantics(
                           g.title(lang),
-                          (summary?.statuses[g.id] ?? GoalStatus.unlogged)
-                              .label(l),
+                          goalOutcome(
+                            g,
+                            summary?.statuses[g.id] ?? GoalStatus.unlogged,
+                          ).label(l),
                         ),
                       ),
                   ],
@@ -199,6 +205,7 @@ class PartnerGoalDot extends StatelessWidget {
     required this.icon,
     required this.status,
     required this.semanticsLabel,
+    this.outcome,
     this.size = maxSize,
   });
 
@@ -209,12 +216,16 @@ class PartnerGoalDot extends StatelessWidget {
   final GoalStatus status;
   final String semanticsLabel;
 
+  /// Failed (red) vs not yet (amber); defaults from [status].
+  final GoalOutcome? outcome;
+
   /// Diameter of the dot.
   final double size;
 
   @override
   Widget build(BuildContext context) {
     final unlogged = status == GoalStatus.unlogged;
+    final color = outcome?.color ?? status.color;
     return Semantics(
       label: semanticsLabel,
       excludeSemantics: true,
@@ -225,9 +236,9 @@ class PartnerGoalDot extends StatelessWidget {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: status.color.withValues(alpha: unlogged ? 0.12 : 0.2),
+          color: color.withValues(alpha: unlogged ? 0.12 : 0.2),
           border: Border.all(
-            color: unlogged ? Colors.transparent : status.color,
+            color: unlogged ? Colors.transparent : color,
             width: 2,
           ),
         ),

@@ -225,7 +225,6 @@ class _GoalHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final lang = Localizations.localeOf(context).languageCode;
     return Row(
@@ -251,35 +250,34 @@ class _GoalHeader extends StatelessWidget {
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: status == GoalStatus.unlogged
                       ? theme.colorScheme.onSurfaceVariant
-                      : status.color,
+                      : goalOutcome(goal, status).color,
                   fontWeight: FontWeight.w600,
                 ),
               ),
             ],
           ),
         ),
-        _StatusChip(status: status, label: status.label(l)),
+        _StatusChip(outcome: goalOutcome(goal, status)),
       ],
     );
   }
 }
 
 class _StatusChip extends StatelessWidget {
-  const _StatusChip({required this.status, required this.label});
-  final GoalStatus status;
-  final String label;
+  const _StatusChip({required this.outcome});
+  final GoalOutcome outcome;
 
   @override
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsetsDirectional.symmetric(horizontal: 10, vertical: 4),
     decoration: BoxDecoration(
-      color: status.color.withValues(alpha: 0.14),
+      color: outcome.color.withValues(alpha: 0.14),
       borderRadius: BorderRadius.circular(999),
     ),
     child: Text(
-      label,
+      outcome.label(AppLocalizations.of(context)),
       style: Theme.of(context).textTheme.labelMedium
-          ?.copyWith(color: status.color, fontWeight: FontWeight.w700),
+          ?.copyWith(color: outcome.color, fontWeight: FontWeight.w700),
     ),
   );
 }
@@ -665,25 +663,27 @@ class _GroupWeekCard extends ConsumerWidget {
                             final status =
                                 summaries[uid]?.statuses[g.id] ??
                                 GoalStatus.unlogged;
+                            final outcome = goalOutcome(g, status);
                             return Semantics(
-                              label: '${g.title(lang)}: ${status.label(l)}',
+                              label: '${g.title(lang)}: ${outcome.label(l)}',
                               child: Container(
                                 padding: const EdgeInsetsDirectional.symmetric(
                                   horizontal: 8,
                                   vertical: 4,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: status.color.withValues(alpha: 0.14),
+                                  color: outcome.color.withValues(alpha: 0.14),
                                   borderRadius: BorderRadius.circular(999),
                                   border: Border.all(
-                                    color: status.color.withValues(alpha: 0.5),
+                                    color: outcome.color.withValues(alpha: 0.5),
                                   ),
                                 ),
                                 child: Text(
-                                  '${g.icon} ${switch (status) {
-                                    GoalStatus.met => '✓',
-                                    GoalStatus.notMet => '✗',
-                                    GoalStatus.unlogged => '–',
+                                  '${g.icon} ${switch (outcome) {
+                                    GoalOutcome.met => '✓',
+                                    GoalOutcome.failed => '✗',
+                                    GoalOutcome.notYet => '…',
+                                    GoalOutcome.unlogged => '–',
                                   }}',
                                   textDirection: TextDirection.ltr,
                                 ),

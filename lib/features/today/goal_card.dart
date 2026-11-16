@@ -86,6 +86,11 @@ class _GoalCardState extends State<GoalCard>
     final status = widget.status;
     final needsPhoto = widget.needsPhoto;
     final unlogged = status == GoalStatus.unlogged;
+    // Failed (a rule was broken) is red; still possible is amber.
+    final outcome = needsPhoto
+        ? GoalOutcome.notYet
+        : goalOutcome(goal, status, value: widget.value);
+    final color = outcome.color;
     final target = GoalFormatter(
       l,
       Localizations.localeOf(context).toLanguageTag(),
@@ -98,7 +103,7 @@ class _GoalCardState extends State<GoalCard>
       decoration: BoxDecoration(
         color: switch (status) {
           GoalStatus.met => Color.alphaBlend(
-            status.color.withValues(alpha: 0.08),
+            color.withValues(alpha: 0.08),
             scheme.surface,
           ),
           GoalStatus.notMet => scheme.surface,
@@ -107,9 +112,7 @@ class _GoalCardState extends State<GoalCard>
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           width: 1.5,
-          color: unlogged
-              ? Colors.transparent
-              : status.color.withValues(alpha: 0.55),
+          color: unlogged ? Colors.transparent : color.withValues(alpha: 0.55),
         ),
       ),
       child: Column(
@@ -117,7 +120,12 @@ class _GoalCardState extends State<GoalCard>
         children: [
           Row(
             children: [
-              _GoalIcon(icon: goal.icon, status: status, pop: _pop),
+              _GoalIcon(
+                icon: goal.icon,
+                status: status,
+                color: color,
+                pop: _pop,
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -137,9 +145,7 @@ class _GoalCardState extends State<GoalCard>
                         target,
                         style: theme.textTheme.bodyMedium?.copyWith(
                           fontWeight: FontWeight.w600,
-                          color: unlogged
-                              ? scheme.onSurfaceVariant
-                              : status.color,
+                          color: unlogged ? scheme.onSurfaceVariant : color,
                         ),
                       ),
                   ],
@@ -148,7 +154,8 @@ class _GoalCardState extends State<GoalCard>
               const SizedBox(width: 8),
               _StatusPill(
                 status: status,
-                label: needsPhoto ? l.todayNeedsPhotoShort : status.label(l),
+                color: color,
+                label: needsPhoto ? l.todayNeedsPhotoShort : outcome.label(l),
               ),
             ],
           ),
@@ -215,11 +222,15 @@ class _GoalIcon extends StatelessWidget {
   const _GoalIcon({
     required this.icon,
     required this.status,
+    required this.color,
     required this.pop,
   });
 
   final String icon;
   final GoalStatus status;
+
+  /// Outcome color (red failed / amber not yet / green done).
+  final Color color;
   final Animation<double> pop;
 
   static final _popScale = TweenSequence<double>([
@@ -253,7 +264,7 @@ class _GoalIcon extends StatelessWidget {
               duration: const Duration(milliseconds: 250),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: status.color.withValues(alpha: unlogged ? 0.18 : 0.16),
+                color: color.withValues(alpha: unlogged ? 0.18 : 0.16),
               ),
               alignment: Alignment.center,
               child: Opacity(
@@ -278,7 +289,7 @@ class _GoalIcon extends StatelessWidget {
                     width: 20,
                     height: 20,
                     decoration: BoxDecoration(
-                      color: status.color,
+                      color: color,
                       shape: BoxShape.circle,
                       border: Border.all(
                         color: Theme.of(context).colorScheme.surface,
@@ -301,9 +312,14 @@ class _GoalIcon extends StatelessWidget {
 }
 
 class _StatusPill extends StatelessWidget {
-  const _StatusPill({required this.status, required this.label});
+  const _StatusPill({
+    required this.status,
+    required this.color,
+    required this.label,
+  });
 
   final GoalStatus status;
+  final Color color;
   final String label;
 
   @override
@@ -317,7 +333,7 @@ class _StatusPill extends StatelessWidget {
         vertical: 4,
       ),
       decoration: BoxDecoration(
-        color: status.color.withValues(alpha: unlogged ? 0.14 : 0.16),
+        color: color.withValues(alpha: unlogged ? 0.14 : 0.16),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
@@ -325,7 +341,7 @@ class _StatusPill extends StatelessWidget {
         maxLines: 1,
         style: theme.textTheme.labelMedium?.copyWith(
           fontWeight: FontWeight.w700,
-          color: unlogged ? theme.colorScheme.onSurfaceVariant : status.color,
+          color: unlogged ? theme.colorScheme.onSurfaceVariant : color,
         ),
       ),
     );

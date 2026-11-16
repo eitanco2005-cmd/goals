@@ -590,11 +590,23 @@ abstract class AppLocalizations {
   /// **'Not yet'**
   String get statusNotMet;
 
+  /// No description provided for @statusFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get statusFailed;
+
   /// No description provided for @statusUnlogged.
   ///
   /// In en, this message translates to:
   /// **'Not logged'**
   String get statusUnlogged;
+
+  /// No description provided for @goalsDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'\"{goal}\" deleted'**
+  String goalsDeleted(String goal);
 
   /// No description provided for @pairEditGoals.
   ///

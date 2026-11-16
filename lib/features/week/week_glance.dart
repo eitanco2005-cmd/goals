@@ -73,9 +73,9 @@ class WeekGlanceCard extends ConsumerWidget {
                             ),
                           ),
                           Text(
-                            status.label(l),
+                            goalOutcome(g, status).label(l),
                             style: theme.textTheme.labelLarge?.copyWith(
-                              color: status.color,
+                              color: goalOutcome(g, status).color,
                               fontWeight: FontWeight.w700,
                             ),
                           ),

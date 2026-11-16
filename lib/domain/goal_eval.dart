@@ -112,3 +112,24 @@ Map<String, num> sumLogs(Iterable<DailyLog> logs) {
   }
   return totals;
 }
+
+/// Whether a goal that is not met has FAILED (a rule was broken) rather
+/// than being still open: a limit was exceeded ("at most"), a yes/no goal
+/// was answered no, or an "exactly" target was overshot. Goals still short
+/// of a minimum are open, not failed.
+///
+/// [value] may be null when only the public summary is known (another
+/// member): limits and yes/no goals then count as failed, except a yes/no
+/// goal that requires a photo (it may just be missing the photo).
+bool isFailure(GoalDef goal, num? value) {
+  if (goal.type == GoalType.workouts) return false;
+  if (goal.type == GoalType.boolean) {
+    return value == null ? !goal.requiresPhoto : value < goal.target;
+  }
+  return switch (goal.comparison) {
+    Comparison.atMost =>
+      value == null ? !goal.requiresPhoto : value > goal.target,
+    Comparison.exactly => value != null && value > goal.target,
+    Comparison.atLeast => false,
+  };
+}

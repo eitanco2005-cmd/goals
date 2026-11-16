@@ -10,6 +10,9 @@ abstract final class AppColors {
   static const notMet = Color(0xFFD1495B);
   static const unlogged = Color(0xFFB8B0A8);
 
+  /// Not met yet, but still possible today (amber); red means failed.
+  static const inProgress = Color(0xFFD08A1E);
+
   /// "Me" vs "partner" accents, used on the board and partner strip.
   static const me = Color(0xFFE07A5F);
   static const partner = Color(0xFF3D7DD8);
