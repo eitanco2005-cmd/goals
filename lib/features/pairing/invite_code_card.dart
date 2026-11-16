@@ -34,7 +34,7 @@ class InviteCodeCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.favorite_outline, color: scheme.primary, size: 20),
+                Icon(Icons.group_add_outlined, color: scheme.primary, size: 20),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(

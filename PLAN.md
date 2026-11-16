@@ -1,6 +1,6 @@
 # Goals Challenge App — Plan
 
-A two-person habit challenge app for tracking your own daily and weekly goals and seeing your partner's progress.
+A habit challenge app for a small group (2–8 people): each person tracks their own daily and weekly goals and sees how the others are doing.
 
 ## Platforms
 | Who | How | Widget |
@@ -60,9 +60,9 @@ Daily score = met daily goals ÷ total daily goals. Weekly goals are shown separ
 
 ## Milestones
 1. ✅ Project setup, Firebase, login and partner pairing, Today screen with sync, Hebrew/English
-2. Photos: attach a photo to a goal, compress and store it, partner photo strip and viewer, reactions
-3. Android home-screen widget: rotates through the partner's photos from today, with their % and goal checkmarks
-4. Week screen, Board (heatmap, stats and photo diary), goal editing and challenge rounds
+2. ✅ Photos: attach a photo to a goal, compress and store it, group photo strips and viewer, reactions
+3. ✅ Android home-screen widget: rotates through the group's photos from today, with everyone's %; launcher shortcuts; iPhone install guide
+4. ✅ Week screen and Board (heatmap, stats and photo diary). Still to do: goal editing and challenge rounds
 5. Notifications: end-of-day check, reminders, partner nudges, reactions
 6. Health Connect steps (Android)
 7. Later: native iPhone app and widget

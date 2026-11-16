@@ -9,9 +9,14 @@ A habit-challenge app for two people. Each of you logs your own daily goals and 
 See [PLAN.md](PLAN.md) for the product plan and milestones.
 
 ## Status
-- ✅ **Step 1:** sign up and sign in, pairing with an invite code, the Today screen with live sync, settings in Hebrew and English
-- ✅ **Step 2:** photos. Attach a photo to any goal, see your partner's photos today, react with ❤️ 💪 🔥
-- ⏭️ **Next:** the Android home-screen widget, which rotates through your partner's photos from today
+- ✅ **Accounts and groups:** sign up, start a challenge or join one with a code, up to 8 people per group
+- ✅ **Today:** log the 9 daily goals; see every member's day as ✔/✘ and %, never their exact numbers
+- ✅ **Photos:** attach a photo to any goal; members react ❤️ 💪 🔥
+- ✅ **Week:** log workouts and junk food for any day of the week; the group sees only met / not met
+- ✅ **Board:** heatmap of the whole challenge per member, streaks, goal success rates, and a photo diary for each day
+- ✅ **Android home screen:** a widget that rotates through the group's photos from today; long-press shortcuts (+1 glass of water, add a photo)
+- ✅ **iPhone:** web app with a guide for adding it to the home screen
+- ⏭️ **Next:** editing goals and new challenge rounds, notifications, automatic steps on Android
 
 ## Run it
 ```bash
