@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:material_ui/material_ui.dart';
@@ -166,7 +164,7 @@ class _Cell extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         color: fill ?? (isFuture ? null : scheme.surfaceContainerHighest),
-        borderRadius: BorderRadius.circular(math.min(4, size / 4)),
+        borderRadius: BorderRadius.circular(size * 0.24),
         border: isToday
             ? Border.all(color: scheme.onSurface, width: 1.5)
             : (fill == null
@@ -184,7 +182,7 @@ class _Cell extends StatelessWidget {
               label!,
               textDirection: TextDirection.ltr,
               style: TextStyle(
-                fontSize: size * 0.4,
+                fontSize: size * 0.36,
                 fontWeight: isToday ? FontWeight.w800 : FontWeight.w600,
                 color: fill != null
                     ? (ThemeData.estimateBrightnessForColor(fill) ==
@@ -321,7 +319,7 @@ class _Heatmap extends StatelessWidget {
 
   static const gap = 4.0;
   static const minCell = 14.0;
-  static const maxCell = 30.0;
+  static const maxCell = 44.0;
 
   /// Cells at least this big show the day of the month.
   static const labelCell = 22.0;
@@ -466,7 +464,7 @@ class _Heatmap extends StatelessWidget {
                             label: l.boardCellLabel(dateLabel, value),
                             child: InkWell(
                               key: ValueKey('cell-$key'),
-                              borderRadius: BorderRadius.circular(4),
+                              borderRadius: BorderRadius.circular(cell * 0.24),
                               onTap: () => showDayDiary(context, key),
                               child: square,
                             ),
