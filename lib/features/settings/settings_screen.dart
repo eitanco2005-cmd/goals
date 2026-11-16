@@ -19,7 +19,16 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(l.settingsTitle)),
+      appBar: AppBar(
+        // Same large bold header as the Today screen.
+        title: Text(
+          l.settingsTitle,
+          style: Theme.of(context)
+              .textTheme
+              .headlineMedium
+              ?.copyWith(fontWeight: FontWeight.w800),
+        ),
+      ),
       body: SafeArea(
         child: Align(
           alignment: AlignmentDirectional.topCenter,
@@ -171,12 +180,7 @@ class _DatesTile extends ConsumerWidget {
         DateFormat.yMMMd(Localizations.localeOf(context).toLanguageTag());
     final start = parseDayKey(challenge.startDate);
     final end = parseDayKey(challenge.endDate);
-    final total = dayKeysBetween(challenge.startDate, challenge.endDate).length;
-    final inProgress = today.compareTo(challenge.startDate) >= 0 &&
-        today.compareTo(challenge.endDate) <= 0;
-    final day = inProgress
-        ? dayKeysBetween(challenge.startDate, today).length
-        : null;
+    final progress = challengeProgress(challenge, today);
 
     return ListTile(
       leading: const Icon(Icons.date_range_outlined),
@@ -184,9 +188,9 @@ class _DatesTile extends ConsumerWidget {
       subtitle: Text(
         l.settingsDateRange(format.format(start), format.format(end)),
       ),
-      trailing: day == null
+      trailing: !progress.inProgress
           ? null
-          : Text(l.settingsDayOf(day, total),
+          : Text(l.settingsDayOf(progress.day, progress.total),
               style: Theme.of(context).textTheme.labelMedium),
     );
   }

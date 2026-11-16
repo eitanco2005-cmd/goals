@@ -17,6 +17,18 @@ import '../domain/models.dart';
 ///     reported as 'pair-full' without outsiders reading the pair doc)
 ///   Every Firestore write also stores a server `updatedAt` (debug only).
 
+/// Maximum length of a display name (mirrors `isName` in firestore.rules).
+const maxNameLength = 100;
+
+/// Display name for a profile created from the auth account alone (see
+/// [ProfileRepository.ensureProfile]): the account's name, else the local
+/// part of its email, clipped to [maxNameLength] characters.
+String fallbackProfileName(AppUser user) {
+  final name = user.displayName?.trim() ?? '';
+  final base = name.isNotEmpty ? name : (user.email ?? '').split('@').first;
+  return String.fromCharCodes(base.runes.take(maxNameLength));
+}
+
 /// Thrown by repositories with a stable [code] the UI maps to a localized
 /// message (see `errorMessage()` in core/errors.dart).
 class AppException implements Exception {
@@ -52,6 +64,14 @@ abstract interface class ProfileRepository {
   Stream<UserProfile?> watchProfile(String uid);
   Future<void> setLanguage(String uid, String languageCode);
   Future<void> setDisplayName(String uid, String displayName);
+
+  /// Creates [user]'s profile if it does not exist yet; no-op otherwise.
+  ///
+  /// Recovers accounts whose sign-up stopped between creating the auth user
+  /// and writing the profile (network failure, app killed). The name comes
+  /// from [fallbackProfileName]. Waits for a sign-up still in flight on this
+  /// repository, so it never overwrites the profile that sign-up writes.
+  Future<void> ensureProfile(AppUser user, {required String languageCode});
 }
 
 abstract interface class PairRepository {
@@ -88,6 +108,15 @@ abstract interface class ChallengeRepository {
 }
 
 abstract interface class LogRepository {
+  /// Failures of writes that were already reported as done.
+  ///
+  /// Plain writes (e.g. [setGoalValue], workouts) return once applied
+  /// locally, after at most a short wait for the server (they keep syncing
+  /// in the background, which is what makes logging work offline). If the
+  /// server later rejects one, the error is emitted here so the UI can tell
+  /// the user (e.g. with a snackbar). Broadcast; never closes.
+  Stream<AppException> get writeErrors;
+
   /// Emits an empty log if nothing was logged that day.
   Stream<DailyLog> watchDailyLog({
     required String pairId,
@@ -97,6 +126,11 @@ abstract interface class LogRepository {
 
   /// Sets (or clears, when [value] is null) one goal value AND atomically
   /// rewrites the public [DaySummary] computed with `summarizeDay`.
+  ///
+  /// Calls for the same (pairId, uid, date) are applied in call order, each
+  /// on top of the previous one, so firing several without awaiting never
+  /// leaves a stale summary. Clearing a value of a day without a log is a
+  /// no-op.
   Future<void> setGoalValue({
     required String pairId,
     required String uid,

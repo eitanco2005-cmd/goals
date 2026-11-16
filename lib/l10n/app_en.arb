@@ -1,6 +1,10 @@
 {
   "@@locale": "en",
   "appTitle": "Our Challenge",
+  "sessionNameTooLong": "Name can be at most {max} characters",
+  "@sessionNameTooLong": {"placeholders": {"max": {"type": "int"}}},
+  "sessionStuckMessage": "This is taking longer than expected. Check your connection and try again.",
+  "sessionTryAgain": "Try again",
   "authTagline": "Two people, one challenge. Build healthy habits together, one day at a time.",
   "authSignInTitle": "Welcome back",
   "authSignUpTitle": "Create your account",
@@ -91,6 +95,9 @@
   "statusMet": "Done",
   "statusNotMet": "Not yet",
   "statusUnlogged": "Not logged",
+  "todayClearedGoal": "{goal} cleared",
+  "@todayClearedGoal": {"placeholders": {"goal": {"type": "String"}}},
+  "todayUndo": "Undo",
 
   "todayGreetingMorning": "Good morning",
   "todayGreetingAfternoon": "Good afternoon",

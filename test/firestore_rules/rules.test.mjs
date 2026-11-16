@@ -123,6 +123,20 @@ describe('users', () => {
     await assertFails(getDoc(doc(db('bob'), 'users/alice')));
   });
 
+  it('setLanguage (with stamp) succeeds; unknown language is rejected', async () => {
+    await signUp('alice');
+    const ref = doc(db('alice'), 'users/alice');
+    await assertSucceeds(updateDoc(ref, { languageCode: 'en', ...stamp() }));
+    await assertFails(updateDoc(ref, { languageCode: 'fr', ...stamp() }));
+  });
+
+  it('display name longer than 100 characters is rejected', async () => {
+    await signUp('alice');
+    const ref = doc(db('alice'), 'users/alice');
+    await assertSucceeds(updateDoc(ref, { displayName: 'a'.repeat(100), ...stamp() }));
+    await assertFails(updateDoc(ref, { displayName: 'a'.repeat(101), ...stamp() }));
+  });
+
   it('cannot point pairId at a pair you are not in', async () => {
     await signUp('alice');
     await signUp('mallory');
@@ -203,6 +217,18 @@ describe('pairing', () => {
     await assertFails(updateDoc(doc(db('alice'), `pairs/${PAIR}`), { memberUids: ['alice'] }));
   });
 
+  it('setDisplayName: profile + own memberNames entry', async () => {
+    await pairedAliceBob();
+    const f = db('alice');
+    await assertSucceeds(updateDoc(doc(f, 'users/alice'), { displayName: 'Eitan', ...stamp() }));
+    await assertSucceeds(updateDoc(doc(f, `pairs/${PAIR}`), { 'memberNames.alice': 'Eitan', ...stamp() }));
+    // Not the partner's name, not a non-string, not too long.
+    await assertFails(updateDoc(doc(f, `pairs/${PAIR}`), { 'memberNames.bob': 'x', ...stamp() }));
+    await assertFails(updateDoc(doc(f, `pairs/${PAIR}`), { 'memberNames.alice': 42, ...stamp() }));
+    await assertFails(updateDoc(doc(f, `pairs/${PAIR}`), { 'memberNames.alice': { x: 1 }, ...stamp() }));
+    await assertFails(updateDoc(doc(f, `pairs/${PAIR}`), { 'memberNames.alice': 'a'.repeat(101), ...stamp() }));
+  });
+
   it('members can switch the active challenge (createChallenge batch)', async () => {
     await pairedAliceBob();
     const f = db('bob');
@@ -215,6 +241,22 @@ describe('pairing', () => {
     await assertSucceeds(getDoc(doc(db('alice'), `pairs/${PAIR}/challenges/ch2`)));
     await assertFails(getDoc(doc(db('carol'), `pairs/${PAIR}/challenges/ch2`)));
   });
+
+  it('challenges cannot be deleted', async () => {
+    await pairedAliceBob();
+    await assertFails(deleteDoc(doc(db('alice'), `pairs/${PAIR}/challenges/${CH}`)));
+  });
+
+  it('challenge goals must be a list of maps (at most 30)', async () => {
+    await pairedAliceBob();
+    const ch = (goals) => setDoc(doc(db('alice'), `pairs/${PAIR}/challenges/ch3`), {
+      id: 'ch3', pairId: PAIR, startDate: '2027-01-01', endDate: '2027-01-31', goals, ...stamp(),
+    });
+    await assertFails(ch([1, 2]));
+    await assertFails(ch('water'));
+    await assertFails(ch(Array.from({ length: 31 }, (_, i) => ({ id: `g${i}` }))));
+    await assertSucceeds(ch([{ id: 'water', period: 'daily' }]));
+  });
 });
 
 describe('logs, summaries, workouts', () => {
@@ -224,6 +266,10 @@ describe('logs, summaries, workouts', () => {
     await assertSucceeds(setGoal('alice'));
     await assertSucceeds(setGoal('alice', { value: null }));
     await assertSucceeds(getDoc(doc(db('alice'), `pairs/${PAIR}/logs/alice/days/${DATE}`)));
+  });
+
+  it('clearing a value with no log doc is rejected, so the app skips that write', async () => {
+    await assertFails(setGoal('alice', { date: '2026-11-20', value: null }));
   });
 
   it('partner can NOT read the private log, but can read the summary', async () => {

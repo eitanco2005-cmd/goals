@@ -67,4 +67,61 @@ void main() {
     final updated = await b.watchPair(pair.id).first;
     expect(updated!.memberNames[u.uid], 'Eitan');
   });
+
+  test('concurrent setGoalValue calls all land in the summary', () async {
+    final b = MemoryBackend();
+    const goals = defaultGoals;
+    final daily = goals.where((g) => g.period == GoalPeriod.daily).toList();
+    Future<void> set(String goalId, num? v) => b.setGoalValue(
+        pairId: 'p', uid: 'u', date: '2026-11-15',
+        goalId: goalId, value: v, dailyGoals: daily);
+    await Future.wait([
+      set(GoalIds.water, 8),
+      set(GoalIds.reading, 60),
+      set(GoalIds.reading, null),
+      set(GoalIds.veggies, 1),
+    ]);
+    final summary = (await b
+        .watchDaySummary(pairId: 'p', uid: 'u', date: '2026-11-15')
+        .first)!;
+    expect(summary.statuses[GoalIds.water], GoalStatus.met);
+    expect(summary.statuses[GoalIds.veggies], GoalStatus.met);
+    expect(summary.statuses[GoalIds.reading], GoalStatus.unlogged);
+  });
+
+  test('clearing a value of a day without a log writes nothing', () async {
+    final b = MemoryBackend();
+    await b.setGoalValue(
+        pairId: 'p', uid: 'u', date: '2026-11-15',
+        goalId: GoalIds.water, value: null, dailyGoals: defaultGoals);
+    expect(
+        await b.watchDaySummary(pairId: 'p', uid: 'u', date: '2026-11-15').first,
+        isNull);
+  });
+
+  test('sign-up emits the user before the profile exists (like Firebase)',
+      () async {
+    final b = MemoryBackend();
+    final profileWhenSignedIn = b
+        .authStateChanges()
+        .firstWhere((u) => u != null)
+        .then((u) => b.watchProfile(u!.uid).first);
+    final u = await b.signUp(
+        email: 'a@x.com', password: 'secret1', displayName: 'A', languageCode: 'he');
+    expect(await profileWhenSignedIn, isNull);
+    expect((await b.watchProfile(u.uid).first)!.displayName, 'A');
+  });
+
+  test('ensureProfile re-creates a missing profile', () async {
+    final b = MemoryBackend();
+    final u = await b.signUp(
+        email: 'dana@x.com', password: 'secret1', displayName: 'Dana', languageCode: 'he');
+    await b.ensureProfile(u, languageCode: 'en');
+    expect((await b.watchProfile(u.uid).first)!.languageCode, 'he');
+    b.debugDeleteProfile(u.uid);
+    await b.ensureProfile(u, languageCode: 'en');
+    final p = (await b.watchProfile(u.uid).first)!;
+    expect(p.displayName, 'Dana');
+    expect(p.languageCode, 'en');
+  });
 }

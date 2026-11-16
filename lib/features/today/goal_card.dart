@@ -1,6 +1,7 @@
 import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:material_ui/material_ui.dart';
 
+import '../../core/status_ui.dart';
 import '../../domain/goal_eval.dart';
 import '../../domain/models.dart';
 import '../../l10n/gen/app_localizations.dart';

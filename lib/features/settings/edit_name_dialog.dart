@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../l10n/gen/app_localizations.dart';
+import '../auth/validators.dart';
 
 /// Asks for a new display name. Returns the trimmed name, or null when
 /// cancelled.
@@ -48,8 +49,7 @@ class _EditNameDialogState extends State<_EditNameDialog> {
           textInputAction: TextInputAction.done,
           autofillHints: const [AutofillHints.name],
           decoration: InputDecoration(labelText: l.displayName),
-          validator: (v) =>
-              (v?.trim() ?? '').isEmpty ? l.authNameRequired : null,
+          validator: (v) => AuthValidators.name(l, v),
           onFieldSubmitted: (_) => _save(),
         ),
       ),

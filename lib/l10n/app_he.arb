@@ -1,6 +1,9 @@
 {
   "@@locale": "he",
   "appTitle": "האתגר שלנו",
+  "sessionNameTooLong": "השם יכול להכיל עד {max} תווים",
+  "sessionStuckMessage": "הטעינה לוקחת יותר זמן מהרגיל. כדאי לבדוק את החיבור ולנסות שוב.",
+  "sessionTryAgain": "לנסות שוב",
   "authTagline": "שניים, אתגר אחד. בונים הרגלים בריאים יחד, יום אחרי יום.",
   "authSignInTitle": "טוב שחזרתם",
   "authSignUpTitle": "יצירת חשבון",
@@ -85,6 +88,8 @@
   "statusMet": "בוצע",
   "statusNotMet": "עוד לא",
   "statusUnlogged": "לא עודכן",
+  "todayClearedGoal": "{goal}: הרישום נמחק",
+  "todayUndo": "ביטול",
 
   "todayGreetingMorning": "בוקר טוב",
   "todayGreetingAfternoon": "צהריים טובים",

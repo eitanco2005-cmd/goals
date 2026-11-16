@@ -11,6 +11,7 @@ import '../features/shell/home_shell.dart';
 import '../features/shell/splash_screen.dart';
 import '../features/today/today_screen.dart';
 import '../features/week/week_screen.dart';
+import '../domain/models.dart';
 import 'providers.dart';
 
 abstract final class Routes {
@@ -24,19 +25,51 @@ abstract final class Routes {
   static const settings = '/settings';
 }
 
+/// Where the signed-in user's profile stands.
+enum ProfileStatus {
+  /// Not received yet.
+  loading,
+
+  /// Confirmed missing: the account exists but its profile was never
+  /// written (see `ProfileRepository.ensureProfile`).
+  missing,
+
+  /// The profile stream failed.
+  error,
+
+  /// Loaded.
+  ready,
+}
+
+/// Classifies the profile provider's state for a signed-in user. A loaded
+/// profile stays [ProfileStatus.ready] through a later refresh or error.
+ProfileStatus profileStatusOf(AsyncValue<UserProfile?> profile) {
+  if (profile.value != null) return ProfileStatus.ready;
+  if (profile.hasError) return ProfileStatus.error;
+  // While loading, `value` may still hold the previous (signed-out) null.
+  if (profile.isLoading || !profile.hasValue) return ProfileStatus.loading;
+  return ProfileStatus.missing;
+}
+
 /// Decides where the user must be based on auth/profile state.
 /// Pure function so it can be unit-tested.
+///
+/// Until the profile is [ProfileStatus.ready] a signed-in user stays on the
+/// splash screen, which creates a missing profile and offers "Try again" /
+/// "Sign out" when stuck or failed. [hasPair] is only read once ready.
 String? redirectFor({
   required String location,
   required bool authLoading,
   required bool signedIn,
-  required bool profileLoading,
+  required ProfileStatus profile,
   required bool hasPair,
 }) {
   const authPages = {Routes.signIn, Routes.signUp};
   if (authLoading) return location == Routes.splash ? null : Routes.splash;
   if (!signedIn) return authPages.contains(location) ? null : Routes.signIn;
-  if (profileLoading) return location == Routes.splash ? null : Routes.splash;
+  if (profile != ProfileStatus.ready) {
+    return location == Routes.splash ? null : Routes.splash;
+  }
   if (!hasPair) return location == Routes.pair ? null : Routes.pair;
   if (authPages.contains(location) ||
       location == Routes.pair ||
@@ -63,8 +96,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         location: state.matchedLocation,
         authLoading: auth.isLoading && !auth.hasValue,
         signedIn: signedIn,
-        profileLoading:
-            signedIn && (!profile.hasValue || profile.value == null),
+        profile: profileStatusOf(profile),
         hasPair: profile.value?.pairId != null,
       );
     },

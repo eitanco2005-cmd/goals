@@ -1,12 +1,18 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:goals_challenge/app.dart';
 import 'package:goals_challenge/core/dates.dart';
+import 'package:goals_challenge/core/providers.dart';
 import 'package:goals_challenge/data/memory/memory_backend.dart';
+import 'package:goals_challenge/data/repositories.dart';
 import 'package:goals_challenge/domain/default_goals.dart';
 import 'package:goals_challenge/domain/models.dart';
 import 'package:goals_challenge/features/pairing/invite_code_card.dart';
+import 'package:goals_challenge/features/today/partner_strip.dart';
 import 'package:goals_challenge/features/today/today_header.dart';
+import 'package:goals_challenge/features/today/today_providers.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../helpers.dart';
@@ -34,7 +40,126 @@ Future<DaySummary?> _mySummary(MemoryBackend b) => b
     )
     .first;
 
+/// Writes resolve only when completed by the test, and the log stream only
+/// emits what the test pushes (it never echoes writes back by itself).
+class _NoEchoLogs implements LogRepository {
+  final writes = <Completer<void>>[];
+  final logs = StreamController<DailyLog>();
+
+  @override
+  Stream<DailyLog> watchDailyLog({
+    required String pairId,
+    required String uid,
+    required String date,
+  }) => logs.stream;
+
+  @override
+  Future<void> setGoalValue({
+    required String pairId,
+    required String uid,
+    required String date,
+    required String goalId,
+    required num? value,
+    required List<GoalDef> dailyGoals,
+  }) {
+    final c = Completer<void>();
+    writes.add(c);
+    return c.future;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+const _emptyLog = DailyLog(uid: 'u', date: '2026-05-10');
+
 void main() {
+  group('TodayLogController', () {
+    late _NoEchoLogs logs;
+    late ProviderContainer container;
+
+    tearDown(() => logs.logs.close());
+
+    setUp(() async {
+      logs = _NoEchoLogs();
+      container = ProviderContainer.test(
+        overrides: [
+          logRepositoryProvider.overrideWithValue(logs),
+          todayScopeProvider.overrideWithValue((
+            pairId: 'p',
+            uid: 'u',
+            date: '2026-05-10',
+          )),
+          challengeProvider.overrideWith(
+            (ref) => Stream.value(
+              const Challenge(
+                id: 'c',
+                pairId: 'p',
+                startDate: '2026-05-01',
+                endDate: '2026-07-29',
+                goals: defaultGoals,
+              ),
+            ),
+          ),
+        ],
+      );
+      container
+        ..listen(todayLogProvider, (_, _) {})
+        ..listen(challengeProvider, (_, _) {});
+      await container.read(challengeProvider.future);
+      logs.logs.add(_emptyLog);
+      await container.read(myTodayLogStreamProvider.future);
+    });
+
+    Map<String, num?> pending() => container.read(todayLogControllerProvider);
+    TodayLogController controller() =>
+        container.read(todayLogControllerProvider.notifier);
+
+    num? shown() =>
+        container.read(todayLogProvider).value!.valueOf(GoalIds.water);
+
+    test('a saved value never masks later updates from the stream', () async {
+      final write = controller().setValue(GoalIds.water, 3);
+      expect(pending(), {GoalIds.water: 3});
+      expect(shown(), 3);
+
+      // Saved, but the stream has not caught up yet: keep showing it.
+      logs.writes.single.complete();
+      await write;
+      expect(shown(), 3);
+
+      // Whatever the stream says next wins (e.g. another device's update).
+      logs.logs.add(_emptyLog.withValue(GoalIds.water, 5));
+      await pumpEventQueue();
+      expect(pending(), isEmpty);
+      expect(shown(), 5);
+    });
+
+    test('a failed write drops its optimistic value right away', () async {
+      final write = controller().setValue(GoalIds.water, 3);
+      logs.writes.single.completeError(const AppException('network'));
+      await expectLater(write, throwsA(isA<AppException>()));
+      expect(pending(), isEmpty);
+      expect(shown(), isNull);
+    });
+
+    test('an older write settling keeps the newer pending value', () async {
+      final first = controller().setValue(GoalIds.water, 1);
+      final second = controller().setValue(GoalIds.water, 2);
+      logs.writes.first.complete();
+      await first;
+      // The echo of the older write doesn't drop the newer value either.
+      logs.logs.add(_emptyLog.withValue(GoalIds.water, 1));
+      await pumpEventQueue();
+      expect(pending(), {GoalIds.water: 2});
+
+      logs.writes.last.completeError(const AppException('network'));
+      await expectLater(second, throwsA(isA<AppException>()));
+      expect(pending(), isEmpty);
+      expect(shown(), 1);
+    });
+  });
+
   testWidgets('paired user sees all daily goals and the partner strip', (
     tester,
   ) async {
@@ -127,6 +252,51 @@ void main() {
     expect((await _mySummary(b))!.statuses[id], GoalStatus.met);
   });
 
+  testWidgets('− at 0 clears a mistaken "None today", and Undo restores it', (
+    tester,
+  ) async {
+    final b = await signedInPairedBackend();
+    await pumpApp(tester, b, size: _tall);
+    const id = GoalIds.sweets;
+    final semantics = tester.ensureSemantics();
+
+    await tester.tap(_inCard(id, find.text('None today ✓')));
+    await tester.pumpAndSettle();
+    expect(_inCard(id, find.text('Done')), findsOneWidget);
+    expect(
+      find.bySemanticsLabel(RegExp(r'Max one sweet/snack: 0$')),
+      findsOneWidget,
+    );
+    semantics.dispose();
+
+    await tester.tap(find.byTooltip('Decrease Max one sweet/snack'));
+    await tester.pumpAndSettle();
+    expect(_inCard(id, find.text('Not logged')), findsOneWidget);
+    expect(_inCard(id, find.text('None today ✓')), findsOneWidget);
+    expect((await _mySummary(b))!.statuses[id], GoalStatus.unlogged);
+    expect(find.text('Max one sweet/snack cleared'), findsOneWidget);
+
+    await tester.tap(find.text('Undo'));
+    await tester.pumpAndSettle();
+    expect(_inCard(id, find.text('Done')), findsOneWidget);
+    expect((await _mySummary(b))!.statuses[id], GoalStatus.met);
+  });
+
+  testWidgets('partner goal dots fit on one row at 390px', (tester) async {
+    final b = await signedInPairedBackend(languageCode: 'he');
+    await pumpApp(tester, b, size: const Size(390, 3200));
+    final dots = find.byType(PartnerGoalDot);
+    expect(dots, findsNWidgets(9));
+    final top = tester.getTopLeft(dots.first).dy;
+    for (final e in dots.evaluate()) {
+      expect(tester.getTopLeft(find.byWidget(e.widget)).dy, top);
+      expect(
+        tester.getSize(find.byWidget(e.widget)).width,
+        greaterThanOrEqualTo(PartnerGoalDot.minSize),
+      );
+    }
+  });
+
   testWidgets('steps: quick +1000 and precise entry dialog', (tester) async {
     final b = await signedInPairedBackend();
     await pumpApp(tester, b, size: _tall);
@@ -206,6 +376,34 @@ void main() {
     await tester.tap(find.byTooltip('Dismiss'));
     await tester.pumpAndSettle();
     expect(find.textContaining(MemoryBackend.demoInviteCode), findsNothing);
+  });
+
+  testWidgets('a write rejected later shows a localized snackbar', (
+    tester,
+  ) async {
+    final b = await signedInPairedBackend();
+    final errors = StreamController<AppException>.broadcast();
+    addTearDown(errors.close);
+    tester.view.physicalSize = _tall;
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          ...memoryOverrides(b),
+          logWriteErrorsProvider.overrideWith((ref) => errors.stream),
+        ],
+        child: const GoalsApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    errors.add(const AppException('network'));
+    await tester.pumpAndSettle();
+    expect(
+      find.text('No connection. Check your internet and try again'),
+      findsOneWidget,
+    );
   });
 
   for (final lang in ['he', 'en']) {

@@ -70,23 +70,26 @@ class CounterControl extends StatelessWidget {
     final v = value;
     final change = onChanged;
     final showNone = goal.comparison == Comparison.atMost && v == null;
+    final text = v == null
+        ? null
+        : GoalFormatter(l, _locale(context)).number(v);
     return Row(
       children: [
         IconButton.filledTonal(
           tooltip: l.todayDecrease(title),
           constraints: const BoxConstraints.tightFor(width: 48, height: 48),
-          onPressed: change == null || v == null || v <= 0
+          // At 0 (or after a mistaken "None today") − returns to "not logged".
+          onPressed: change == null || v == null
               ? null
-              : () => change(v - 1),
+              : () => change(v <= 0 ? null : v - 1),
           icon: const Icon(Icons.remove),
         ),
         SizedBox(
           width: 56,
-          child: _AnimatedValue(
-            text: v == null
-                ? '–'
-                : GoalFormatter(l, _locale(context)).number(v),
-            muted: v == null,
+          child: Semantics(
+            label: '$title: ${text ?? l.statusUnlogged}',
+            excludeSemantics: true,
+            child: _AnimatedValue(text: text ?? '–', muted: v == null),
           ),
         ),
         IconButton.filledTonal(
@@ -188,31 +191,37 @@ class MeasureControl extends StatelessWidget {
                       horizontal: 8,
                     ),
                     // Scale down rather than clip big numbers on narrow phones.
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _AnimatedValue(
-                            text: v == null ? '–' : fmt.number(v),
-                            muted: v == null,
-                          ),
-                          if (unit != null && v != null) ...[
-                            const SizedBox(width: 4),
-                            Text(
-                              unit,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
+                    child: Semantics(
+                      label: v == null
+                          ? '$title: ${l.statusUnlogged}'
+                          : '$title: ${[fmt.number(v), ?unit].join(' ')}',
+                      excludeSemantics: true,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _AnimatedValue(
+                              text: v == null ? '–' : fmt.number(v),
+                              muted: v == null,
+                            ),
+                            if (unit != null && v != null) ...[
+                              const SizedBox(width: 4),
+                              Text(
+                                unit,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
                               ),
+                            ],
+                            const SizedBox(width: 6),
+                            Icon(
+                              Icons.edit_outlined,
+                              size: 16,
+                              color: theme.colorScheme.onSurfaceVariant,
                             ),
                           ],
-                          const SizedBox(width: 6),
-                          Icon(
-                            Icons.edit_outlined,
-                            size: 16,
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ],
+                        ),
                       ),
                     ),
                   ),

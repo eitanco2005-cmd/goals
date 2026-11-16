@@ -104,6 +104,24 @@ abstract class AppLocalizations {
   /// **'Our Challenge'**
   String get appTitle;
 
+  /// No description provided for @sessionNameTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Name can be at most {max} characters'**
+  String sessionNameTooLong(int max);
+
+  /// No description provided for @sessionStuckMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This is taking longer than expected. Check your connection and try again.'**
+  String get sessionStuckMessage;
+
+  /// No description provided for @sessionTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get sessionTryAgain;
+
   /// No description provided for @authTagline.
   ///
   /// In en, this message translates to:
@@ -577,6 +595,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not logged'**
   String get statusUnlogged;
+
+  /// No description provided for @todayClearedGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'{goal} cleared'**
+  String todayClearedGoal(String goal);
+
+  /// No description provided for @todayUndo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get todayUndo;
 
   /// No description provided for @todayGreetingMorning.
   ///

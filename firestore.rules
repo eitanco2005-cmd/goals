@@ -138,6 +138,7 @@ service cloud.firestore {
         return request.auth.uid in before.memberUids
           && after.diff(before).affectedKeys().hasOnly(['activeChallengeId', 'memberNames', 'updatedAt'])
           && after.memberNames.diff(before.memberNames).affectedKeys().hasOnly([request.auth.uid])
+          && isName(after.memberNames[request.auth.uid])
           && (after.activeChallengeId == null
               || existsAfter(/databases/$(database)/documents/pairs/$(pairId)/challenges/$(after.activeChallengeId)));
       }
@@ -146,8 +147,10 @@ service cloud.firestore {
       match /challenges/{challengeId} {
         allow read: if isMember(pairId);
         allow create, update: if isMemberAfter(pairId) && validChallenge(request.resource.data);
-        allow delete: if isMember(pairId);
+        allow delete: if false;
 
+        // Rules cannot iterate a list, so `goals` gets a light shape check:
+        // a list of at most 30 entries whose first entry is a map.
         function validChallenge(d) {
           return d.id == challengeId
             && d.pairId == pairId
@@ -155,7 +158,8 @@ service cloud.firestore {
             && isDayKey(d.endDate)
             && d.startDate <= d.endDate
             && d.goals is list
-            && d.goals.size() <= 50
+            && d.goals.size() <= 30
+            && (d.goals.size() == 0 || d.goals[0] is map)
             && stampOk(d);
         }
       }

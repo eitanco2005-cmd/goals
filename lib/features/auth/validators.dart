@@ -1,3 +1,4 @@
+import '../../data/repositories.dart' show maxNameLength;
 import '../../l10n/gen/app_localizations.dart';
 
 /// Localized form validators shared by the auth screens.
@@ -22,6 +23,11 @@ abstract final class AuthValidators {
     return null;
   }
 
-  static String? name(AppLocalizations l, String? v) =>
-      (v?.trim() ?? '').isEmpty ? l.authNameRequired : null;
+  /// Required, at most [maxNameLength] characters (the rules' limit).
+  static String? name(AppLocalizations l, String? v) {
+    final value = v?.trim() ?? '';
+    if (value.isEmpty) return l.authNameRequired;
+    if (value.length > maxNameLength) return l.sessionNameTooLong(maxNameLength);
+    return null;
+  }
 }

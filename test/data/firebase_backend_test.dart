@@ -219,6 +219,106 @@ void main() {
     );
   });
 
+  test('concurrent setGoalValue calls all land in the summary', () async {
+    final a = await signUp('A');
+    final pair = await createPair(a);
+    final goals = (await b.watchActiveChallenge(pair.id).first)!.dailyGoals;
+    const date = '2026-11-15';
+    Future<void> set(String goalId, num? v) => b.setGoalValue(
+      pairId: pair.id,
+      uid: a.uid,
+      date: date,
+      goalId: goalId,
+      value: v,
+      dailyGoals: goals,
+    );
+
+    // Fired without awaiting in between, like quick taps.
+    await Future.wait([
+      set(GoalIds.water, 8),
+      set(GoalIds.reading, 60),
+      set(GoalIds.sweets, 3),
+      set(GoalIds.reading, null),
+      set(GoalIds.veggies, 1),
+    ]);
+
+    final log = await b
+        .watchDailyLog(pairId: pair.id, uid: a.uid, date: date)
+        .first;
+    expect(log.values, {GoalIds.water: 8, GoalIds.sweets: 3, GoalIds.veggies: 1});
+    final summary = (await b
+        .watchDaySummary(pairId: pair.id, uid: a.uid, date: date)
+        .first)!;
+    expect(summary.statuses[GoalIds.water], GoalStatus.met);
+    expect(summary.statuses[GoalIds.veggies], GoalStatus.met);
+    expect(summary.statuses[GoalIds.sweets], GoalStatus.notMet);
+    expect(summary.statuses[GoalIds.reading], GoalStatus.unlogged);
+    expect(summary.percent, 22); // 2 of 9
+  });
+
+  test('clearing a value of a day without a log writes nothing', () async {
+    final a = await signUp('A');
+    final pair = await createPair(a);
+    final goals = (await b.watchActiveChallenge(pair.id).first)!.dailyGoals;
+    const date = '2026-11-20';
+    await b.setGoalValue(
+      pairId: pair.id,
+      uid: a.uid,
+      date: date,
+      goalId: GoalIds.water,
+      value: null,
+      dailyGoals: goals,
+    );
+    expect(
+      (await db.doc('pairs/${pair.id}/logs/${a.uid}/days/$date').get()).exists,
+      isFalse,
+    );
+    expect(
+      (await db.doc('pairs/${pair.id}/summaries/${a.uid}_$date').get()).exists,
+      isFalse,
+    );
+  });
+
+  test('ensureProfile creates a missing profile and keeps an existing one',
+      () async {
+    final u = await signUp('Dana');
+    await b.ensureProfile(u, languageCode: 'en');
+    expect((await b.watchProfile(u.uid).first)!.languageCode, 'he');
+
+    await db.doc('users/${u.uid}').delete();
+    await b.ensureProfile(
+      const AppUser(uid: 'x', email: 'noa.k@x.com'),
+      languageCode: 'en',
+    );
+    final created = (await b.watchProfile('x').first)!;
+    expect(created.displayName, 'noa.k');
+    expect(created.languageCode, 'en');
+    expect(created.pairId, isNull);
+
+    await b.ensureProfile(
+      AppUser(uid: u.uid, displayName: 'D' * 150),
+      languageCode: 'he',
+    );
+    expect((await b.watchProfile(u.uid).first)!.displayName, 'D' * 100);
+  });
+
+  test('ensureProfile waits for a sign-up in flight', () async {
+    final pending = signUp('Dana');
+    final u = await b.authStateChanges().firstWhere((u) => u != null);
+    await b.ensureProfile(
+      AppUser(uid: u!.uid, email: u.email),
+      languageCode: 'en',
+    );
+    await pending;
+    final profile = (await b.watchProfile(u.uid).first)!;
+    expect(profile.displayName, 'Dana');
+    expect(profile.languageCode, 'he');
+  });
+
+  test('writeErrors is a broadcast stream', () {
+    expect(b.writeErrors.isBroadcast, isTrue);
+  });
+
   test('watchSummaries returns one user in an inclusive date range', () async {
     final a = await signUp('A');
     final pair = await createPair(a);

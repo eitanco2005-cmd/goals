@@ -13,6 +13,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appTitle => 'Our Challenge';
 
   @override
+  String sessionNameTooLong(int max) {
+    return 'Name can be at most $max characters';
+  }
+
+  @override
+  String get sessionStuckMessage =>
+      'This is taking longer than expected. Check your connection and try again.';
+
+  @override
+  String get sessionTryAgain => 'Try again';
+
+  @override
   String get authTagline =>
       'Two people, one challenge. Build healthy habits together, one day at a time.';
 
@@ -273,6 +285,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get statusUnlogged => 'Not logged';
+
+  @override
+  String todayClearedGoal(String goal) {
+    return '$goal cleared';
+  }
+
+  @override
+  String get todayUndo => 'Undo';
 
   @override
   String get todayGreetingMorning => 'Good morning';

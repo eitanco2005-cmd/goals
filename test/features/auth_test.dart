@@ -78,6 +78,29 @@ void main() {
     expect(find.byType(SignUpScreen), findsOneWidget);
   });
 
+  testWidgets('sign-up rejects names longer than 100 characters',
+      (tester) async {
+    final backend = MemoryBackend();
+    await pumpApp(tester, backend);
+    await tester.tap(find.text('English'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Create an account'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+        find.widgetWithText(TextFormField, 'Your name'), 'a' * 101);
+    await tester.enterText(
+        find.widgetWithText(TextFormField, 'Email'), 'dana@x.com');
+    await tester.enterText(
+        find.widgetWithText(TextFormField, 'Password'), 'secret1');
+    await tester.tap(find.widgetWithText(FilledButton, 'Create account'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Name can be at most 100 characters'), findsOneWidget);
+    expect(find.byType(SignUpScreen), findsOneWidget);
+    expect(backend.currentUser, isNull);
+  });
+
   testWidgets('wrong password shows a localized error (Hebrew)',
       (tester) async {
     final backend = MemoryBackend();

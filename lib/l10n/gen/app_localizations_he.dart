@@ -13,6 +13,18 @@ class AppLocalizationsHe extends AppLocalizations {
   String get appTitle => 'האתגר שלנו';
 
   @override
+  String sessionNameTooLong(int max) {
+    return 'השם יכול להכיל עד $max תווים';
+  }
+
+  @override
+  String get sessionStuckMessage =>
+      'הטעינה לוקחת יותר זמן מהרגיל. כדאי לבדוק את החיבור ולנסות שוב.';
+
+  @override
+  String get sessionTryAgain => 'לנסות שוב';
+
+  @override
   String get authTagline =>
       'שניים, אתגר אחד. בונים הרגלים בריאים יחד, יום אחרי יום.';
 
@@ -272,6 +284,14 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get statusUnlogged => 'לא עודכן';
+
+  @override
+  String todayClearedGoal(String goal) {
+    return '$goal: הרישום נמחק';
+  }
+
+  @override
+  String get todayUndo => 'ביטול';
 
   @override
   String get todayGreetingMorning => 'בוקר טוב';

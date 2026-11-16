@@ -57,7 +57,7 @@ final partnerUidProvider = Provider<String?>((ref) {
   return pair.partnerOf(uid);
 });
 
-/// Today's day key. Re-evaluates automatically at local midnight.
+/// Today's logging-day key. Rolls over automatically at [dayStartHour].
 final todayKeyProvider = NotifierProvider<TodayKeyNotifier, String>(
     TodayKeyNotifier.new);
 
@@ -74,8 +74,8 @@ class TodayKeyNotifier extends Notifier<String> {
   void _schedule() {
     _timer?.cancel();
     final now = DateTime.now();
-    final midnight = DateTime(now.year, now.month, now.day + 1);
-    _timer = Timer(midnight.difference(now) + const Duration(seconds: 1), () {
+    final next = nextDayStart(now);
+    _timer = Timer(next.difference(now) + const Duration(seconds: 1), () {
       state = todayKey();
       _schedule();
     });

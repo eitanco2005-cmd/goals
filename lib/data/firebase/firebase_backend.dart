@@ -45,6 +45,16 @@ class FirebaseBackend
   /// (the write stays queued in the offline cache and syncs later).
   final Duration serverAckWait;
 
+  final _writeErrors = StreamController<AppException>.broadcast();
+
+  /// The sign-up in flight, if any (see [ensureProfile]).
+  Future<AppUser>? _signUpInFlight;
+
+  /// Per `pairId/uid/date`: the day's log (null: no log document) as it is
+  /// once the [setGoalValue] calls issued so far are applied. Present only
+  /// while such a write is in flight; see [setGoalValue].
+  final _pendingLogs = <String, Future<DailyLog?>>{};
+
   /// Invite code alphabet: no 0/O or 1/I to avoid confusion when typed.
   static const inviteAlphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   static const inviteLength = 6;
@@ -79,7 +89,7 @@ class FirebaseBackend
   /// Awaits [commit] for at most [serverAckWait]. Firestore applies writes
   /// to the local cache synchronously but only completes the future once
   /// the server acknowledges them, which never happens while offline.
-  /// Errors reported after the wait are logged (they cannot be surfaced).
+  /// Errors reported after the wait are emitted on [writeErrors].
   Future<void> _write(Future<void> commit) async {
     final done = Completer<void>();
     final timer = Timer(serverAckWait, () {
@@ -94,6 +104,7 @@ class FirebaseBackend
           done.completeError(toAppException(e), st);
         } else {
           debugPrint('FirebaseBackend: queued write failed: $e');
+          _writeErrors.add(toAppException(e));
         }
       },
     );
@@ -166,7 +177,7 @@ class FirebaseBackend
     required String password,
     required String displayName,
     required String languageCode,
-  }) => guard(() async {
+  }) => _signUpInFlight = guard(() async {
     final cred = await _auth.createUserWithEmailAndPassword(
       email: email.trim(),
       password: password,
@@ -215,13 +226,31 @@ class FirebaseBackend
       guard(() async {
         await _updateProfile(uid, {'displayName': displayName});
         // Keep the name the partner sees (pair.memberNames) in sync.
-        final snap = await _userDoc(uid).get();
+        final snap = await _getPreferCache(_userDoc(uid));
         final pairId = snap.data()?['pairId'] as String?;
         if (pairId == null) return;
         await _write(_pairDoc(pairId).update({
           'memberNames.$uid': displayName,
           ..._stamp,
         }));
+      });
+
+  @override
+  Future<void> ensureProfile(AppUser user, {required String languageCode}) =>
+      guard(() async {
+        try {
+          await _signUpInFlight;
+        } catch (_) {
+          // A failed sign-up is exactly what this recovers from.
+        }
+        final ref = _userDoc(user.uid);
+        if ((await ref.get()).exists) return;
+        final profile = UserProfile(
+          uid: user.uid,
+          displayName: fallbackProfileName(user),
+          languageCode: languageCode,
+        );
+        await _write(ref.set({...profile.toMap(), ..._stamp}));
       });
 
   /// Updates profile fields; a missing profile is a no-op (like the memory
@@ -426,6 +455,11 @@ class FirebaseBackend
   /// is patched field-by-field (merge), so a concurrent edit of another goal
   /// from a second device is never lost; at worst the summary is
   /// momentarily stale until the next edit.
+  ///
+  /// Calls for the same day are chained through [_pendingLogs]: each one
+  /// starts from the log the previous call produced instead of re-reading
+  /// the cache (which may not reflect a just-issued batch yet), without
+  /// waiting for the server to acknowledge the previous batch.
   @override
   Future<void> setGoalValue({
     required String pairId,
@@ -435,22 +469,49 @@ class FirebaseBackend
     required num? value,
     required List<GoalDef> dailyGoals,
   }) => guard(() async {
+    final key = '$pairId/$uid/$date';
     final logRef = _logDoc(pairId, uid, date);
-    final snap = await _getPreferCache(logRef);
-    final current = snap.exists
-        ? DailyLog.fromMap(snap.data()!)
-        : DailyLog(uid: uid, date: date);
-    final summary = summarizeDay(current.withValue(goalId, value), dailyGoals);
-    final batch = _firestore.batch()
-      ..set(logRef, {
-        'uid': uid,
-        'date': date,
-        'values': {goalId: value ?? FieldValue.delete()},
-        ..._stamp,
-      }, SetOptions(merge: true))
-      ..set(_summaryDoc(pairId, uid, date), {...summary.toMap(), ..._stamp});
-    await _write(batch.commit());
+    Future<DailyLog?> readLog() async {
+      final snap = await _getPreferCache(logRef);
+      return snap.exists ? DailyLog.fromMap(snap.data()!) : null;
+    }
+
+    Future<void>? commit;
+    final previous = _pendingLogs[key];
+    final step =
+        (previous == null ? readLog() : previous.catchError((_) => readLog()))
+            .then((before) {
+              // Clearing a value of a day without a log: nothing to write
+              // (a merge holding only a delete would also fail the rules).
+              if (before == null && value == null) return null;
+              final after = (before ?? DailyLog(uid: uid, date: date))
+                  .withValue(goalId, value);
+              final summary = summarizeDay(after, dailyGoals);
+              commit = (_firestore.batch()
+                    ..set(logRef, {
+                      'uid': uid,
+                      'date': date,
+                      'values': {goalId: value ?? FieldValue.delete()},
+                      ..._stamp,
+                    }, SetOptions(merge: true))
+                    ..set(_summaryDoc(pairId, uid, date), {
+                      ...summary.toMap(),
+                      ..._stamp,
+                    }))
+                  .commit();
+              return after;
+            });
+    _pendingLogs[key] = step;
+    try {
+      await step;
+      if (commit != null) await _write(commit!);
+    } finally {
+      if (identical(_pendingLogs[key], step)) _pendingLogs.remove(key);
+    }
   });
+
+  @override
+  Stream<AppException> get writeErrors => _writeErrors.stream;
 
   @override
   Stream<DaySummary?> watchDaySummary({

@@ -4,9 +4,9 @@ import 'package:intl/intl.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../core/dates.dart';
+import '../../core/demo.dart';
 import '../../core/errors.dart';
 import '../../core/providers.dart';
-import '../../data/memory/memory_backend.dart';
 import '../../domain/models.dart';
 import '../../l10n/gen/app_localizations.dart';
 import 'goal_card.dart';
@@ -30,7 +30,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
   @override
   void initState() {
     super.initState();
-    // Roll the date over when the app comes back after midnight.
+    // Roll the day over when the app comes back after the day start.
     _lifecycle = AppLifecycleListener(
       onResume: () => ref.read(todayKeyProvider.notifier).refresh(),
     );
@@ -59,6 +59,13 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
       }
     });
 
+    ref.listen(logWriteErrorsProvider, (_, next) {
+      if (next case AsyncData(:final value)) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(errorMessage(l, value))));
+      }
+    });
+
     final body = switch (ref.watch(challengeProvider)) {
       AsyncValue(value: final Challenge challenge) => _TodayContent(
         challenge: challenge,
@@ -83,6 +90,7 @@ class _TodayContent extends ConsumerWidget {
 
   final Challenge challenge;
 
+  /// Sets [value]; when that clears a logged value, offers an Undo.
   Future<void> _set(
     BuildContext context,
     WidgetRef ref,
@@ -92,13 +100,34 @@ class _TodayContent extends ConsumerWidget {
     HapticFeedback.selectionClick();
     final messenger = ScaffoldMessenger.of(context);
     final l = AppLocalizations.of(context);
-    try {
-      await ref
-          .read(todayLogControllerProvider.notifier)
-          .setValue(goal.id, value);
-    } catch (e) {
-      messenger.showSnackBar(SnackBar(content: Text(errorMessage(l, e))));
+    final controller = ref.read(todayLogControllerProvider.notifier);
+    final previous = ref.read(todayLogProvider).value?.valueOf(goal.id);
+
+    Future<void> write(num? v) async {
+      try {
+        await controller.setValue(goal.id, v);
+      } catch (e) {
+        messenger.showSnackBar(SnackBar(content: Text(errorMessage(l, e))));
+      }
     }
+
+    if (value == null && previous != null) {
+      final lang = Localizations.localeOf(context).languageCode;
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(l.todayClearedGoal(goal.title(lang))),
+            behavior: SnackBarBehavior.floating,
+            persist: false, // auto-hide even though it has an action
+            action: SnackBarAction(
+              label: l.todayUndo,
+              onPressed: () => write(previous),
+            ),
+          ),
+        );
+    }
+    await write(value);
   }
 
   @override
@@ -126,7 +155,7 @@ class _TodayContent extends ConsumerWidget {
             children: [
               if (showDemo) ...[
                 DemoModeBanner(
-                  code: MemoryBackend.demoInviteCode,
+                  code: demoInviteCode,
                   onDismiss: () =>
                       ref.read(demoBannerDismissedProvider.notifier).dismiss(),
                 ),
@@ -139,11 +168,7 @@ class _TodayContent extends ConsumerWidget {
                     .format(parseDayKey(todayKey)),
                 dayLabel: challengeDayLabel(
                   l,
-                  challengeDay(
-                    startDate: challenge.startDate,
-                    endDate: challenge.endDate,
-                    today: todayKey,
-                  ),
+                  challengeProgress(challenge, todayKey),
                 ),
                 percent: summary?.percent ?? 0,
                 met: met,

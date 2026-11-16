@@ -2,12 +2,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../core/providers.dart';
+import '../../core/status_ui.dart';
 import '../../core/theme.dart';
 import '../../domain/models.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../pairing/invite_code_card.dart';
 import 'progress_ring.dart';
-import 'today_format.dart';
 import 'today_providers.dart';
 
 /// Partner strip, or a "waiting for your partner" card until they join.
@@ -110,20 +110,37 @@ class PartnerStrip extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 12),
-            Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: [
-                for (final g in dailyGoals)
-                  PartnerGoalDot(
-                    icon: g.icon,
-                    status: summary?.statuses[g.id] ?? GoalStatus.unlogged,
-                    semanticsLabel: l.todayGoalStatusSemantics(
-                      g.title(lang),
-                      (summary?.statuses[g.id] ?? GoalStatus.unlogged).label(l),
-                    ),
-                  ),
-              ],
+            // One row of dots: shrink them to fit (down to a minimum size).
+            LayoutBuilder(
+              builder: (context, constraints) {
+                const gap = 4.0;
+                final n = dailyGoals.length;
+                final fit = n == 0
+                    ? PartnerGoalDot.maxSize
+                    : ((constraints.maxWidth - gap * (n - 1)) / n)
+                          .floorToDouble();
+                final size = fit.clamp(
+                  PartnerGoalDot.minSize,
+                  PartnerGoalDot.maxSize,
+                );
+                return Wrap(
+                  spacing: gap,
+                  runSpacing: gap,
+                  children: [
+                    for (final g in dailyGoals)
+                      PartnerGoalDot(
+                        icon: g.icon,
+                        size: size,
+                        status: summary?.statuses[g.id] ?? GoalStatus.unlogged,
+                        semanticsLabel: l.todayGoalStatusSemantics(
+                          g.title(lang),
+                          (summary?.statuses[g.id] ?? GoalStatus.unlogged)
+                              .label(l),
+                        ),
+                      ),
+                  ],
+                );
+              },
             ),
           ],
         ),
@@ -139,11 +156,18 @@ class PartnerGoalDot extends StatelessWidget {
     required this.icon,
     required this.status,
     required this.semanticsLabel,
+    this.size = maxSize,
   });
+
+  static const minSize = 28.0;
+  static const maxSize = 34.0;
 
   final String icon;
   final GoalStatus status;
   final String semanticsLabel;
+
+  /// Diameter of the dot.
+  final double size;
 
   @override
   Widget build(BuildContext context) {
@@ -153,8 +177,8 @@ class PartnerGoalDot extends StatelessWidget {
       excludeSemantics: true,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
-        width: 34,
-        height: 34,
+        width: size,
+        height: size,
         alignment: Alignment.center,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
@@ -168,7 +192,7 @@ class PartnerGoalDot extends StatelessWidget {
           opacity: unlogged ? 0.45 : 1,
           child: Text(
             icon,
-            style: const TextStyle(fontSize: 16),
+            style: TextStyle(fontSize: size * 0.47),
             textDirection: TextDirection.ltr,
           ),
         ),

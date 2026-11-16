@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 
 import '../repositories.dart';
 
@@ -8,16 +9,31 @@ import '../repositories.dart';
 /// [AppException] with one of the stable codes documented on
 /// [AppException.code]. This is the ONLY place where Firebase error codes are
 /// interpreted.
+///
+/// Errors that map to 'unknown' (e.g. `permission-denied` from the security
+/// rules) are logged with their original code and message first, since the
+/// UI only shows a generic message for them.
 AppException toAppException(Object error) {
-  if (error is AppException) return error;
-  if (error is FirebaseAuthException) {
-    return AppException(_authCode(error.code), error.message);
+  final mapped = switch (error) {
+    AppException() => error,
+    FirebaseAuthException() => AppException(
+      _authCode(error.code),
+      error.message,
+    ),
+    FirebaseException() => AppException(
+      _firestoreCode(error.code),
+      error.message,
+    ),
+    TimeoutException() => AppException('network', error),
+    _ => AppException('unknown', error),
+  };
+  if (mapped.code == 'unknown' && error is! AppException) {
+    final detail = error is FirebaseException
+        ? '[${error.plugin}/${error.code}] ${error.message}'
+        : '$error';
+    debugPrint('Unmapped error -> unknown: $detail');
   }
-  if (error is FirebaseException) {
-    return AppException(_firestoreCode(error.code), error.message);
-  }
-  if (error is TimeoutException) return AppException('network', error);
-  return AppException('unknown', error);
+  return mapped;
 }
 
 String _authCode(String code) => switch (code) {
