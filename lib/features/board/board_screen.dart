@@ -324,7 +324,6 @@ class _Heatmap extends StatelessWidget {
   /// Cells at least this big show the day of the month.
   static const labelCell = 22.0;
   static const dayLabelWidth = 22.0;
-  static const monthHeader = 18.0;
 
   @override
   Widget build(BuildContext context) {
@@ -346,20 +345,10 @@ class _Heatmap extends StatelessWidget {
       color: theme.colorScheme.onSurfaceVariant,
     );
     final weekdayFormat = DateFormat('EEEEE', locale);
-    final monthFormat = DateFormat.MMM(locale);
-
-    // Month name above the first week and above each week where one starts.
-    String? monthLabel(int i, DateTime week) {
-      final first = i == 0 ? parseDayKey(challenge.startDate) : null;
-      if (first != null) return monthFormat.format(first);
-      for (var d = 0; d < 7; d++) {
-        final date = DateTime(week.year, week.month, week.day + d);
-        if (date.day == 1 && dayKey(date).compareTo(challenge.endDate) <= 0) {
-          return monthFormat.format(date);
-        }
-      }
-      return null;
-    }
+    final rangeFormat = DateFormat.MMMd(locale);
+    final range =
+        '${rangeFormat.format(parseDayKey(challenge.startDate))} – '
+        '${rangeFormat.format(parseDayKey(challenge.endDate))}';
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -367,25 +356,9 @@ class _Heatmap extends StatelessWidget {
         final fit = (available - gap * (weeks.length - 1)) / weeks.length;
         final cell = fit.clamp(minCell, maxCell).toDouble();
         final showNumbers = cell >= labelCell;
-        // A month name needs ~3 narrow columns: when two would collide, keep
-        // the later one (where the month actually starts).
-        final monthLabels = [
-          for (final (i, w) in weeks.indexed) monthLabel(i, w),
-        ];
-        final span = (36 / (cell + gap)).ceil();
-        for (var i = 0; i < monthLabels.length; i++) {
-          if (monthLabels[i] == null) continue;
-          for (var j = i + 1; j < i + span && j < monthLabels.length; j++) {
-            if (monthLabels[j] != null) {
-              monthLabels[i] = null;
-              break;
-            }
-          }
-        }
 
         final dayLabels = Column(
           children: [
-            const SizedBox(height: monthHeader),
             for (var d = 0; d < 7; d++) ...[
               if (d > 0) const SizedBox(height: gap),
               SizedBox(
@@ -416,19 +389,6 @@ class _Heatmap extends StatelessWidget {
               if (i > 0) const SizedBox(width: gap),
               Column(
                 children: [
-                  SizedBox(
-                    width: cell,
-                    height: monthHeader,
-                    child: OverflowBox(
-                      maxWidth: cell * 3,
-                      alignment: AlignmentDirectional.topStart,
-                      child: Text(
-                        monthLabels[i] ?? '',
-                        style: muted,
-                        maxLines: 1,
-                      ),
-                    ),
-                  ),
                   for (var d = 0; d < 7; d++) ...[
                     if (d > 0) const SizedBox(height: gap),
                     Builder(
@@ -442,7 +402,20 @@ class _Heatmap extends StatelessWidget {
                         final inRange =
                             key.compareTo(challenge.startDate) >= 0 &&
                             key.compareTo(challenge.endDate) <= 0;
-                        if (!inRange) return SizedBox.square(dimension: cell);
+                        // Days outside the challenge: faint, so every week
+                        // still reads as a full column.
+                        if (!inRange) {
+                          return Container(
+                            width: cell,
+                            height: cell,
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.onSurface.withValues(
+                                alpha: 0.04,
+                              ),
+                              borderRadius: BorderRadius.circular(cell * 0.3),
+                            ),
+                          );
+                        }
                         final future = key.compareTo(today) > 0;
                         final percent = percentByDay[key];
                         final dateLabel = DateFormat.MMMEd(locale).format(date);
@@ -488,12 +461,23 @@ class _Heatmap extends StatelessWidget {
                   child: grid,
                 ),
               );
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            dayLabels,
-            const SizedBox(width: gap),
-            weeksView,
+            Text(range, style: muted, textAlign: TextAlign.center),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                dayLabels,
+                const SizedBox(width: gap),
+                weeksView,
+                // Balances the day letters so the grid sits centered.
+                if (width + 2 * (dayLabelWidth + gap) <= constraints.maxWidth)
+                  const SizedBox(width: dayLabelWidth + gap),
+              ],
+            ),
           ],
         );
       },
