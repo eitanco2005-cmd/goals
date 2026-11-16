@@ -287,6 +287,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statusFailed => 'Failed';
 
   @override
+  String get statusOnTrack => 'On track';
+
+  @override
+  String get settingsEditGoalsHint => 'Changes apply to the whole group';
+
+  @override
   String get statusUnlogged => 'Not logged';
 
   @override

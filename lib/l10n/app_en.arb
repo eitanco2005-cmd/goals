@@ -96,6 +96,8 @@
   "statusMet": "Done",
   "statusNotMet": "Not yet",
   "statusFailed": "Failed",
+  "statusOnTrack": "On track",
+  "settingsEditGoalsHint": "Changes apply to the whole group",
   "statusUnlogged": "Not logged",
   "goalsDeleted": "\"{goal}\" deleted",
   "@goalsDeleted": {"placeholders": {"goal": {"type": "String"}}},

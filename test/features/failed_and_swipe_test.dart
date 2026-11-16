@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:goals_challenge/core/status_ui.dart';
+import 'package:goals_challenge/domain/board_stats.dart';
 import 'package:goals_challenge/domain/default_goals.dart';
 import 'package:goals_challenge/domain/goal_eval.dart';
 import 'package:goals_challenge/domain/models.dart';
@@ -35,6 +36,26 @@ void main() {
       final g = goal(GoalIds.veggies).copyWith(requiresPhoto: true);
       expect(isFailure(g, null), isFalse);
       expect(isFailure(g, 0), isTrue);
+    });
+    test('a weekly limit reads "on track" while the week runs', () {
+      final junk = goal(GoalIds.junkFood);
+      expect(
+        goalOutcome(junk, GoalStatus.met, periodOpen: true),
+        GoalOutcome.onTrack,
+      );
+      expect(goalOutcome(junk, GoalStatus.met), GoalOutcome.met);
+      expect(
+        goalOutcome(goal(GoalIds.workouts), GoalStatus.met, periodOpen: true),
+        GoalOutcome.met,
+      );
+    });
+    test('board stats start at the first logged day', () {
+      const days = ['2026-11-13', '2026-11-14', '2026-11-15', '2026-11-16'];
+      final s = [
+        DaySummary(uid: 'u', date: '2026-11-15', statuses: {}, percent: 50),
+      ];
+      expect(daysSinceFirstLog(s, days), ['2026-11-15', '2026-11-16']);
+      expect(daysSinceFirstLog(const [], days), isEmpty);
     });
     test('outcomes', () {
       expect(

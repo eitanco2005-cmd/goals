@@ -288,6 +288,12 @@ class AppLocalizationsHe extends AppLocalizations {
   String get statusFailed => 'נכשל';
 
   @override
+  String get statusOnTrack => 'בדרך הנכונה';
+
+  @override
+  String get settingsEditGoalsHint => 'השינויים חלים על כל הקבוצה';
+
+  @override
   String get statusUnlogged => 'לא עודכן';
 
   @override

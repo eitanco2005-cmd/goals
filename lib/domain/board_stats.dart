@@ -59,3 +59,13 @@ Map<String, int> goalSuccessRates(
               .round(),
   };
 }
+
+/// [days] from the member's first logged day on: someone who joined (or
+/// started logging) mid-challenge isn't scored on the days before.
+List<String> daysSinceFirstLog(List<DaySummary> summaries, List<String> days) {
+  if (summaries.isEmpty) return const [];
+  final first = summaries
+      .map((s) => s.date)
+      .reduce((a, b) => a.compareTo(b) <= 0 ? a : b);
+  return days.where((d) => d.compareTo(first) >= 0).toList();
+}

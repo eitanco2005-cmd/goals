@@ -225,8 +225,9 @@ class _MemberCard extends ConsumerWidget {
     final summaries =
         ref.watch(memberSummariesProvider(uid)).value ?? const <DaySummary>[];
     final percentByDay = {for (final s in summaries) s.date: s.percent};
-    final days = ref.watch(boardDaysProvider);
     final today = ref.watch(todayKeyProvider);
+    // Scored from the first day this member logged anything.
+    final days = daysSinceFirstLog(summaries, ref.watch(boardDaysProvider));
     // Today is still in progress: leave it out of the average.
     final finished = days.where((d) => d != today).toList();
 
@@ -542,7 +543,12 @@ class _GoalRatesCard extends ConsumerWidget {
     final theme = Theme.of(context);
     final lang = Localizations.localeOf(context).languageCode;
     final today = ref.watch(todayKeyProvider);
-    final days = ref.watch(boardDaysProvider).where((d) => d != today).toList();
+    final summaries =
+        ref.watch(memberSummariesProvider(uid)).value ?? const <DaySummary>[];
+    final days = daysSinceFirstLog(
+      summaries,
+      ref.watch(boardDaysProvider),
+    ).where((d) => d != today).toList();
     if (days.isEmpty) {
       return Card(
         child: Padding(
@@ -568,8 +574,6 @@ class _GoalRatesCard extends ConsumerWidget {
         ),
       );
     }
-    final summaries =
-        ref.watch(memberSummariesProvider(uid)).value ?? const <DaySummary>[];
     final rates = goalSuccessRates(summaries, dailyGoals, days);
     final barColor = boardColor(76, theme.brightness)!;
 

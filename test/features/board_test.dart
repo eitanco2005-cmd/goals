@@ -49,9 +49,17 @@ void main() {
     await b.setGoalValue(
       pairId: 'demo-pair',
       uid: me,
-      date: daysAgo(1),
+      date: daysAgo(4),
       goalId: GoalIds.water,
       value: 8,
+      dailyGoals: challenge.dailyGoals,
+    );
+    await b.setGoalValue(
+      pairId: 'demo-pair',
+      uid: me,
+      date: daysAgo(1),
+      goalId: GoalIds.water,
+      value: 2,
       dailyGoals: challenge.dailyGoals,
     );
     await pumpApp(tester, b);
@@ -66,9 +74,10 @@ void main() {
     await tester.drag(find.byType(Scrollable).first, const Offset(0, -2000));
     await tester.pumpAndSettle();
     final card = find.ancestor(of: rates, matching: find.byType(Card));
-    // Water: met on 1 of the 20 finished days. Others: never.
+    // Counted from my first logged day (4 days ago): water met on 1 of
+    // those 4 finished days. Others: never.
     expect(
-      find.descendant(of: card, matching: find.text('5%')),
+      find.descendant(of: card, matching: find.text('25%')),
       findsOneWidget,
     );
     expect(

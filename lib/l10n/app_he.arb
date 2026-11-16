@@ -88,6 +88,8 @@
   "statusMet": "בוצע",
   "statusNotMet": "עוד לא",
   "statusFailed": "נכשל",
+  "statusOnTrack": "בדרך הנכונה",
+  "settingsEditGoalsHint": "השינויים חלים על כל הקבוצה",
   "statusUnlogged": "לא עודכן",
   "goalsDeleted": "\"{goal}\" נמחק",
   "pairEditGoals": "עריכת היעדים",

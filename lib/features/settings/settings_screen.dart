@@ -188,11 +188,7 @@ class _ChallengeTiles extends ConsumerWidget {
           ListTile(
             leading: const Icon(Icons.checklist_rtl),
             title: Text(l.settingsEditGoals),
-            subtitle: Text(
-              l.goalsInfo,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
+            subtitle: Text(l.settingsEditGoalsHint),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute<void>(

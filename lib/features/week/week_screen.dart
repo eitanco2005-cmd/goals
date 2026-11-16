@@ -217,11 +217,15 @@ class _GoalHeader extends StatelessWidget {
     required this.goal,
     required this.status,
     required this.subtitle,
+    this.open = false,
   });
 
   final GoalDef goal;
   final GoalStatus status;
   final String subtitle;
+
+  /// The week shown is still running.
+  final bool open;
 
   @override
   Widget build(BuildContext context) {
@@ -250,14 +254,14 @@ class _GoalHeader extends StatelessWidget {
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: status == GoalStatus.unlogged
                       ? theme.colorScheme.onSurfaceVariant
-                      : goalOutcome(goal, status).color,
+                      : goalOutcome(goal, status, periodOpen: open).color,
                   fontWeight: FontWeight.w600,
                 ),
               ),
             ],
           ),
         ),
-        _StatusChip(outcome: goalOutcome(goal, status)),
+        _StatusChip(outcome: goalOutcome(goal, status, periodOpen: open)),
       ],
     );
   }
@@ -575,6 +579,7 @@ class _WeeklyCounterCard extends ConsumerWidget {
             _GoalHeader(
               goal: goal,
               status: status,
+              open: ref.watch(selectedWeekProvider).week == currentWeekStart(),
               subtitle: goal.comparison == Comparison.atMost
                   ? l.weekLimitTotal(total, goal.target.toInt())
                   : l.weekDone(total, goal.target.toInt()),
@@ -663,7 +668,11 @@ class _GroupWeekCard extends ConsumerWidget {
                             final status =
                                 summaries[uid]?.statuses[g.id] ??
                                 GoalStatus.unlogged;
-                            final outcome = goalOutcome(g, status);
+                            final outcome = goalOutcome(
+                              g,
+                              status,
+                              periodOpen: week == currentWeekStart(),
+                            );
                             return Semantics(
                               label: '${g.title(lang)}: ${outcome.label(l)}',
                               child: Container(
@@ -680,7 +689,7 @@ class _GroupWeekCard extends ConsumerWidget {
                                 ),
                                 child: Text(
                                   '${g.icon} ${switch (outcome) {
-                                    GoalOutcome.met => '✓',
+                                    GoalOutcome.met || GoalOutcome.onTrack => '✓',
                                     GoalOutcome.failed => '✗',
                                     GoalOutcome.notYet => '…',
                                     GoalOutcome.unlogged => '–',

@@ -596,6 +596,18 @@ abstract class AppLocalizations {
   /// **'Failed'**
   String get statusFailed;
 
+  /// No description provided for @statusOnTrack.
+  ///
+  /// In en, this message translates to:
+  /// **'On track'**
+  String get statusOnTrack;
+
+  /// No description provided for @settingsEditGoalsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Changes apply to the whole group'**
+  String get settingsEditGoalsHint;
+
   /// No description provided for @statusUnlogged.
   ///
   /// In en, this message translates to:
