@@ -354,6 +354,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get photoDeleted => 'Photo deleted';
 
   @override
+  String get photoRetry => 'Retry';
+
+  @override
   String get photoLoadFailed => 'Couldn\'t load the full photo';
 
   @override

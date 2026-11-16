@@ -704,6 +704,12 @@ abstract class AppLocalizations {
   /// **'Photo deleted'**
   String get photoDeleted;
 
+  /// No description provided for @photoRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get photoRetry;
+
   /// No description provided for @photoLoadFailed.
   ///
   /// In en, this message translates to:

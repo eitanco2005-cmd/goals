@@ -119,6 +119,7 @@
   "photoDeleteBody": "It will disappear for both of you. This can't be undone.",
   "photoDeleteConfirm": "Delete",
   "photoDeleted": "Photo deleted",
+  "photoRetry": "Retry",
   "photoLoadFailed": "Couldn't load the full photo",
   "photoErrTooLarge": "This photo is too large. Try another one",
   "photoErrLimit": "You've reached the limit of {count} photos a day",

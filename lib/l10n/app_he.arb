@@ -106,6 +106,7 @@
   "photoDeleteBody": "התמונה תיעלם אצל שני הצדדים. אי אפשר לבטל את המחיקה.",
   "photoDeleteConfirm": "מחיקה",
   "photoDeleted": "התמונה נמחקה",
+  "photoRetry": "נסו שוב",
   "photoLoadFailed": "לא הצלחנו לטעון את התמונה המלאה",
   "photoErrTooLarge": "התמונה גדולה מדי. נסו תמונה אחרת",
   "photoErrLimit": "הגעת למגבלה של {count} תמונות ביום",

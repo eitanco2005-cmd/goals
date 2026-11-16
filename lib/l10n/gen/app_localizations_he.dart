@@ -353,6 +353,9 @@ class AppLocalizationsHe extends AppLocalizations {
   String get photoDeleted => 'התמונה נמחקה';
 
   @override
+  String get photoRetry => 'נסו שוב';
+
+  @override
   String get photoLoadFailed => 'לא הצלחנו לטעון את התמונה המלאה';
 
   @override

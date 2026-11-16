@@ -1,5 +1,8 @@
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart'
+    show debugDefaultTargetPlatformOverride;
+import 'package:flutter/services.dart' show LogicalKeyboardKey;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:goals_challenge/app.dart';
@@ -14,6 +17,7 @@ import 'package:goals_challenge/features/photos/photo_providers.dart';
 import 'package:goals_challenge/features/photos/photo_thumbnails.dart';
 import 'package:goals_challenge/features/photos/photo_viewer.dart';
 import 'package:goals_challenge/features/today/partner_strip.dart';
+import 'package:goals_challenge/l10n/gen/app_localizations.dart';
 import 'package:image/image.dart' as img;
 import 'package:material_ui/material_ui.dart';
 
@@ -118,6 +122,16 @@ Future<GoalPhoto> _photo(MemoryBackend b, String id) async =>
             .watchPhotos(pairId: _pairId, from: todayKey(), to: todayKey())
             .first)
         .singleWhere((p) => p.id == id);
+
+/// Removes the demo seed's photos of Noa for today.
+Future<void> _deleteSeededPartnerPhotos(MemoryBackend b) async {
+  for (final p
+      in await b
+          .watchPhotos(pairId: _pairId, from: todayKey(), to: todayKey())
+          .first) {
+    await b.deletePhoto(pairId: _pairId, photoId: p.id);
+  }
+}
 
 Finder _inCard(String goalId, Finder matching) => find.descendant(
   of: find.byKey(ValueKey('goal-$goalId')),
@@ -421,20 +435,171 @@ void main() {
     // Reactions that were already there on load are not news.
     expect(find.byType(SnackBar), findsNothing);
 
-    await b.setReaction(
-      pairId: _pairId,
-      photoId: photo.id,
-      uid: _partnerUid,
-      emoji: '❤️',
-    );
+    // The partner cycles through reactions: only the final one is announced,
+    // and only once it has settled.
+    for (final emoji in ['🔥', '💪', '❤️']) {
+      await b.setReaction(
+        pairId: _pairId,
+        photoId: photo.id,
+        uid: _partnerUid,
+        emoji: emoji,
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+    }
+    expect(find.byType(SnackBar), findsNothing);
+    await tester.pump(const Duration(milliseconds: 1500));
     await tester.pumpAndSettle();
     expect(find.text('Noa reacted ❤️ to your photo 🥗'), findsOneWidget);
+    expect(find.textContaining('reacted 🔥'), findsNothing);
 
     // "View" opens the photo.
     await tester.tap(find.text('View'));
     await tester.pumpAndSettle();
     expect(find.byType(PhotoViewer), findsOneWidget);
     expect(find.text('Noa reacted ❤️'), findsOneWidget);
+  });
+
+  testWidgets('a reaction removed before it settles is not announced', (
+    tester,
+  ) async {
+    final b = await signedInPairedBackend();
+    final me = b.currentUser!.uid;
+    final photo = await _addPhoto(b, uid: me);
+    await _pump(tester, b);
+    await b.setReaction(
+      pairId: _pairId,
+      photoId: photo.id,
+      uid: _partnerUid,
+      emoji: '❤️',
+    );
+    await tester.pump(const Duration(milliseconds: 500));
+    await b.setReaction(
+      pairId: _pairId,
+      photoId: photo.id,
+      uid: _partnerUid,
+      emoji: null,
+    );
+    await tester.pump(const Duration(seconds: 2));
+    await tester.pumpAndSettle();
+    expect(find.byType(SnackBar), findsNothing);
+  });
+
+  testWidgets('a partner photo of a weekly goal is labelled with its title', (
+    tester,
+  ) async {
+    final b = await signedInPairedBackend();
+    await _deleteSeededPartnerPhotos(b);
+    await _addPhoto(b, uid: _partnerUid, goalId: GoalIds.workouts);
+    await _pump(tester, b);
+    expect(find.bySemanticsLabel(RegExp('3 workouts a week')), findsWidgets);
+  });
+
+  testWidgets(
+    'the viewer drops a photo the owner deletes and closes when empty',
+    (tester) async {
+      final b = await signedInPairedBackend();
+      await _deleteSeededPartnerPhotos(b);
+      final photo = await _addPhoto(b, uid: _partnerUid);
+      await _pump(tester, b);
+      await tester.tap(
+        _inPartnerStrip(find.byKey(ValueKey('photo-${photo.id}'))),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(PhotoViewer), findsOneWidget);
+
+      await b.deletePhoto(pairId: _pairId, photoId: photo.id);
+      await tester.pumpAndSettle();
+      expect(find.byType(PhotoViewer), findsNothing);
+    },
+  );
+
+  testWidgets('Escape closes the viewer', (tester) async {
+    final b = await signedInPairedBackend();
+    await _deleteSeededPartnerPhotos(b);
+    final photo = await _addPhoto(b, uid: _partnerUid);
+    await _pump(tester, b);
+    await tester.tap(
+      _inPartnerStrip(find.byKey(ValueKey('photo-${photo.id}'))),
+    );
+    await tester.pumpAndSettle();
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pumpAndSettle();
+    expect(find.byType(PhotoViewer), findsNothing);
+  });
+
+  testWidgets('a pending upload shows the upload badge', (tester) async {
+    final photo = await _addPhoto(
+      await signedInPairedBackend(),
+      uid: 'someone',
+    );
+    final pending = GoalPhoto(
+      id: photo.id,
+      uid: photo.uid,
+      date: photo.date,
+      goalId: photo.goalId,
+      createdAt: photo.createdAt,
+      thumbnail: photo.thumbnail,
+      width: photo.width,
+      height: photo.height,
+      isPending: true,
+    );
+    Widget thumb(GoalPhoto p) => MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: Scaffold(
+        body: PhotoThumbnail(
+          photo: p,
+          size: 44,
+          semanticsLabel: 'Photo',
+          onTap: () {},
+        ),
+      ),
+    );
+    await tester.pumpWidget(thumb(pending));
+    expect(find.byKey(const ValueKey('photo-pending')), findsOneWidget);
+    expect(find.bySemanticsLabel(RegExp('Uploading')), findsOneWidget);
+    await tester.pumpWidget(thumb(photo));
+    expect(find.byKey(const ValueKey('photo-pending')), findsNothing);
+  });
+
+  testWidgets('Android: a photo lost while the camera was open is uploaded '
+      'on the next start', (tester) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+    final b = await signedInPairedBackend();
+    final me = b.currentUser!.uid;
+    final picker = _FakePicker(null)
+      ..lost = (
+        target: (goalId: GoalIds.veggies, day: todayKey()),
+        bytes: _image(400, 300),
+      );
+    await _pump(tester, b, picker: picker);
+    await tester.pumpAndSettle();
+    final mine = await b
+        .watchPhotos(pairId: _pairId, uid: me, from: todayKey(), to: todayKey())
+        .first;
+    expect(mine.map((p) => p.goalId), [GoalIds.veggies]);
+    expect(picker.lost, isNull);
+  });
+
+  testWidgets('Android: a lost photo from another day is discarded', (
+    tester,
+  ) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.android;
+    addTearDown(() => debugDefaultTargetPlatformOverride = null);
+    final b = await signedInPairedBackend();
+    final me = b.currentUser!.uid;
+    final picker = _FakePicker(null)
+      ..lost = (
+        target: (goalId: GoalIds.veggies, day: '2000-01-01'),
+        bytes: _image(400, 300),
+      );
+    await _pump(tester, b, picker: picker);
+    await tester.pumpAndSettle();
+    final mine = await b
+        .watchPhotos(pairId: _pairId, uid: me, from: todayKey(), to: todayKey())
+        .first;
+    expect(mine, isEmpty);
   });
 
   testWidgets('in Hebrew the viewer swipes to the next photo toward the left', (

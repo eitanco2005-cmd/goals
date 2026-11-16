@@ -31,6 +31,7 @@ class PartnerSection extends ConsumerWidget {
       summary: ref.watch(partnerTodaySummaryProvider).value,
       dailyGoals: dailyGoals,
       photos: ref.watch(partnerTodayPhotosProvider),
+      photoGoals: ref.watch(challengeProvider).value?.goals,
       myUid: ref.watch(authStateProvider.select((a) => a.value?.uid)),
     );
   }
@@ -45,6 +46,7 @@ class PartnerStrip extends StatelessWidget {
     required this.summary,
     required this.dailyGoals,
     this.photos = const [],
+    this.photoGoals,
     this.myUid,
   });
 
@@ -54,6 +56,10 @@ class PartnerStrip extends StatelessWidget {
 
   /// The partner's photos today, newest first. The row is hidden when empty.
   final List<GoalPhoto> photos;
+
+  /// Goals used to label [photos] (all challenge goals, so photos of weekly
+  /// goals such as workouts get a title too). Defaults to [dailyGoals].
+  final List<GoalDef>? photoGoals;
 
   /// My uid, to show the reaction I gave on each photo.
   final String? myUid;
@@ -164,7 +170,7 @@ class PartnerStrip extends StatelessWidget {
                       padding: const EdgeInsetsDirectional.only(top: 12),
                       child: PartnerPhotoRow(
                         photos: photos,
-                        goals: dailyGoals,
+                        goals: photoGoals ?? dailyGoals,
                         myUid: myUid,
                       ),
                     ),

@@ -50,9 +50,12 @@ class PhotoThumbnail extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final radius = BorderRadius.circular(size * 0.27);
     final cache = (size * MediaQuery.devicePixelRatioOf(context)).round();
+    final label = photo.isPending
+        ? '$semanticsLabel, ${AppLocalizations.of(context).photoUploading}'
+        : semanticsLabel;
     return Semantics(
       button: true,
-      label: semanticsLabel,
+      label: label,
       excludeSemantics: true,
       child: SizedBox.square(
         dimension: size,
@@ -75,6 +78,26 @@ class PhotoThumbnail extends StatelessWidget {
                 ),
               ),
             ),
+            // Not on the server yet (offline or slow network): the partner
+            // can't see it until it syncs.
+            if (photo.isPending)
+              PositionedDirectional(
+                start: 3,
+                top: 3,
+                child: Container(
+                  key: const ValueKey('photo-pending'),
+                  padding: const EdgeInsets.all(2),
+                  decoration: const BoxDecoration(
+                    color: Color(0x99000000),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.cloud_upload_outlined,
+                    size: size * 0.3,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
             if (bottomBadge case final badge?)
               PositionedDirectional(
                 start: -3,

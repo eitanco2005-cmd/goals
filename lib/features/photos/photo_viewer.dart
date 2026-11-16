@@ -1,7 +1,7 @@
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/services.dart'
-    show HapticFeedback, SystemUiOverlayStyle;
+    show HapticFeedback, LogicalKeyboardKey, SystemUiOverlayStyle;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -138,8 +138,42 @@ class _PhotoViewerState extends ConsumerState<PhotoViewer> {
     });
   }
 
+  /// Drops today's photos that disappeared from the live list (the owner
+  /// deleted them), so nobody reacts to a photo that no longer exists.
+  /// Closes the viewer when nothing is left.
+  void _syncDeleted(List<GoalPhoto> live) {
+    final today = ref.read(todayKeyProvider);
+    final ids = {for (final p in live) p.id};
+    final current = _photos[_index].id;
+    final kept = [
+      for (final p in _photos)
+        if (p.date != today || ids.contains(p.id)) p,
+    ];
+    if (kept.length == _photos.length) return;
+    if (kept.isEmpty) {
+      Navigator.of(context).maybePop();
+      return;
+    }
+    final keptIndex = kept.indexWhere((p) => p.id == current);
+    final nextIndex = (keptIndex >= 0 ? keptIndex : _index).clamp(
+      0,
+      kept.length - 1,
+    );
+    setState(() {
+      _photos
+        ..clear()
+        ..addAll(kept);
+      _index = nextIndex;
+      _zoomed = false;
+    });
+    if (_pages.hasClients) _pages.jumpToPage(nextIndex);
+  }
+
   @override
   Widget build(BuildContext context) {
+    ref.listen(todayPhotosProvider, (_, next) {
+      if (next case AsyncData(:final value)) _syncDeleted(value);
+    });
     final live = {
       for (final p in ref.watch(todayPhotosProvider).value ?? const []) p.id: p,
     };
@@ -153,75 +187,87 @@ class _PhotoViewerState extends ConsumerState<PhotoViewer> {
     final goal = goals.where((g) => g.id == photo.goalId).firstOrNull;
     final l = AppLocalizations.of(context);
 
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.light,
-      child: Scaffold(
-        backgroundColor: Colors.black,
-        body: Stack(
-          children: [
-            Positioned.fill(
-              child: GestureDetector(
-                onTap: () => setState(() => _chromeVisible = !_chromeVisible),
-                child: PageView.builder(
-                  controller: _pages,
-                  physics: _zoomed
-                      ? const NeverScrollableScrollPhysics()
-                      : const PageScrollPhysics(),
-                  itemCount: _photos.length,
-                  onPageChanged: (i) => setState(() {
-                    _index = i;
-                    _zoomed = false;
-                  }),
-                  itemBuilder: (context, i) => _PhotoPage(
-                    key: ValueKey(_photos[i].id),
-                    photo: _photos[i],
-                    onZoomChanged: (z) {
-                      if (z != _zoomed) setState(() => _zoomed = z);
-                    },
-                  ),
-                ),
-              ),
-            ),
-            _Chrome(
-              visible: _chromeVisible,
-              alignment: Alignment.topCenter,
-              child: _TopBar(
-                goalIcon: goal?.icon ?? unknownGoalIcon,
-                title:
-                    goal?.title(Localizations.localeOf(context).languageCode) ??
-                    '',
-                subtitle: [
-                  ?pair?.memberNames[photo.uid],
-                  formatPhotoTime(context, photo.createdAt),
-                ].join(' · '),
-                onDelete: mine ? () => _delete(photo) : null,
-              ),
-            ),
-            _Chrome(
-              visible: _chromeVisible,
-              alignment: Alignment.bottomCenter,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (_photos.length > 1)
-                    _PageDots(count: _photos.length, index: _index),
-                  if (!mine && myUid != null)
-                    _ReactionBar(
-                      selected: _myReaction(photo, myUid),
-                      onTap: (e) => _toggleReaction(photo, e),
-                    )
-                  else if (partnerReaction != null)
-                    _ReactionPill(
-                      text: l.photoPartnerReacted(
-                        pair?.memberNames[partnerUid] ??
-                            l.todayPartnerFallbackName,
-                        partnerReaction,
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.escape): () =>
+            Navigator.of(context).maybePop(),
+      },
+      child: Focus(
+        autofocus: true,
+        child: AnnotatedRegion<SystemUiOverlayStyle>(
+          value: SystemUiOverlayStyle.light,
+          child: Scaffold(
+            backgroundColor: Colors.black,
+            body: Stack(
+              children: [
+                Positioned.fill(
+                  child: GestureDetector(
+                    onTap: () =>
+                        setState(() => _chromeVisible = !_chromeVisible),
+                    child: PageView.builder(
+                      controller: _pages,
+                      physics: _zoomed
+                          ? const NeverScrollableScrollPhysics()
+                          : const PageScrollPhysics(),
+                      itemCount: _photos.length,
+                      onPageChanged: (i) => setState(() {
+                        _index = i;
+                        _zoomed = false;
+                      }),
+                      itemBuilder: (context, i) => _PhotoPage(
+                        key: ValueKey(_photos[i].id),
+                        photo: _photos[i],
+                        onZoomChanged: (z) {
+                          if (z != _zoomed) setState(() => _zoomed = z);
+                        },
                       ),
                     ),
-                ],
-              ),
+                  ),
+                ),
+                _Chrome(
+                  visible: _chromeVisible,
+                  alignment: Alignment.topCenter,
+                  child: _TopBar(
+                    goalIcon: goal?.icon ?? unknownGoalIcon,
+                    title:
+                        goal?.title(
+                          Localizations.localeOf(context).languageCode,
+                        ) ??
+                        '',
+                    subtitle: [
+                      ?pair?.memberNames[photo.uid],
+                      formatPhotoTime(context, photo.createdAt),
+                    ].join(' · '),
+                    onDelete: mine ? () => _delete(photo) : null,
+                  ),
+                ),
+                _Chrome(
+                  visible: _chromeVisible,
+                  alignment: Alignment.bottomCenter,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (_photos.length > 1)
+                        _PageDots(count: _photos.length, index: _index),
+                      if (!mine && myUid != null)
+                        _ReactionBar(
+                          selected: _myReaction(photo, myUid),
+                          onTap: (e) => _toggleReaction(photo, e),
+                        )
+                      else if (partnerReaction != null)
+                        _ReactionPill(
+                          text: l.photoPartnerReacted(
+                            pair?.memberNames[partnerUid] ??
+                                l.todayPartnerFallbackName,
+                            partnerReaction,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -446,7 +492,21 @@ class _PhotoPageState extends ConsumerState<_PhotoPage> {
             ),
           ),
         if (full.hasError)
-          Center(child: _ReactionPill(text: l.photoLoadFailed)),
+          Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _ReactionPill(text: l.photoLoadFailed),
+                const SizedBox(height: 8),
+                TextButton.icon(
+                  style: TextButton.styleFrom(foregroundColor: Colors.white),
+                  onPressed: () => ref.invalidate(fullPhotoProvider(photo.id)),
+                  icon: const Icon(Icons.refresh),
+                  label: Text(l.photoRetry),
+                ),
+              ],
+            ),
+          ),
       ],
     );
   }

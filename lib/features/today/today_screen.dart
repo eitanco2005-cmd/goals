@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -31,6 +33,14 @@ class TodayScreen extends ConsumerStatefulWidget {
 class _TodayScreenState extends ConsumerState<TodayScreen> {
   late final AppLifecycleListener _lifecycle;
 
+  /// How long a partner's reaction must stay put before it is announced, so
+  /// cycling ❤️ → 💪 → 🔥 produces one snackbar, not three.
+  static const reactionSettle = Duration(milliseconds: 1500);
+  final _reactionTimers = <String, Timer>{};
+
+  /// Whether the Android lost-camera-photo check already ran this session.
+  bool _recoveryStarted = false;
+
   @override
   void initState() {
     super.initState();
@@ -42,8 +52,31 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
 
   @override
   void dispose() {
+    for (final t in _reactionTimers.values) {
+      t.cancel();
+    }
     _lifecycle.dispose();
     super.dispose();
+  }
+
+  /// Announces [r] once the partner's reaction on that photo has settled for
+  /// [reactionSettle]; nothing if they removed it in the meantime.
+  void _scheduleReaction(PartnerReaction r, String myUid) {
+    _reactionTimers.remove(r.photo.id)?.cancel();
+    _reactionTimers[r.photo.id] = Timer(reactionSettle, () {
+      _reactionTimers.remove(r.photo.id);
+      if (!mounted) return;
+      final photo = (ref.read(todayPhotosProvider).value ?? const <GoalPhoto>[])
+          .where((p) => p.id == r.photo.id)
+          .firstOrNull;
+      final emoji = photo?.reactions[r.reactorUid];
+      if (photo == null || emoji == null) return;
+      _showReaction((
+        photo: photo,
+        reactorUid: r.reactorUid,
+        emoji: emoji,
+      ), myUid);
+    });
   }
 
   /// "Noa reacted ❤️ to your photo 🥗", with a shortcut to the photo.
@@ -107,9 +140,21 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
       final after = next.value;
       final myUid = ref.read(authStateProvider).value?.uid;
       if (before == null || after == null || myUid == null) return;
-      final reactions = newPartnerReactions(before, after, myUid);
-      if (reactions.isNotEmpty) _showReaction(reactions.last, myUid);
+      for (final r in newPartnerReactions(before, after, myUid)) {
+        _scheduleReaction(r, myUid);
+      }
     });
+
+    // Android may kill the app while the camera is open; pick the photo up
+    // once today's challenge is loaded (an upload needs the pair and day).
+    if (!_recoveryStarted &&
+        pickerMayLoseData &&
+        ref.watch(todayScopeProvider) != null) {
+      _recoveryStarted = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) recoverLostGoalPhoto(context, ref);
+      });
+    }
 
     final body = switch (ref.watch(challengeProvider)) {
       AsyncValue(value: final Challenge challenge) => _TodayContent(
